@@ -53,7 +53,7 @@ describe("cinemateca ingest endpoint", () => {
   it("rejects a wrong cron secret", async () => {
     const res = await handleCinematecaIngest(post({}, "Bearer nope"), {
       loadSource: async () => makeSource(["a"]),
-      createPersist: async () => vi.fn(),
+      createPersist: async () => vi.fn(async () => {}),
     });
     expect(res.status).toBe(401);
   });
@@ -133,7 +133,7 @@ describe("cinemateca ingest endpoint", () => {
   it("rejects an invalid body", async () => {
     const res = await handleCinematecaIngest(post({ limit: -1 }), {
       loadSource: async () => makeSource(["a"]),
-      createPersist: async () => vi.fn(),
+      createPersist: async () => vi.fn(async () => {}),
     });
     expect(res.status).toBe(400);
   });
@@ -142,7 +142,7 @@ describe("cinemateca ingest endpoint", () => {
     const { loadCinematecaSource } = await import("./cinemateca-source.server");
     const res = await handleCinematecaIngest(post({ dryRun: true }), {
       loadSource: loadCinematecaSource,
-      createPersist: async () => vi.fn(),
+      createPersist: async () => vi.fn(async () => {}),
     });
     expect(res.status).toBe(501);
     expect(((await res.json()) as { error: string }).error).toContain("tustopt/docuevents");
