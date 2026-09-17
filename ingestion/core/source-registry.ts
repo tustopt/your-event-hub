@@ -20,6 +20,8 @@ export interface SourceDefinition {
   languageCode: string;
   status: SourceStatus;
   adapterKey?: string;
+  canonicalUrl: string;
+  fetchIntervalMinutes?: number;
   description?: string;
 }
 
@@ -39,6 +41,8 @@ export const sourceRegistry: readonly SourceDefinition[] = [
     languageCode: "pt",
     status: "production",
     adapterKey: "cinemateca_pt",
+    canonicalUrl: "https://www.cinemateca.pt/Programacao%20.aspx",
+    fetchIntervalMinutes: 360,
     description: "Cinemateca Portuguesa programme and screening source.",
   },
   {
@@ -50,6 +54,8 @@ export const sourceRegistry: readonly SourceDefinition[] = [
     languageCode: "pt",
     status: "production",
     adapterKey: "cinema_sao_jorge",
+    canonicalUrl: "https://cinemasaojorge.pt/programacao/0/",
+    fetchIntervalMinutes: 360,
     description: "Cinema São Jorge programme and screening source.",
   },
   {
@@ -61,6 +67,8 @@ export const sourceRegistry: readonly SourceDefinition[] = [
     languageCode: "pt",
     status: "production",
     adapterKey: "cinema_fernando_lopes",
+    canonicalUrl: "https://cinemafernandolopes.pt/programacao",
+    fetchIntervalMinutes: 360,
     description: "Cinema Fernando Lopes programme and screening source.",
   },
   {
@@ -71,6 +79,8 @@ export const sourceRegistry: readonly SourceDefinition[] = [
     countryCode: "PT",
     languageCode: "pt",
     status: "candidate",
+    canonicalUrl: "https://doclisboa.org/",
+    fetchIntervalMinutes: 360,
     description: "Candidate festival source. Edition-aware ingestion for Doclisboa programme, screenings and festival venues.",
   },
   {
@@ -81,6 +91,8 @@ export const sourceRegistry: readonly SourceDefinition[] = [
     countryCode: "PT",
     languageCode: "pt",
     status: "candidate",
+    canonicalUrl: "https://www.culturgest.pt/",
+    fetchIntervalMinutes: 360,
     description: "Candidate cultural programme source.",
   },
   {
@@ -91,6 +103,8 @@ export const sourceRegistry: readonly SourceDefinition[] = [
     countryCode: "PT",
     languageCode: "pt",
     status: "candidate",
+    canonicalUrl: "https://gulbenkian.pt/",
+    fetchIntervalMinutes: 360,
     description: "Candidate cultural programme source.",
   },
 ];
