@@ -52,6 +52,12 @@ export {
   doclisboaAdapter,
 } from "./sources/doclisboa/parser";
 export {
+  fetchDoclisboaProgramme,
+  DOCLISBOA_SOURCE_KEY,
+  DOCLISBOA_PROGRAMME_URL,
+  type FetchDoclisboaOptions,
+} from "./sources/doclisboa/fetcher";
+export {
   ingestCinematecaFixture,
   type CinematecaFixture,
   type FixtureRunResult,
