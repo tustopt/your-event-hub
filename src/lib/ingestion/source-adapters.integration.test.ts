@@ -120,6 +120,38 @@ describe("warning and error propagation", () => {
   });
 });
 
+function stubLibrary(): IngestionLibrary {
+  const screening: ScreeningLike = {
+    eventType: "screening",
+    title: "Stub",
+    startAt: "2026-09-18T20:00:00",
+    provenance: { sourceKey: "cinemateca_pt", sourceExternalId: "stub-1" },
+  };
+  return {
+    getSourceDefinition: (key: string) =>
+      ({ key, name: "Stub", status: "production", adapterKey: "cinemateca_pt" }) as never,
+    createProductionAdapterRegistry: () =>
+      new Map([
+        [
+          "cinemateca_pt",
+          {
+            key: "cinemateca_pt",
+            sourceType: "website",
+            parse: () => ({ screenings: [screening], warnings: [] }),
+          },
+        ],
+      ]) as never,
+    getSourceFetcher: (sourceKey: string) =>
+      ({
+        sourceKey,
+        sourceType: "website",
+        fetch: async () => [{ id: "stub-1" }],
+        toParsedItem: () => ({ sourceKey, sourceType: "website" }),
+      }) as never,
+    runSourcePipeline: () => undefined,
+  };
+}
+
 describe("Cinemateca route stays a thin wrapper", () => {
   it("delegates to the generic handler with the cinemateca_pt source key", async () => {
     const persist = vi.fn(async () => {});
@@ -130,7 +162,7 @@ describe("Cinemateca route stays a thin wrapper", () => {
     });
 
     const res = await handleCinematecaIngest(request, {
-      loadLibrary: async () => library,
+      loadLibrary: async () => stubLibrary(),
       createPersist: async () => persist,
     });
     const body = (await res.json()) as { source: string; persisted: number };
