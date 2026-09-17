@@ -10,33 +10,44 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiPublicIngestCinematecaRouteImport } from './routes/api/public/ingest/cinemateca'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicIngestCinematecaRoute =
+  ApiPublicIngestCinematecaRouteImport.update({
+    id: '/api/public/ingest/cinemateca',
+    path: '/api/public/ingest/cinemateca',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/api/public/ingest/cinemateca': typeof ApiPublicIngestCinematecaRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/api/public/ingest/cinemateca': typeof ApiPublicIngestCinematecaRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/api/public/ingest/cinemateca': typeof ApiPublicIngestCinematecaRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/api/public/ingest/cinemateca'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/api/public/ingest/cinemateca'
+  id: '__root__' | '/' | '/api/public/ingest/cinemateca'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ApiPublicIngestCinematecaRoute: typeof ApiPublicIngestCinematecaRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +59,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/ingest/cinemateca': {
+      id: '/api/public/ingest/cinemateca'
+      path: '/api/public/ingest/cinemateca'
+      fullPath: '/api/public/ingest/cinemateca'
+      preLoaderRoute: typeof ApiPublicIngestCinematecaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ApiPublicIngestCinematecaRoute: ApiPublicIngestCinematecaRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
