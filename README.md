@@ -1,24 +1,40 @@
-# Your Event Hub
+# DocuEvents
 
-create a new app called eventapp
+Personalized discovery platform for documentary cinema, screenings, festivals, television, streaming and related cultural events.
 
-This project was built with [Lovable](https://lovable.dev).
+## Product principle
 
-## Build with Lovable
+DocuEvents is not a generic event calendar. It combines user interests, location, dates, films, directors, themes, festivals and trusted sources to answer a practical question:
 
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/da9c1962-7730-43e6-8f67-c8ae1a1ba35d).
+> What is relevant for me to see or discover now?
 
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
+Recommendations should initially be deterministic and explainable. Popularity must not be treated as a substitute for personal relevance.
 
-## Development
+## Architecture
 
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
-
-```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm i
-npm run dev
+```text
+External sources
+      ↓
+Fetch / ingestion
+      ↓
+Source adapters
+      ↓
+Normalization + entity resolution
+      ↓
+Supabase PostgreSQL
+      ↓
+Recommendation engine
+      ↓
+Mobile / web application
 ```
+
+## Repository areas
+
+- `docs/` — product and technical architecture
+- `ingestion/` — source fetching, parsing, normalization and resolution
+- `database/` — database migrations and schema decisions
+- `src/` — application code
+
+## Project boundary
+
+This repository is the source of truth for DocuEvents and is independent from `tustopt/docworld`.
