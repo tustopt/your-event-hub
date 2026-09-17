@@ -13,10 +13,24 @@
 import type { CinematecaSource } from "./contract";
 
 const CANDIDATE_MODULE_IDS = [
+  "docuevents/ingestion",
   "@docuevents/ingestion",
   "docuevents/ingestion/sources/cinemateca_pt",
   "docuevents",
 ];
+
+// Accepted export names, newest first: the library entry
+// (ingestion/index.ts at tustopt/docuevents@2d3894d) exports
+// fetchCinematecaProgramme() + normalizeProgrammeItem().
+const FETCH_EXPORTS = ["fetchCinematecaProgramme", "fetchCinematecaScreenings"];
+const NORMALIZE_EXPORTS = ["normalizeProgrammeItem", "normalizeCinematecaScreening"];
+
+function pick(mod: Record<string, unknown>, names: string[]): unknown {
+  for (const name of names) {
+    if (typeof mod[name] === "function") return mod[name];
+  }
+  return undefined;
+}
 
 export class SourceUnavailableError extends Error {
   constructor(message: string) {
@@ -26,8 +40,8 @@ export class SourceUnavailableError extends Error {
 }
 
 function asSource(mod: Record<string, unknown>): CinematecaSource | null {
-  const fetchFn = mod["fetchCinematecaScreenings"];
-  const normalizeFn = mod["normalizeCinematecaScreening"];
+  const fetchFn = pick(mod, FETCH_EXPORTS);
+  const normalizeFn = pick(mod, NORMALIZE_EXPORTS);
   if (typeof fetchFn === "function" && typeof normalizeFn === "function") {
     return {
       fetchCinematecaScreenings: fetchFn as CinematecaSource["fetchCinematecaScreenings"],
