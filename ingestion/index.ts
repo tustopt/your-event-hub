@@ -2,6 +2,8 @@ export * from "./core/contracts";
 export * from "./core/entity-resolution";
 export * from "./core/persistence-contracts";
 export * from "./core/source-registry";
+export * from "./core/source-fetchers";
+export * from "./core/source-pipeline";
 export * from "./core/adapter-registry";
 export * from "./core/ingestion-runner";
 export * from "./core/production-adapters";
