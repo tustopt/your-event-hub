@@ -7,8 +7,8 @@ import {
 } from "./source-contract";
 
 export type SourceIngestOptions = {
-  dryRun?: boolean;
-  limit?: number;
+  dryRun?: boolean | undefined;
+  limit?: number | undefined;
 };
 
 export type IngestItemError = {
