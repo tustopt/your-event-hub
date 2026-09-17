@@ -44,7 +44,7 @@ function makeLibrary(
         : {
             key,
             name: "Cinemateca Portuguesa",
-            status: (overrides.status ?? "registered") as never,
+            status: (overrides.status ?? "production") as never,
             ...("adapterKey" in overrides
               ? overrides.adapterKey === undefined
                 ? {}
@@ -82,7 +82,7 @@ beforeEach(() => {
 });
 
 describe("generic source resolution", () => {
-  it("resolves a registered source with adapter and fetcher", () => {
+  it("resolves a production source with adapter and fetcher", () => {
     const resolved = resolveRunnableSource(makeLibrary(), "cinemateca_pt");
     expect(resolved).toMatchObject({ sourceKey: "cinemateca_pt", adapterKey: "cinemateca_pt" });
   });
@@ -96,6 +96,15 @@ describe("generic source resolution", () => {
   it("rejects a candidate (non-runnable) source", () => {
     try {
       resolveRunnableSource(makeLibrary({ status: "candidate" }), "doclisboa");
+      throw new Error("should have thrown");
+    } catch (error) {
+      expect((error as SourceResolutionError).code).toBe("not_runnable");
+    }
+  });
+
+  it("rejects a non-production source", () => {
+    try {
+      resolveRunnableSource(makeLibrary({ status: "registered" }), "cinemateca_pt");
       throw new Error("should have thrown");
     } catch (error) {
       expect((error as SourceResolutionError).code).toBe("not_runnable");
