@@ -134,7 +134,7 @@ describe("generic ingest endpoint", () => {
       failed: 0,
     });
     expect(persist).toHaveBeenCalledTimes(2);
-    expect(persist.mock.calls[0]?.[1]).toBe("cinemateca_pt");
+    expect((persist.mock.calls[0] as unknown[])[1]).toBe("cinemateca_pt");
   });
 
   it("dryRun writes nothing and returns the normalized screenings", async () => {

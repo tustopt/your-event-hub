@@ -54,7 +54,7 @@ export async function handleSourceIngest(
   const unauthorized = await authenticateCronRequest(request);
   if (unauthorized) return unauthorized;
 
-  let options: { dryRun?: boolean; limit?: number } = {};
+  let options: { dryRun?: boolean | undefined; limit?: number | undefined } = {};
   const rawBody = await request.text();
   if (rawBody.trim().length > 0) {
     try {
