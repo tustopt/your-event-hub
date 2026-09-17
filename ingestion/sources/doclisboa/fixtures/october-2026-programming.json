@@ -1,0 +1,40 @@
+[
+  {
+    "sourceExternalId": "doclisboa-2026-001",
+    "sourceUrl": "https://doclisboa.org/",
+    "editionYear": 2026,
+    "date": "2026-10-15",
+    "time": "19:00",
+    "title": "EXEMPLO DE SESSÃO",
+    "section": "Competição Nacional",
+    "venue": "Culturgest",
+    "venueType": "cultural_center",
+    "ticketUrl": "https://doclisboa.org/",
+    "language": "Português",
+    "subtitleLanguage": "Inglês",
+    "format": "DCP",
+    "durationMinutes": 92,
+    "director": "Realizador Exemplo",
+    "country": "Portugal",
+    "year": 2026,
+    "synopsis": "Fixture sintética para testar o contrato de festival e edição."
+  },
+  {
+    "sourceExternalId": "doclisboa-2026-002",
+    "sourceUrl": "https://doclisboa.org/",
+    "editionYear": 2026,
+    "date": "2026-10-18",
+    "time": "15:30",
+    "title": "OUTRA SESSÃO DE TESTE",
+    "section": "Competição Internacional",
+    "venue": "Cinema São Jorge",
+    "venueType": "cinema",
+    "language": "Inglês",
+    "subtitleLanguage": "Português",
+    "format": "DCP",
+    "durationMinutes": 105,
+    "director": "Another Director",
+    "country": "Reino Unido, França",
+    "year": 2025
+  }
+]

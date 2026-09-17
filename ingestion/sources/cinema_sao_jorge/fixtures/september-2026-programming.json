@@ -1,0 +1,54 @@
+{
+  "source": {
+    "sourceKey": "cinema_sao_jorge",
+    "sourceUrl": "https://cinemasaojorge.pt/programacao/0/",
+    "capturedAt": "2026-09-17"
+  },
+  "items": [
+    {
+      "sourceExternalId": "2026-09-18-1600-word-is-out-stories-of-some-of-our-lives",
+      "sourceUrl": "https://cinemasaojorge.pt/programacao/0/",
+      "date": "2026-09-18",
+      "time": "16:00",
+      "title": "Word Is Out: Stories of Some of Our Lives",
+      "festival": "QUEER LISBOA 2026",
+      "durationMinutes": 132
+    },
+    {
+      "sourceExternalId": "2026-09-18-2100-the-man-i-love-sessao-de-abertura",
+      "sourceUrl": "https://cinemasaojorge.pt/programacao/0/",
+      "date": "2026-09-18",
+      "time": "21:00",
+      "title": "The Man I Love | SESSÃO DE ABERTURA",
+      "festival": "QUEER LISBOA 2026",
+      "durationMinutes": 95
+    },
+    {
+      "sourceExternalId": "2026-09-19-1530-feito-pipa",
+      "sourceUrl": "https://cinemasaojorge.pt/programacao/0/",
+      "date": "2026-09-19",
+      "time": "15:30",
+      "title": "FEITO PIPA",
+      "festival": "QUEER LISBOA 2026",
+      "durationMinutes": 93
+    },
+    {
+      "sourceExternalId": "2026-09-19-1600-public-access",
+      "sourceUrl": "https://cinemasaojorge.pt/programacao/0/",
+      "date": "2026-09-19",
+      "time": "16:00",
+      "title": "Public Access",
+      "festival": "QUEER LISBOA 2026",
+      "durationMinutes": 107
+    },
+    {
+      "sourceExternalId": "2026-09-19-2145-pink-narcissus",
+      "sourceUrl": "https://cinemasaojorge.pt/programacao/0/",
+      "date": "2026-09-19",
+      "time": "21:45",
+      "title": "Pink Narcissus",
+      "festival": "QUEER LISBOA 2026",
+      "durationMinutes": 68
+    }
+  ]
+}
