@@ -47,5 +47,5 @@ export type IngestionLibrary = {
   runSourcePipeline: unknown;
 };
 
-/** Statuses whose sources may be executed by the ingestion endpoint. */
-export const RUNNABLE_STATUSES: readonly SourceStatus[] = ["registered", "production"];
+/** Only production sources with a registered adapter may be executed. */
+export const RUNNABLE_STATUSES: readonly SourceStatus[] = ["production"];
