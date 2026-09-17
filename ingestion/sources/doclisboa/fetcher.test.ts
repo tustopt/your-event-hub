@@ -2,60 +2,89 @@ import { describe, expect, it } from "vitest";
 import { fetchDoclisboaProgramme } from "./fetcher";
 
 describe("Doclisboa fetcher", () => {
-  it("extracts programme sessions from the documented festival programme shape", async () => {
-    const html = `
-      <div>15 Outubro</div>
-      <div>Da Terra à Lua</div>
-      <div>15.10 / 10:30 / 104’</div>
-      <div>Culturgest - Pequeno Auditório</div>
-      <div>The Example Documentary</div>
-      <div>De Example Director</div>
-      <div>16.10 / 14:00 / 72’</div>
-      <div>Cinema São Jorge - Sala 3</div>
-      <div>Another Documentary</div>
-      <div>De Another Director</div>
+  it("discovers film pages and extracts the current session format", async () => {
+    const indexHtml = `
+      <a href="/filmes/complo/">Complô</a>
+      <a href="/filmes/cover-up/">Cover-Up</a>
     `;
 
+    const pages: Record<string, string> = {
+      "https://doclisboa.test/filmes/complo/": `
+        <h1>Complô</h1>
+        <div>João Miller Guerra</div>
+        <div>2025 Portugal 86’</div>
+        <div>Competição Portuguesa</div>
+        <div>17.10 / 22:45 / 86’</div>
+        <div>Cinema São Jorge - Sala M. Oliveira</div>
+        <div>Bilhete</div>
+        <div>21.10 / 15:00 / 86’</div>
+        <div>Cinema São Jorge - Sala 3</div>
+      `,
+      "https://doclisboa.test/filmes/cover-up/": `
+        <h1>Cover-Up</h1>
+        <div>Laura Poitras, Mark Obenhaus</div>
+        <div>2025 EUA 117’</div>
+        <div>Da Terra à Lua</div>
+        <div>21.10 / 20:15 / 117’</div>
+        <div>Cinema São Jorge - Sala M. Oliveira</div>
+      `,
+    };
+
     const result = await fetchDoclisboaProgramme({
-      fetchImpl: async () => new Response(html, { status: 200 }),
-      url: "https://example.test/2026/programa/",
+      fetchImpl: async (input) => {
+        const url = String(input);
+        const body = url === "https://doclisboa.test/filmes/" ? indexHtml : pages[url] ?? "";
+        return new Response(body, { status: body ? 200 : 404 });
+      },
+      url: "https://doclisboa.test/filmes/",
     });
 
-    expect(result).toHaveLength(2);
+    expect(result).toHaveLength(3);
     expect(result[0]).toMatchObject({
-      editionYear: 2026,
-      date: "2026-10-15",
-      time: "10:30",
-      title: "The Example Documentary",
-      section: "Da Terra à Lua",
-      venue: "Culturgest - Pequeno Auditório",
-      durationMinutes: 104,
-      director: "Example Director",
+      title: "Complô",
+      date: "2026-10-17",
+      time: "22:45",
+      venue: "Cinema São Jorge - Sala M. Oliveira",
+      section: "Competição Portuguesa",
+      director: "João Miller Guerra",
+      year: 2025,
+      durationMinutes: 86,
     });
     expect(result[1]).toMatchObject({
-      date: "2026-10-16",
-      time: "14:00",
-      title: "Another Documentary",
+      title: "Complô",
+      date: "2026-10-21",
+      time: "15:00",
       venue: "Cinema São Jorge - Sala 3",
-      durationMinutes: 72,
-      director: "Another Director",
+    });
+    expect(result[2]).toMatchObject({
+      title: "Cover-Up",
+      date: "2026-10-21",
+      time: "20:15",
+      venue: "Cinema São Jorge - Sala M. Oliveira",
+      section: "Da Terra à Lua",
     });
   });
 
-  it("deduplicates repeated session cards", async () => {
-    const html = `
-      <div>15.10 / 10:30 / 104’</div>
+  it("deduplicates repeated film links and sessions", async () => {
+    const indexHtml = `
+      <a href="/filmes/complo/">Complô</a>
+      <a href="/filmes/complo/">Complô duplicate</a>
+    `;
+    const pageHtml = `
+      <h1>Complô</h1>
+      <div>João Miller Guerra</div>
+      <div>2025 Portugal 86’</div>
+      <div>Competição Portuguesa</div>
+      <div>17.10 / 22:45 / 86’</div>
       <div>Culturgest</div>
-      <div>Example Documentary</div>
-      <div>De Example Director</div>
-      <div>15.10 / 10:30 / 104’</div>
-      <div>Culturgest</div>
-      <div>Example Documentary</div>
-      <div>De Example Director</div>
     `;
 
     const result = await fetchDoclisboaProgramme({
-      fetchImpl: async () => new Response(html, { status: 200 }),
+      fetchImpl: async (input) => {
+        const url = String(input);
+        return new Response(url === "https://doclisboa.test/filmes/" ? indexHtml : pageHtml, { status: 200 });
+      },
+      url: "https://doclisboa.test/filmes/",
     });
 
     expect(result).toHaveLength(1);
