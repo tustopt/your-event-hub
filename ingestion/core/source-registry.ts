@@ -1,0 +1,106 @@
+import type { SourceType } from "./contracts.js";
+
+export type SourceCategory =
+  | "cinema"
+  | "festival"
+  | "cinematheque"
+  | "television"
+  | "streaming"
+  | "cultural"
+  | "manual";
+
+export type SourceStatus = "candidate" | "validated" | "registered" | "production" | "paused" | "retired";
+
+export interface SourceDefinition {
+  key: string;
+  name: string;
+  category: SourceCategory;
+  sourceType: SourceType;
+  countryCode: string;
+  languageCode: string;
+  status: SourceStatus;
+  adapterKey?: string;
+  description?: string;
+}
+
+/**
+ * Canonical application registry for external DocuEvents sources.
+ *
+ * A source can be registered before an adapter exists. Runners must only
+ * execute sources with status="production" and a declared adapterKey.
+ */
+export const sourceRegistry: readonly SourceDefinition[] = [
+  {
+    key: "cinemateca_pt",
+    name: "Cinemateca Portuguesa",
+    category: "cinematheque",
+    sourceType: "website",
+    countryCode: "PT",
+    languageCode: "pt",
+    status: "registered",
+    adapterKey: "cinemateca_pt",
+    description: "Cinemateca Portuguesa programme and screening source.",
+  },
+  {
+    key: "cinema_sao_jorge",
+    name: "Cinema São Jorge",
+    category: "cinema",
+    sourceType: "website",
+    countryCode: "PT",
+    languageCode: "pt",
+    status: "registered",
+    adapterKey: "cinema_sao_jorge",
+    description: "Cinema São Jorge programme and screening source.",
+  },
+  {
+    key: "cinema_fernando_lopes",
+    name: "Cinema Fernando Lopes",
+    category: "cinema",
+    sourceType: "website",
+    countryCode: "PT",
+    languageCode: "pt",
+    status: "registered",
+    adapterKey: "cinema_fernando_lopes",
+    description: "Cinema Fernando Lopes programme and screening source.",
+  },
+  {
+    key: "doclisboa",
+    name: "Doclisboa",
+    category: "festival",
+    sourceType: "website",
+    countryCode: "PT",
+    languageCode: "pt",
+    status: "candidate",
+    description: "Candidate festival source. Edition-aware ingestion for Doclisboa programme, screenings and festival venues.",
+  },
+  {
+    key: "culturgest",
+    name: "Culturgest",
+    category: "cultural",
+    sourceType: "website",
+    countryCode: "PT",
+    languageCode: "pt",
+    status: "candidate",
+    description: "Candidate cultural programme source.",
+  },
+  {
+    key: "fundacao_gulbenkian",
+    name: "Fundação Calouste Gulbenkian",
+    category: "cultural",
+    sourceType: "website",
+    countryCode: "PT",
+    languageCode: "pt",
+    status: "candidate",
+    description: "Candidate cultural programme source.",
+  },
+];
+
+export function getSourceDefinition(key: string): SourceDefinition | undefined {
+  return sourceRegistry.find((source) => source.key === key);
+}
+
+export function getProductionSources(): SourceDefinition[] {
+  return sourceRegistry.filter(
+    (source) => source.status === "production" && source.adapterKey !== undefined,
+  );
+}

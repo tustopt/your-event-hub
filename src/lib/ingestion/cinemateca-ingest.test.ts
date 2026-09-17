@@ -138,10 +138,18 @@ describe("cinemateca ingest endpoint", () => {
     expect(res.status).toBe(400);
   });
 
-  it("returns 501 when the GitHub parser is not installed", async () => {
+  it("loads the DocuEvents ingestion library from the repository", async () => {
     const { loadCinematecaSource } = await import("./cinemateca-source.server");
+    const source = await loadCinematecaSource();
+    expect(typeof source.fetchCinematecaScreenings).toBe("function");
+    expect(typeof source.normalizeCinematecaScreening).toBe("function");
+  });
+
+  it("returns 501 when no parser can be loaded", async () => {
     const res = await handleCinematecaIngest(post({ dryRun: true }), {
-      loadSource: loadCinematecaSource,
+      loadSource: async () => {
+        throw new Error("Cinemateca parser not available (tustopt/docuevents)");
+      },
       createPersist: async () => vi.fn(async () => {}),
     });
     expect(res.status).toBe(501);

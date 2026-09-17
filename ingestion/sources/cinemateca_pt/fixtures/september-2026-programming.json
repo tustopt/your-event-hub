@@ -1,0 +1,73 @@
+{
+  "source": {
+    "sourceKey": "cinemateca_pt",
+    "sourceUrl": "https://www.cinemateca.pt/Programacao%20.aspx?ciclo=2098",
+    "capturedAt": "2026-09-17"
+  },
+  "items": [
+    {
+      "sourceExternalId": "2026-09-01-2130-e-la-nave-va",
+      "sourceUrl": "https://www.cinemateca.pt/Programacao%20.aspx?ciclo=2098",
+      "date": "2026-09-01",
+      "time": "21:30",
+      "venue": "Sala M. Félix Ribeiro",
+      "cycle": "CINE-ÓPERA",
+      "title": "E LA NAVE VA",
+      "originalTitle": "E LA NAVE VA",
+      "director": "Federico Fellini",
+      "country": "Itália",
+      "year": 1983,
+      "durationMinutes": 128,
+      "subtitles": "legendado em português",
+      "eventType": "screening"
+    },
+    {
+      "sourceExternalId": "2026-09-02-1930-turandot",
+      "sourceUrl": "https://www.cinemateca.pt/Programacao%20.aspx?ciclo=2098",
+      "date": "2026-09-02",
+      "time": "19:30",
+      "venue": "Sala Luís de Pina",
+      "cycle": "CINE-ÓPERA",
+      "title": "TURANDOT",
+      "originalTitle": "TURANDOT",
+      "director": "Felix Breisach",
+      "country": "Áustria, Alemanha, Suíça",
+      "year": 2015,
+      "durationMinutes": 123,
+      "subtitles": "legendado eletronicamente em português",
+      "eventType": "screening"
+    },
+    {
+      "sourceExternalId": "2026-09-08-1530-amadeus",
+      "sourceUrl": "https://www.cinemateca.pt/Programacao%20.aspx?ciclo=2098",
+      "date": "2026-09-08",
+      "time": "15:30",
+      "venue": "Sala M. Félix Ribeiro",
+      "cycle": "CINE-ÓPERA",
+      "title": "AMADEUS",
+      "originalTitle": "Amadeus",
+      "director": "Milos Forman",
+      "country": "Estados Unidos",
+      "year": 1984,
+      "durationMinutes": 160,
+      "subtitles": "legendado em português",
+      "eventType": "screening"
+    },
+    {
+      "sourceExternalId": "2026-09-10-1900-aria",
+      "sourceUrl": "https://www.cinemateca.pt/Programacao%20.aspx?ciclo=2098",
+      "date": "2026-09-10",
+      "time": "19:00",
+      "venue": "Sala M. Félix Ribeiro",
+      "cycle": "CINE-ÓPERA",
+      "title": "ARIA",
+      "originalTitle": "ARIA",
+      "director": "Robert Altman; Bruce Beresford; Bill Bryden; Jean-Luc Godard; Derek Jarman; Franc Roddam; Nicolas Roeg; Ken Russell; Charles Sturridge; Julien Temple",
+      "country": "Reino Unido, França, Estados Unidos",
+      "year": 1987,
+      "durationMinutes": 90,
+      "subtitles": "legendado eletronicamente em português",
+      "eventType": "screening"
+    }
+  ]
+}
