@@ -23,6 +23,21 @@ export {
   DEFAULT_SOURCE_URL as CINEMA_SAO_JORGE_SOURCE_URL,
   type FetchCinemaSaoJorgeOptions,
 } from "./sources/cinema_sao_jorge/fetcher";
+export * from "./sources/cinema_fernando_lopes/types";
+export {
+  normalizeProgrammeItem as normalizeCinemaFernandoLopesProgrammeItem,
+  CINEMA_FERNANDO_LOPES_SOURCE_KEY,
+} from "./sources/cinema_fernando_lopes/normalizer";
+export {
+  parseProgrammeItems as parseCinemaFernandoLopesProgrammeItems,
+  cinemaFernandoLopesAdapter,
+} from "./sources/cinema_fernando_lopes/parser";
+export {
+  fetchCinemaFernandoLopesProgramme,
+  DEFAULT_SOURCE_KEY as CINEMA_FERNANDO_LOPES_DEFAULT_SOURCE_KEY,
+  DEFAULT_SOURCE_URL as CINEMA_FERNANDO_LOPES_SOURCE_URL,
+  type FetchCinemaFernandoLopesOptions,
+} from "./sources/cinema_fernando_lopes/fetcher";
 export * from "./sources/doclisboa/types";
 export {
   DOCLISBOA_FESTIVAL_KEY,
