@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiPublicIngestCinematecaRouteImport } from './routes/api/public/ingest/cinemateca'
+import { Route as ApiPublicIngestSourceSourceKeyRouteImport } from './routes/api/public/ingest/source.$sourceKey'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -23,31 +24,51 @@ const ApiPublicIngestCinematecaRoute =
     path: '/api/public/ingest/cinemateca',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicIngestSourceSourceKeyRoute =
+  ApiPublicIngestSourceSourceKeyRouteImport.update({
+    id: '/api/public/ingest/source/$sourceKey',
+    path: '/api/public/ingest/source/$sourceKey',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/api/public/ingest/cinemateca': typeof ApiPublicIngestCinematecaRoute
+  '/api/public/ingest/source/$sourceKey': typeof ApiPublicIngestSourceSourceKeyRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/api/public/ingest/cinemateca': typeof ApiPublicIngestCinematecaRoute
+  '/api/public/ingest/source/$sourceKey': typeof ApiPublicIngestSourceSourceKeyRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/api/public/ingest/cinemateca': typeof ApiPublicIngestCinematecaRoute
+  '/api/public/ingest/source/$sourceKey': typeof ApiPublicIngestSourceSourceKeyRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/api/public/ingest/cinemateca'
+  fullPaths:
+    | '/'
+    | '/api/public/ingest/cinemateca'
+    | '/api/public/ingest/source/$sourceKey'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/api/public/ingest/cinemateca'
-  id: '__root__' | '/' | '/api/public/ingest/cinemateca'
+  to:
+    | '/'
+    | '/api/public/ingest/cinemateca'
+    | '/api/public/ingest/source/$sourceKey'
+  id:
+    | '__root__'
+    | '/'
+    | '/api/public/ingest/cinemateca'
+    | '/api/public/ingest/source/$sourceKey'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ApiPublicIngestCinematecaRoute: typeof ApiPublicIngestCinematecaRoute
+  ApiPublicIngestSourceSourceKeyRoute: typeof ApiPublicIngestSourceSourceKeyRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -66,12 +87,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicIngestCinematecaRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/ingest/source/$sourceKey': {
+      id: '/api/public/ingest/source/$sourceKey'
+      path: '/api/public/ingest/source/$sourceKey'
+      fullPath: '/api/public/ingest/source/$sourceKey'
+      preLoaderRoute: typeof ApiPublicIngestSourceSourceKeyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ApiPublicIngestCinematecaRoute: ApiPublicIngestCinematecaRoute,
+  ApiPublicIngestSourceSourceKeyRoute: ApiPublicIngestSourceSourceKeyRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
