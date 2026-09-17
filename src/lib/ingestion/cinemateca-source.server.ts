@@ -53,6 +53,17 @@ function asSource(mod: Record<string, unknown>): CinematecaSource | null {
 }
 
 export async function loadCinematecaSource(): Promise<CinematecaSource> {
+  // Primary: the DocuEvents ingestion library vendored in this repository at
+  // ingestion/ (source of truth: tustopt/docuevents). No parser logic is copied
+  // into src/ - this only re-exports fetch + normalize from that library.
+  try {
+    const mod = (await import("../../../ingestion/index")) as Record<string, unknown>;
+    const source = asSource(mod);
+    if (source) return source;
+  } catch {
+    // ingestion/ not present - fall through to installed-package candidates
+  }
+
   for (const id of CANDIDATE_MODULE_IDS) {
     try {
       const mod = (await import(/* @vite-ignore */ id)) as Record<string, unknown>;
