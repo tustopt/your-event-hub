@@ -3,8 +3,8 @@ import type { SourceFetcher } from "./source-pipeline.js";
 import { fetchCinematecaProgramme } from "../sources/cinemateca_pt/fetcher.js";
 import { fetchCinemaSaoJorgeProgramme } from "../sources/cinema_sao_jorge/fetcher.js";
 import { fetchCinemaFernandoLopesProgramme } from "../sources/cinema_fernando_lopes/fetcher.js";
+import { fetchDoclisboaProgramme } from "../sources/doclisboa/fetcher.js";
 
-/** Shared shape of every programme item produced by the website fetchers. */
 interface ProgrammeItemLike {
   sourceExternalId?: string;
   sourceUrl?: string;
@@ -18,11 +18,6 @@ export interface SourceFetcherOptions {
 
 type ProgrammeFetch<T> = (options: SourceFetcherOptions) => Promise<readonly T[]>;
 
-/**
- * Wraps a source-specific fetcher in the generic SourceFetcher contract so the
- * ingestion runner never needs source-specific knowledge. No parsing or
- * normalization happens here - that stays in the source adapters.
- */
 function websiteFetcher<T extends ProgrammeItemLike>(
   sourceKey: string,
   fetchProgramme: ProgrammeFetch<T>,
@@ -53,6 +48,8 @@ export const sourceFetcherFactories: Readonly<Record<string, FetcherFactory>> = 
     websiteFetcher("cinema_sao_jorge", (o) => fetchCinemaSaoJorgeProgramme(o), options),
   cinema_fernando_lopes: (options) =>
     websiteFetcher("cinema_fernando_lopes", (o) => fetchCinemaFernandoLopesProgramme(o), options),
+  doclisboa: (options) =>
+    websiteFetcher("doclisboa", (o) => fetchDoclisboaProgramme(o), options),
 };
 
 export function hasSourceFetcher(sourceKey: string): boolean {
