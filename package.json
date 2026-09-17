@@ -4,12 +4,16 @@
   "sideEffects": false,
   "type": "module",
   "scripts": {
-    "dev": "vite dev",
     "build": "vite build",
     "build:dev": "vite build --mode development",
-    "preview": "vite preview",
+    "dev": "vite dev",
+    "format": "prettier --write .",
+    "ingest:cinemateca:fixture": "tsx ingestion/runners/cinemateca-fixture-cli.ts",
     "lint": "eslint .",
-    "format": "prettier --write ."
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck:ingestion": "tsc --noEmit -p tsconfig.ingestion.json"
   },
   "overrides": {
     "rolldown": "1.2.1"
@@ -87,6 +91,7 @@
     "nitro": "3.0.260603-beta",
     "postgres": "^3.4.9",
     "prettier": "^3.7.3",
+    "tsx": "^4.20.5",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.56.1",
     "vite": "8.1.5",
