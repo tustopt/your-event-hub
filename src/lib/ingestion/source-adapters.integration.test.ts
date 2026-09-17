@@ -78,7 +78,7 @@ describe("each production adapter runs through the generic runner", () => {
       expect(persistedKey).toBe(sourceKey);
       expect(screening.provenance?.sourceKey).toBe(sourceKey);
       expect(typeof screening.provenance?.sourceExternalId).toBe("string");
-      expect(screening.startAt).toBeTruthy();
+      expect(screening["startAt"]).toBeTruthy();
     });
 
     it(`does not write in dryRun for ${sourceKey}`, async () => {
@@ -101,7 +101,7 @@ describe("warning and error propagation", () => {
       ...resolved,
       adapter: {
         ...resolved.adapter,
-        parse: (input: unknown, item?: unknown) => {
+        parse: (input: Parameters<typeof resolved.adapter.parse>[0], item?: unknown) => {
           call += 1;
           if (call === 1) throw new Error("bad item");
           const parsed = resolved.adapter.parse(input, item);
