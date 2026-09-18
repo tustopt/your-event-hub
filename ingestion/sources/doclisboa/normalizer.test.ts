@@ -22,6 +22,7 @@ const item = {
   director: "Realizador Exemplo",
   country: "Portugal",
   year: 2026,
+  films: [{ title: "EXEMPLO DE SESSÃO", year: 2026, director: "Realizador Exemplo", country: "Portugal", durationMinutes: 92 }],
 };
 
 describe("Doclisboa normalizer", () => {
