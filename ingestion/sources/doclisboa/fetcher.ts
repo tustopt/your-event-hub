@@ -1,4 +1,4 @@
-import type { DoclisboaProgrammeItem } from "./types";
+import type { DoclisboaFilmItem, DoclisboaProgrammeItem } from "./types";
 
 export const DOCLISBOA_SOURCE_KEY = "doclisboa";
 export const DOCLISBOA_PROGRAMME_URL = "https://doclisboa.org/seccoes/";
@@ -45,70 +45,115 @@ function extractSectionUrls(indexHtml: string, indexUrl: string): string[] {
   return [...urls];
 }
 
+type Session = { date: string; time: string; venue: string; duration: number };
+
+function parseFilm(lines: string[], titleIndex: number): DoclisboaFilmItem | undefined {
+  const title = lines[titleIndex + 1];
+  if (!title) return undefined;
+
+  let metadataIndex = -1;
+  for (let j = titleIndex + 2; j < Math.min(lines.length, titleIndex + 12); j += 1) {
+    if (METADATA_RE.test(lines[j])) {
+      metadataIndex = j;
+      break;
+    }
+  }
+  if (metadataIndex < 0) return undefined;
+
+  const meta = lines[metadataIndex].match(METADATA_RE)!;
+  const candidateDirector = lines[metadataIndex - 1];
+  const director =
+    candidateDirector && !/^(Bilhete|Image|Estreia|Prémio)/i.test(candidateDirector)
+      ? candidateDirector
+      : undefined;
+
+  const originalTitle =
+    metadataIndex - 2 > titleIndex + 1 &&
+    candidateDirector !== lines[metadataIndex - 2] &&
+    !/^\d{4}\s/.test(lines[metadataIndex - 2])
+      ? lines[metadataIndex - 2]
+      : undefined;
+
+  return {
+    title,
+    originalTitle,
+    director,
+    year: Number(meta[1]),
+    country: meta[2],
+    durationMinutes: Number(meta[3]),
+  };
+}
+
 function parseSectionPage(html: string, sourceUrl: string): DoclisboaProgrammeItem[] {
   const lines = htmlToLines(html);
   const sectionMatch = html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i);
   const section = sectionMatch ? decodeHtml(sectionMatch[1]) : undefined;
   const items: DoclisboaProgrammeItem[] = [];
-  let currentFilm: { title: string; director?: string; year?: number; country?: string; duration?: number } | undefined;
-  const pending: Array<{ date: string; time: string; venue: string; duration: number }> = [];
+  const pendingSessions: Session[] = [];
+  let activeSessions: Session[] = [];
+  let activeFilms: DoclisboaFilmItem[] = [];
 
-  const emit = (session: { date: string; time: string; venue: string; duration: number }, film: NonNullable<typeof currentFilm>) => {
-    items.push({
-      sourceExternalId: `${session.date}-${session.time.replace(":", "")}-${slug(session.venue)}-${slug(film.title)}`,
-      sourceUrl, editionYear: DOCLISBOA_EDITION_YEAR, date: session.date, time: session.time,
-      title: film.title, section, venue: session.venue,
-      venueType: /cinemateca|cinema/i.test(session.venue) ? "cinema" : "cultural_center",
-      durationMinutes: session.duration || film.duration, director: film.director, country: film.country, year: film.year,
-    });
+  const flush = () => {
+    if (!activeFilms.length || !activeSessions.length) return;
+    for (const session of activeSessions) {
+      const firstFilm = activeFilms[0];
+      const sourceExternalId = `${session.date}-${session.time.replace(":", "")}-${slug(session.venue)}-${slug(firstFilm.title)}`;
+      items.push({
+        sourceExternalId,
+        sourceUrl,
+        editionYear: DOCLISBOA_EDITION_YEAR,
+        date: session.date,
+        time: session.time,
+        title: firstFilm.title,
+        films: [...activeFilms],
+        section,
+        venue: session.venue,
+        venueType: /cinemateca|cinema/i.test(session.venue) ? "cinema" : "cultural_center",
+        durationMinutes: session.duration,
+        director: firstFilm.director,
+        country: firstFilm.country,
+        year: firstFilm.year,
+        synopsis: firstFilm.synopsis,
+      });
+    }
+    activeSessions = [];
+    activeFilms = [];
   };
 
   for (let i = 0; i < lines.length; i += 1) {
-    if (lines[i] === "@@TITLE@@") {
-      const title = lines[i + 1];
-      if (!title) continue;
-      let director: string | undefined;
-      let year: number | undefined;
-      let country: string | undefined;
-      let duration: number | undefined;
-      let metadataIndex = -1;
-      for (let j = i + 2; j < Math.min(lines.length, i + 10); j += 1) {
-        const meta = lines[j].match(METADATA_RE);
-        if (meta) {
-          year = Number(meta[1]);
-          country = meta[2];
-          duration = Number(meta[3]);
-          metadataIndex = j;
+    const session = lines[i].match(SESSION_RE);
+    if (session) {
+      flush();
+      const month = MONTHS[session[2].toLowerCase()];
+      if (!month) continue;
+      let venue: string | undefined;
+      for (let j = i + 1; j < Math.min(lines.length, i + 5); j += 1) {
+        if (VENUE_RE.test(lines[j])) {
+          venue = lines[j];
           break;
         }
       }
-      if (metadataIndex < 0) continue;
-      const candidateDirector = lines[metadataIndex - 1];
-      if (candidateDirector && !/^(Bilhete|Image|Estreia|Prémio)/i.test(candidateDirector)) {
-        director = candidateDirector;
-      }
-      currentFilm = { title, director, year, country, duration };
-      while (pending.length) emit(pending.shift()!, currentFilm);
-      i += 1;
+      if (!venue) continue;
+      pendingSessions.push({
+        date: `${DOCLISBOA_EDITION_YEAR}-${String(month).padStart(2, "0")}-${String(Number(session[1])).padStart(2, "0")}`,
+        time: `${String(Number(session[3])).padStart(2, "0")}:${session[4]}`,
+        venue,
+        duration: Number(session[5]),
+      });
       continue;
     }
 
-    const session = lines[i].match(SESSION_RE);
-    if (!session) continue;
-    const month = MONTHS[session[2].toLowerCase()];
-    if (!month) continue;
-    const date = `${DOCLISBOA_EDITION_YEAR}-${String(month).padStart(2, "0")}-${String(Number(session[1])).padStart(2, "0")}`;
-    const time = `${String(Number(session[3])).padStart(2, "0")}:${session[4]}`;
-    let venue: string | undefined;
-    for (let j = i + 1; j < Math.min(lines.length, i + 5); j += 1) {
-      if (VENUE_RE.test(lines[j])) { venue = lines[j]; break; }
+    if (lines[i] !== "@@TITLE@@") continue;
+    const film = parseFilm(lines, i);
+    if (!film) continue;
+
+    if (!activeFilms.length && pendingSessions.length) {
+      activeSessions = pendingSessions.splice(0);
     }
-    if (!venue) continue;
-    const entry = { date, time, venue, duration: Number(session[5]) };
-    if (currentFilm) emit(entry, currentFilm);
-    else pending.push(entry);
+    if (activeSessions.length) activeFilms.push(film);
   }
 
+  flush();
   return items;
 }
 
