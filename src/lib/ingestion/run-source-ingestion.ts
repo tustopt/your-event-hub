@@ -98,7 +98,7 @@ function externalId(item: ScreeningLike | TVProgramLike | undefined): string | n
 export async function runSourceIngestion(
   resolved: ResolvedSource,
   persistScreening: PersistScreening,
-  persistTVProgram: PersistTVProgram,
+  persistTVProgram: PersistTVProgram = async () => {},
   options: SourceIngestOptions = {},
 ): Promise<SourceIngestResult> {
   const dryRun = options.dryRun === true;
