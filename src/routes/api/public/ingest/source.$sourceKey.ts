@@ -8,6 +8,7 @@ import {
   runSourceIngestion,
   SourceResolutionError,
   type PersistScreening,
+  type PersistTVProgram,
 } from "@/lib/ingestion/run-source-ingestion";
 
 const bodySchema = z
@@ -20,6 +21,7 @@ const bodySchema = z
 export type Deps = {
   loadLibrary: () => Promise<IngestionLibrary>;
   createPersist: () => Promise<PersistScreening>;
+  createPersistTVProgram: () => Promise<PersistTVProgram>;
 };
 
 const defaultDeps: Deps = {
@@ -48,6 +50,16 @@ const defaultDeps: Deps = {
           if (festivalError) throw new Error(festivalError.message);
         }
       }
+    };
+  },
+  createPersistTVProgram: async () => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    return async (program, sourceKey) => {
+      const { error } = await supabaseAdmin.rpc("ingest_tv_program", {
+        p_source_key: sourceKey,
+        p_program: program,
+      } as never);
+      if (error) throw new Error(error.message);
     };
   },
 };
@@ -102,9 +114,11 @@ export async function handleSourceIngest(
 
   const persist: PersistScreening =
     options.dryRun === true ? async () => {} : await deps.createPersist();
+  const persistTVProgram: PersistTVProgram =
+    options.dryRun === true ? async () => {} : await deps.createPersistTVProgram();
 
   try {
-    return Response.json(await runSourceIngestion(resolved, persist, options));
+    return Response.json(await runSourceIngestion(resolved, persist, persistTVProgram, options));
   } catch (error) {
     console.error(`[ingest:${sourceKey}]`, error);
     return Response.json(
