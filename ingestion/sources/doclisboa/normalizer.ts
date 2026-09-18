@@ -4,7 +4,7 @@ import type {
   NormalizedScreening,
   NormalizedVenue,
 } from "../../core/contracts";
-import type { DoclisboaProgrammeItem } from "./types";
+import type { DoclisboaFilmItem, DoclisboaProgrammeItem } from "./types";
 
 export const DOCLISBOA_FESTIVAL_KEY = "doclisboa";
 
@@ -38,6 +38,23 @@ export function normalizeFestivalEdition(
   };
 }
 
+function normalizeFilm(item: DoclisboaFilmItem, sourceExternalId: string, sourceUrl: string) {
+  return {
+    title: item.title,
+    originalTitle: item.originalTitle,
+    year: item.year,
+    durationMinutes: item.durationMinutes,
+    synopsis: item.synopsis,
+    people: item.director ? [{ name: item.director, role: "director" as const }] : undefined,
+    countries: item.country ? item.country.split(/\s*[,/]\s*/).filter(Boolean) : undefined,
+    provenance: {
+      sourceKey: DOCLISBOA_FESTIVAL_KEY,
+      sourceExternalId,
+      sourceUrl,
+    },
+  };
+}
+
 export function normalizeProgrammeItem(item: DoclisboaProgrammeItem): NormalizedScreening {
   const venue: NormalizedVenue = {
     name: item.venue,
@@ -51,35 +68,34 @@ export function normalizeProgrammeItem(item: DoclisboaProgrammeItem): Normalized
     },
   };
 
+  const films = item.films.length
+    ? item.films
+    : [{
+        title: item.title,
+        originalTitle: undefined,
+        durationMinutes: item.durationMinutes,
+        director: item.director,
+        country: item.country,
+        year: item.year,
+        synopsis: item.synopsis,
+      }];
+
   return {
     eventType: "screening",
     title: item.title,
     startAt: `${item.date}T${item.time}:00+01:00`,
+    endAt: item.durationMinutes
+      ? new Date(Date.parse(`${item.date}T${item.time}:00+01:00`) + item.durationMinutes * 60_000).toISOString()
+      : undefined,
     venue,
     language: item.language,
     subtitleLanguage: item.subtitleLanguage,
     format: item.format,
     ticketUrl: item.ticketUrl,
-    films: [
-      {
-        position: 1,
-        film: {
-          title: item.title,
-          year: item.year,
-          durationMinutes: item.durationMinutes,
-          synopsis: item.synopsis,
-          people: item.director
-            ? [{ name: item.director, role: "director" }]
-            : undefined,
-          countries: item.country ? item.country.split(/\s*[,/]\s*/).filter(Boolean) : undefined,
-          provenance: {
-            sourceKey: DOCLISBOA_FESTIVAL_KEY,
-            sourceExternalId: item.sourceExternalId,
-            sourceUrl: item.sourceUrl,
-          },
-        },
-      },
-    ],
+    films: films.map((film, index) => ({
+      position: index + 1,
+      film: normalizeFilm(film, item.sourceExternalId, item.sourceUrl),
+    })),
     cycle: item.section,
     festivalKey: DOCLISBOA_FESTIVAL_KEY,
     festivalEditionYear: item.editionYear,
