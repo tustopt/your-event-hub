@@ -4,6 +4,7 @@ import {
   type IngestionLibrary,
   type ScreeningLike,
   type SourceFetcherLike,
+  type TVProgramLike,
 } from "./source-contract";
 
 export type SourceIngestOptions = {
@@ -28,10 +29,11 @@ export type SourceIngestResult = {
   warnings: string[];
   errors: IngestItemError[];
   screenings?: ScreeningLike[];
+  tvPrograms?: TVProgramLike[];
 };
 
-/** Persists one screening; supplied by the route (supabase rpc) or a test double. */
 export type PersistScreening = (screening: ScreeningLike, sourceKey: string) => Promise<void>;
+export type PersistTVProgram = (program: TVProgramLike, sourceKey: string) => Promise<void>;
 
 export type SourceResolutionCode = "unknown_source" | "not_runnable" | "no_adapter" | "no_fetcher";
 
@@ -51,10 +53,6 @@ export type ResolvedSource = {
   fetcher: SourceFetcherLike;
 };
 
-/**
- * Resolves a source by key through the authoritative registries: only sources
- * with a runnable status, a declared adapter and an implemented fetcher run.
- */
 export function resolveRunnableSource(
   library: IngestionLibrary,
   sourceKey: string,
@@ -76,10 +74,7 @@ export function resolveRunnableSource(
 
   const adapter = library.createProductionAdapterRegistry().get(definition.adapterKey);
   if (!adapter) {
-    throw new SourceResolutionError(
-      "no_adapter",
-      `Adapter not installed for source: ${sourceKey}`,
-    );
+    throw new SourceResolutionError("no_adapter", `Adapter not installed for source: ${sourceKey}`);
   }
 
   let fetcher: SourceFetcherLike;
@@ -95,19 +90,15 @@ export function resolveRunnableSource(
   return { sourceKey, adapterKey: adapter.key, adapter, fetcher };
 }
 
-function externalId(screening: ScreeningLike | undefined): string | null {
-  const value = screening?.provenance?.sourceExternalId;
+function externalId(item: ScreeningLike | TVProgramLike | undefined): string | null {
+  const value = item?.provenance?.sourceExternalId;
   return typeof value === "string" ? value : null;
 }
 
-/**
- * Generic ingestion run: fetch raw items with the source fetcher, parse and
- * normalize through the registered adapter, then persist each screening
- * independently so one failure never stops the rest.
- */
 export async function runSourceIngestion(
   resolved: ResolvedSource,
-  persist: PersistScreening,
+  persistScreening: PersistScreening,
+  persistTVProgram: PersistTVProgram,
   options: SourceIngestOptions = {},
 ): Promise<SourceIngestResult> {
   const dryRun = options.dryRun === true;
@@ -115,30 +106,42 @@ export async function runSourceIngestion(
   const items = options.limit !== undefined ? raw.slice(0, options.limit) : raw;
 
   const screenings: ScreeningLike[] = [];
+  const tvPrograms: TVProgramLike[] = [];
   const warnings: string[] = [];
   const errors: IngestItemError[] = [];
   let processed = 0;
   let persisted = 0;
 
   for (const [index, item] of items.entries()) {
-    let screening: ScreeningLike | undefined;
+    let lastItem: ScreeningLike | TVProgramLike | undefined;
     try {
       const parsedItem = resolved.fetcher.toParsedItem(item);
       const result = resolved.adapter.parse(parsedItem, item);
       warnings.push(...result.warnings);
+
       for (const parsedScreening of result.screenings) {
-        screening = parsedScreening;
+        lastItem = parsedScreening;
         processed += 1;
         screenings.push(parsedScreening);
         if (!dryRun) {
-          await persist(parsedScreening, resolved.sourceKey);
+          await persistScreening(parsedScreening, resolved.sourceKey);
+          persisted += 1;
+        }
+      }
+
+      for (const parsedProgram of result.tvPrograms ?? []) {
+        lastItem = parsedProgram;
+        processed += 1;
+        tvPrograms.push(parsedProgram);
+        if (!dryRun) {
+          await persistTVProgram(parsedProgram, resolved.sourceKey);
           persisted += 1;
         }
       }
     } catch (error) {
       errors.push({
         index,
-        sourceExternalId: externalId(screening),
+        sourceExternalId: externalId(lastItem),
         message: error instanceof Error ? error.message : String(error),
       });
     }
@@ -154,6 +157,6 @@ export async function runSourceIngestion(
     failed: errors.length,
     warnings,
     errors,
-    ...(dryRun ? { screenings } : {}),
+    ...(dryRun ? { screenings, tvPrograms } : {}),
   };
 }
