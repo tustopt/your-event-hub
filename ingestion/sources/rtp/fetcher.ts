@@ -68,7 +68,7 @@ export function parseRtpProgrammePage(html: string, sourceUrl: string, fallbackY
   const genreMatch = text.match(/G[eé]neros\s+Document[aá]rios/i);
   if (!genreMatch) return [];
 
-  const heading = html.match(/<h1\\b[^>]*>([\s\\S]*?)<\/h1>/i);
+  const heading = html.match(/<h1\b[^>]*>([\s\\S]*?)<\/h1>/i);
   const title = heading ? stripTags(heading[1]) : undefined;
   if (!title) return [];
 
