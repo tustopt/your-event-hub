@@ -90,6 +90,24 @@ export interface NormalizedScreening {
   provenance: SourceProvenance;
 }
 
+export interface NormalizedTVProgram {
+  eventType: "television";
+  title: string;
+  description?: string;
+  channel: string;
+  broadcasterKey: string;
+  startAt: string;
+  endAt?: string;
+  durationMinutes?: number;
+  episodeTitle?: string;
+  season?: number;
+  episode?: number;
+  seriesTitle?: string;
+  year?: number;
+  genre: "documentary";
+  provenance: SourceProvenance;
+}
+
 export interface NormalizedEvent {
   eventType: NormalizedEventType;
   title: string;
@@ -115,17 +133,12 @@ export interface ParsedSourceItem {
 export interface AdapterResult {
   events: NormalizedEvent[];
   screenings: NormalizedScreening[];
+  tvPrograms?: NormalizedTVProgram[];
   festivals?: NormalizedFestival[];
   festivalEditions?: NormalizedFestivalEdition[];
   warnings: string[];
 }
 
-/**
- * Adapter contract keeps the typed source item alongside its audit metadata.
- * Generic ingestion can still pass only ParsedSourceItem; source pipelines
- * pass the original typed item so adapters do not need to serialize/deserialize
- * source-specific data.
- */
 export interface SourceAdapter<TInput = ParsedSourceItem> {
   readonly key: string;
   readonly sourceType: SourceType;
