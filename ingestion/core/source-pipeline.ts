@@ -53,10 +53,12 @@ export async function runSourcePipeline<T>(
 function mergeAdapterResults(results: readonly AdapterResult[]): AdapterResult {
   const festivals = results.flatMap((result) => result.festivals ?? []);
   const festivalEditions = results.flatMap((result) => result.festivalEditions ?? []);
+  const tvPrograms = results.flatMap((result) => result.tvPrograms ?? []);
 
   return {
     events: results.flatMap((result) => result.events),
     screenings: results.flatMap((result) => result.screenings),
+    tvPrograms: tvPrograms.length ? tvPrograms : undefined,
     festivals: festivals.length ? festivals : undefined,
     festivalEditions: festivalEditions.length ? festivalEditions : undefined,
     warnings: results.flatMap((result) => result.warnings),
