@@ -101,7 +101,7 @@ export async function handleSourceIngest(
 
   let resolved;
   try {
-    resolved = resolveRunnableSource(library, sourceKey);
+    resolved = resolveRunnableSource(library, sourceKey, {}, options.dryRun === true);
   } catch (error) {
     if (error instanceof SourceResolutionError) {
       return Response.json(
