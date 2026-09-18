@@ -62,3 +62,4 @@ export {
   type CinematecaFixture,
   type FixtureRunResult,
 } from "./runners/fixture-runner";
+\nexport * from "./sources/television/types";\nexport { normalizeTelevisionProgramme } from "./sources/television/normalizer";\nexport { createTelevisionAdapter } from "./sources/television/parser";\nexport * from "./sources/rtp/types";\nexport { rtpAdapter } from "./sources/rtp/parser";\nexport { fetchRtpProgramme, RTP_SOURCE_KEY, RTP_PROGRAMMES_URL, type FetchRtpOptions } from "./sources/rtp/fetcher";\n
