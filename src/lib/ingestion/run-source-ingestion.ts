@@ -57,12 +57,16 @@ export function resolveRunnableSource(
   library: IngestionLibrary,
   sourceKey: string,
   fetcherOptions: Record<string, unknown> = {},
+  allowNonProduction = false,
 ): ResolvedSource {
   const definition = library.getSourceDefinition(sourceKey);
   if (!definition) {
     throw new SourceResolutionError("unknown_source", `Unknown DocuEvents source: ${sourceKey}`);
   }
-  if (!RUNNABLE_STATUSES.includes(definition.status)) {
+  const allowedStatuses = allowNonProduction
+    ? [...RUNNABLE_STATUSES, "candidate", "validated", "registered"] as const
+    : RUNNABLE_STATUSES;
+  if (!allowedStatuses.includes(definition.status)) {
     throw new SourceResolutionError(
       "not_runnable",
       `Source ${sourceKey} has status "${definition.status}" and cannot be ingested.`,
