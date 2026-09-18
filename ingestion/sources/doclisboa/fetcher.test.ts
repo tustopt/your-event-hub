@@ -1,100 +1,78 @@
 import { describe, expect, it } from "vitest";
-import { fetchDoclisboaProgramme } from "./fetcher";
+import { fetchDoclisboaProgramme, DOCLISBOA_EDITION_YEAR } from "./fetcher";
 
 describe("Doclisboa fetcher", () => {
-  it("discovers film pages and extracts the current session format", async () => {
+  it("discovers section pages and extracts 2026 sessions", async () => {
     const indexHtml = `
-      <a href="/filmes/complo/">Complô</a>
-      <a href="/filmes/cover-up/">Cover-Up</a>
+      <a href="/seccoes/riscos/">Riscos</a>
+      <a href="/seccoes/da-terra-a-lua/">Da Terra à Lua</a>
     `;
-
     const pages: Record<string, string> = {
-      "https://doclisboa.test/filmes/complo/": `
-        <h1>Complô</h1>
-        <div>João Miller Guerra</div>
-        <div>2025 Portugal 86’</div>
-        <div>Competição Portuguesa</div>
+      "https://doclisboa.test/seccoes/riscos/": `
+        <h1>Riscos</h1>
+        <div>Complô</div>
         <div>17.10 / 22:45 / 86’</div>
         <div>Cinema São Jorge - Sala M. Oliveira</div>
-        <div>Bilhete</div>
-        <div>21.10 / 15:00 / 86’</div>
-        <div>Cinema São Jorge - Sala 3</div>
       `,
-      "https://doclisboa.test/filmes/cover-up/": `
-        <h1>Cover-Up</h1>
-        <div>Laura Poitras, Mark Obenhaus</div>
-        <div>2025 EUA 117’</div>
-        <div>Da Terra à Lua</div>
+      "https://doclisboa.test/seccoes/da-terra-a-lua/": `
+        <h1>Da Terra à Lua</h1>
+        <div>Cover-Up</div>
         <div>21.10 / 20:15 / 117’</div>
-        <div>Cinema São Jorge - Sala M. Oliveira</div>
+        <div>Culturgest</div>
       `,
     };
 
     const result = await fetchDoclisboaProgramme({
       fetchImpl: async (input) => {
         const url = String(input);
-        const body = url === "https://doclisboa.test/filmes/" ? indexHtml : pages[url] ?? "";
+        const body = url === "https://doclisboa.test/seccoes/" ? indexHtml : pages[url] ?? "";
         return new Response(body, { status: body ? 200 : 404 });
       },
-      url: "https://doclisboa.test/filmes/",
+      url: "https://doclisboa.test/seccoes/",
     });
 
-    expect(result).toHaveLength(3);
+    expect(result).toHaveLength(2);
     expect(result[0]).toMatchObject({
       title: "Complô",
       date: "2026-10-17",
       time: "22:45",
       venue: "Cinema São Jorge - Sala M. Oliveira",
-      section: "Competição Portuguesa",
-      director: "João Miller Guerra",
-      year: 2025,
+      section: "Riscos",
+      editionYear: DOCLISBOA_EDITION_YEAR,
       durationMinutes: 86,
     });
     expect(result[1]).toMatchObject({
-      title: "Complô",
-      date: "2026-10-21",
-      time: "15:00",
-      venue: "Cinema São Jorge - Sala 3",
-    });
-    expect(result[2]).toMatchObject({
       title: "Cover-Up",
       date: "2026-10-21",
       time: "20:15",
-      venue: "Cinema São Jorge - Sala M. Oliveira",
+      venue: "Culturgest",
       section: "Da Terra à Lua",
+      durationMinutes: 117,
     });
   });
 
-  it("deduplicates repeated film links and sessions", async () => {
+  it("deduplicates sessions repeated across sections", async () => {
     const indexHtml = `
-      <a href="/filmes/complo/">Complô</a>
-      <a href="/filmes/complo/">Complô duplicate</a>
+      <a href="/seccoes/a/">A</a>
+      <a href="/seccoes/b/">B</a>
     `;
     const pageHtml = `
-      <h1>Complô</h1>
-      <div>João Miller Guerra</div>
-      <div>2025 Portugal 86’</div>
-      <div>Competição Portuguesa</div>
+      <h1>Section</h1>
+      <div>Film</div>
       <div>17.10 / 22:45 / 86’</div>
       <div>Culturgest</div>
     `;
-
     const result = await fetchDoclisboaProgramme({
-      fetchImpl: async (input) => {
-        const url = String(input);
-        return new Response(url === "https://doclisboa.test/filmes/" ? indexHtml : pageHtml, { status: 200 });
-      },
-      url: "https://doclisboa.test/filmes/",
+      fetchImpl: async (input) =>
+        new Response(String(input) === "https://doclisboa.test/seccoes/" ? indexHtml : pageHtml, { status: 200 }),
+      url: "https://doclisboa.test/seccoes/",
     });
-
     expect(result).toHaveLength(1);
   });
 
   it("rejects failed source responses", async () => {
     await expect(
-      fetchDoclisboaProgramme({
-        fetchImpl: async () => new Response("", { status: 503 }),
-      }),
+      fetchDoclisboaProgramme({ fetchImpl: async () => new Response("", { status: 503 }) }),
     ).rejects.toThrow("Doclisboa fetch failed: 503");
   });
 });
