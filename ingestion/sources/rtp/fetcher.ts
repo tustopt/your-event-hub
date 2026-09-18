@@ -74,7 +74,7 @@ export function parseRtpProgrammePage(html: string, sourceUrl: string, fallbackY
 
   const duration = parseDuration(text);
   const seriesTitle = title;
-  const episodeMatch = text.match(/Epis[oó]dio(?:\s+n\.?[ºo]?)?\s*(\d+)\s+de\s+(\d+)/i);
+  const episodeTitle = (() => {\n    const headingMatch = text.match(/G[eé]neros\\s+Document[aá]rios[\\s\\S]*?Informa[cç][aã]o Adicional[\\s\\S]*?Epis[oó]dio\\s+n\\.?[ºo]?\\s*/i);\n    return headingMatch ? undefined : undefined;\n  })();\n  const episodeMatch = text.match(/Epis[oó]dio(?:\s+n\.?[ºo]?)?\s*(\d+)\s+de\s+(\d+)/i);
   const episode = episodeMatch ? Number(episodeMatch[1]) : undefined;
   const descriptionMatch = text.match(/Informa[cç][aã]o Adicional\s+(.+?)\s+Pr[oó]ximas emiss[oõ]es/i);
   const description = descriptionMatch?.[1]?.trim();
@@ -112,7 +112,7 @@ export function parseRtpProgrammePage(html: string, sourceUrl: string, fallbackY
       channel,
       title,
       seriesTitle,
-      ...(episode !== undefined ? { episode } : {}),
+      ...(episode !== undefined ? { episode } : {}),\n      ...(episodeTitle ? { episodeTitle } : {}),
       ...(description ? { description } : {}),
       genre: "Documentários",
       startAt: date + "T" + time + ":00" + lisbonOffset(date, time),
