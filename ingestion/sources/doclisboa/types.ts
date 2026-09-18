@@ -1,3 +1,13 @@
+export interface DoclisboaFilmItem {
+  title: string;
+  originalTitle?: string;
+  durationMinutes?: number;
+  director?: string;
+  country?: string;
+  year?: number;
+  synopsis?: string;
+}
+
 export interface DoclisboaProgrammeItem {
   sourceExternalId: string;
   sourceUrl: string;
@@ -5,6 +15,7 @@ export interface DoclisboaProgrammeItem {
   date: string;
   time: string;
   title: string;
+  films: readonly DoclisboaFilmItem[];
   section?: string;
   venue: string;
   venueType?: "cinema" | "cultural_center" | "festival_venue" | "theatre" | "other";
