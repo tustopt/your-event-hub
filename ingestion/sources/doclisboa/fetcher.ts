@@ -24,7 +24,9 @@ function decodeHtml(value: string): string {
 function htmlToLines(html: string): string[] {
   return html.replace(/<script[\s\S]*?<\/script>/gi, "").replace(/<style[\s\S]*?<\/style>/gi, "")
     .replace(/<br\s*\/?>/gi, "\n").replace(/<h[1-2][^>]*>/gi, "\n")
-    .replace(/<h3[^>]*>/gi, "\n@@TITLE@@\n").replace(/<\/(?:p|div|li|h[1-6]|article|section|header|footer|a|button)>/gi, "\n")
+    .replace(/<h3[^>]*>/gi, "\n@@TITLE@@\n")
+    .replace(/<a[^>]*href=["']([^"']+)["'][^>]*>\s*Bilhete\s*<\/a>/gi, "\n@@TICKET@@$1@@ENDTICKET@@\n")
+    .replace(/<\/(?:p|div|li|h[1-6]|article|section|header|footer|a|button)>/gi, "\n")
     .replace(/<[^>]+>/g, " ").split(/\r?\n+/).map(decodeHtml).filter(Boolean);
 }
 
@@ -45,7 +47,7 @@ function extractSectionUrls(indexHtml: string, indexUrl: string): string[] {
   return [...urls];
 }
 
-type Session = { date: string; time: string; venue: string; duration: number };
+type Session = { date: string; time: string; venue: string; duration: number; ticketUrl?: string };
 
 function parseFilm(lines: string[], titleIndex: number): DoclisboaFilmItem | undefined {
   const title = lines[titleIndex + 1];
@@ -110,6 +112,7 @@ function parseSectionPage(html: string, sourceUrl: string): DoclisboaProgrammeIt
         venue: session.venue,
         venueType: /cinemateca|cinema/i.test(session.venue) ? "cinema" : "cultural_center",
         durationMinutes: session.duration,
+        ticketUrl: session.ticketUrl,
         director: firstFilm.director,
         country: firstFilm.country,
         year: firstFilm.year,
@@ -127,11 +130,12 @@ function parseSectionPage(html: string, sourceUrl: string): DoclisboaProgrammeIt
       const month = MONTHS[session[2].toLowerCase()];
       if (!month) continue;
       let venue: string | undefined;
-      for (let j = i + 1; j < Math.min(lines.length, i + 5); j += 1) {
-        if (VENUE_RE.test(lines[j])) {
-          venue = lines[j];
-          break;
-        }
+      let ticketUrl: string | undefined;
+      for (let j = i + 1; j < Math.min(lines.length, i + 7); j += 1) {
+        if (VENUE_RE.test(lines[j])) venue = lines[j];
+        const ticket = lines[j].match(/^@@TICKET@@(.+)@@ENDTICKET@@$/);
+        if (ticket) ticketUrl = ticket[1];
+        if (venue && ticketUrl) break;
       }
       if (!venue) continue;
       pendingSessions.push({
@@ -139,6 +143,7 @@ function parseSectionPage(html: string, sourceUrl: string): DoclisboaProgrammeIt
         time: `${String(Number(session[3])).padStart(2, "0")}:${session[4]}`,
         venue,
         duration: Number(session[5]),
+        ticketUrl,
       });
       continue;
     }
