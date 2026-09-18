@@ -71,13 +71,22 @@ function parseSectionPage(html: string, sourceUrl: string): DoclisboaProgrammeIt
       let year: number | undefined;
       let country: string | undefined;
       let duration: number | undefined;
-      for (let j = i + 2; j < Math.min(lines.length, i + 8); j += 1) {
-        const candidate = lines[j];
-        const meta = candidate.match(METADATA_RE);
-        if (meta) { year = Number(meta[1]); country = meta[2]; duration = Number(meta[3]); break; }
-        if (!director && candidate && !/^(Bilhete|Image|Estreia|Prémio)/i.test(candidate)) director = candidate;
+      let metadataIndex = -1;
+      for (let j = i + 2; j < Math.min(lines.length, i + 10); j += 1) {
+        const meta = lines[j].match(METADATA_RE);
+        if (meta) {
+          year = Number(meta[1]);
+          country = meta[2];
+          duration = Number(meta[3]);
+          metadataIndex = j;
+          break;
+        }
       }
-      if (year === undefined) continue;
+      if (metadataIndex < 0) continue;
+      const candidateDirector = lines[metadataIndex - 1];
+      if (candidateDirector && !/^(Bilhete|Image|Estreia|Prémio)/i.test(candidateDirector)) {
+        director = candidateDirector;
+      }
       currentFilm = { title, director, year, country, duration };
       while (pending.length) emit(pending.shift()!, currentFilm);
       i += 1;
