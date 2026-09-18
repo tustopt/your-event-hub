@@ -4,6 +4,7 @@ import { cinematecaAdapter } from "../sources/cinemateca_pt/parser.js";
 import { cinemaSaoJorgeAdapter } from "../sources/cinema_sao_jorge/parser.js";
 import { cinemaFernandoLopesAdapter } from "../sources/cinema_fernando_lopes/parser.js";
 import { doclisboaAdapter } from "../sources/doclisboa/parser.js";
+import { rtpAdapter } from "../sources/rtp/parser.js";
 
 /**
  * Single application registry for implemented adapters.
@@ -19,6 +20,7 @@ export const productionAdapters: readonly SourceAdapter<any>[] = [
   cinemaSaoJorgeAdapter,
   cinemaFernandoLopesAdapter,
   doclisboaAdapter,
+  rtpAdapter,
 ];
 
 export function createProductionAdapterRegistry(): AdapterRegistry {
