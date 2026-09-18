@@ -63,26 +63,55 @@ function extractDocumentaryLinks(html: string): { href:string; title:string }[] 
   return result;
 }
 
-function parseProgrammePage(html: string, sourceUrl: string, fallbackYear: number): RtpProgrammeItem[] {
+export function parseRtpProgrammePage(html: string, sourceUrl: string, fallbackYear: number): RtpProgrammeItem[] {
   const text = stripTags(html);
-  if (!/G[eé]neros\s+Document[aá]rios/i.test(text)) return [];
-  const titleMatch = text.match(/#\s*([^\n]+?)\s+Document[aá]rios/i);
-  const title = titleMatch ? titleMatch[1].trim() : undefined;
+  const genreMatch = text.match(/G[eé]neros\s+Document[aá]rios/i);
+  if (!genreMatch) return [];
+
+  const heading = html.match(/<h1\\b[^>]*>([\\s\\S]*?)<\\/h1>/i);
+  const title = heading ? stripTags(heading[1]) : undefined;
   if (!title) return [];
+
   const duration = parseDuration(text);
+  const sectionStart = text.search(/Pr[oó]ximas emiss[oõ]es deste programa/i);
+  const sectionEnd = text.search(/Rever [uú]ltimos epis[oó]dios/i);
+  const scheduleText = sectionStart >= 0
+    ? text.slice(sectionStart, sectionEnd > sectionStart ? sectionEnd : undefined)
+    : text;
+
+  const monthNames: Record<string, number> = {
+    Jan: 1, Fev: 2, Mar: 3, Abr: 4, Mai: 5, Jun: 6,
+    Jul: 7, Ago: 8, Set: 9, Out: 10, Nov: 11, Dez: 12,
+  };
+  const emissionRe = /(\\d{1,2})\\s+(Jan|Fev|Mar|Abr|Mai|Jun|Jul|Ago|Set|Out|Nov|Dez)\\s+(\\d{4})?\\s+(\\d{1,2}:\\d{2})\\s+((?:RTP(?:\\s+[A-Za-zÀ-ÿ0-9]+){0,3}))/g;
   const items: RtpProgrammeItem[] = [];
   const seen = new Set<string>();
-  const re = /(\d{1,2})\s+(jan|fev|mar|abr|mai|jun|jul|ago|set|out|nov|dez)\s+(\d{4})\s+(\d{1,2}:\d{2})/gi;
-  for (const m of text.matchAll(re)) {
-    const dt = parseDateTime(m[0], fallbackYear);
-    if (!dt) continue;
-    const after = text.slice((m.index || 0) + m[0].length, (m.index || 0) + m[0].length + 100);
-    const channel = (after.match(/RTP\s+[A-Za-zÀ-ÿ0-9]+/i) || ["RTP"])[0].trim();
-    const externalId = slug(sourceUrl) + "-" + dt.date + "-" + dt.time.replace(":","") + "-" + slug(channel);
+
+  for (const match of scheduleText.matchAll(emissionRe)) {
+    const day = Number(match[1]);
+    const month = monthNames[match[2]];
+    const year = Number(match[3] || fallbackYear);
+    const time = match[4];
+    const channel = match[5].trim();
+    if (!month) continue;
+
+    const date = year + "-" + String(month).padStart(2, "0") + "-" + String(day).padStart(2, "0");
+    const externalId = slug(sourceUrl) + "-" + date + "-" + time.replace(":", "") + "-" + slug(channel);
     if (seen.has(externalId)) continue;
     seen.add(externalId);
-    items.push({ sourceExternalId: externalId, sourceUrl, broadcasterKey:"rtp", channel, title, genre:"Documentários", startAt: dt.date + "T" + dt.time + ":00" + lisbonOffset(dt.date, dt.time), ...(duration !== undefined ? { durationMinutes: duration } : {}) });
+
+    items.push({
+      sourceExternalId: externalId,
+      sourceUrl,
+      broadcasterKey: "rtp",
+      channel,
+      title,
+      genre: "Documentários",
+      startAt: date + "T" + time + ":00" + lisbonOffset(date, time),
+      ...(duration !== undefined ? { durationMinutes: duration } : {}),
+    });
   }
+
   return items;
 }
 
