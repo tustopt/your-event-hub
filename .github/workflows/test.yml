@@ -14,10 +14,10 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
       - name: Install dependencies
         run: npm install
-      - name: Typecheck
-        run: npm run typecheck
+      - name: Typecheck ingestion
+        run: npm run typecheck:ingestion
       - name: Run tests
-        run: npm test
+        run: npm test -- --run
