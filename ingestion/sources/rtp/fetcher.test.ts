@@ -22,7 +22,13 @@ describe("RTP programme parser", () => {
     });
   });
 
-  it("extracts episode number when present", () => {\n    const html = `<h1>Como Se Faz</h1><div>Géneros Documentários</div><div>Episódio n.º 9 de 12</div><div>Próximas emissões deste programa</div><div>25 Set 2026</div><div>20:30</div><div>RTP Madeira</div>`;\n    const result = parseRtpProgrammePage(html, "https://www.rtp.pt/programa/tv/p48773/e9", 2026);\n    expect(result[0]).toMatchObject({ seriesTitle: "Como Se Faz", episode: 9 });\n  });\n\n  it("rejects non-documentary programme pages", () => {
+  it("extracts episode number when present", () => {
+    const html = `<h1>Como Se Faz</h1><div>Géneros Documentários</div><div>Episódio n.º 9 de 12</div><div>Próximas emissões deste programa</div><div>25 Set 2026</div><div>20:30</div><div>RTP Madeira</div>`;
+    const result = parseRtpProgrammePage(html, "https://www.rtp.pt/programa/tv/p48773/e9", 2026);
+    expect(result[0]).toMatchObject({ seriesTitle: "Como Se Faz", episode: 9 });
+  });
+
+  it("rejects non-documentary programme pages", () => {
     const html = `<h1>Programa X</h1><div>Géneros</div><div>Informação</div>`;
     expect(parseRtpProgrammePage(html, "https://www.rtp.pt/programa/tv/p1", 2026)).toEqual([]);
   });
