@@ -53,6 +53,7 @@ export const sourceRegistry: readonly SourceDefinition[] = [
   {
     key: "rtp", name: "RTP", category: "television",
     sourceType: "website", countryCode: "PT", languageCode: "pt", status: "candidate",
+    adapterKey: "rtp",
     canonicalUrl: "https://www.rtp.pt/", fetchIntervalMinutes: 360,
     description: "Television source restricted to documentaries and documentary series.",
   },
