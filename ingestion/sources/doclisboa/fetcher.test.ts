@@ -1,70 +1,85 @@
 import { describe, expect, it } from "vitest";
-import { fetchDoclisboaProgramme, DOCLISBOA_EDITION_YEAR } from "./fetcher";
+import { fetchDoclisboaProgramme } from "./fetcher";
 
 describe("Doclisboa fetcher", () => {
-  it("discovers section pages and extracts 2026 sessions", async () => {
+  it("parses the real section page structure: sessions precede each film heading", async () => {
     const indexHtml = `
-      <a href="/seccoes/riscos/">Riscos</a>
       <a href="/seccoes/da-terra-a-lua/">Da Terra à Lua</a>
     `;
-    const pages: Record<string, string> = {
-      "https://doclisboa.test/seccoes/riscos/": `
-        <h1>Riscos</h1>
-        <div>Complô</div>
-        <div>17.10 / 22:45 / 86’</div>
-        <div>Cinema São Jorge - Sala M. Oliveira</div>
-      `,
-      "https://doclisboa.test/seccoes/da-terra-a-lua/": `
-        <h1>Da Terra à Lua</h1>
-        <div>Cover-Up</div>
-        <div>21.10 / 20:15 / 117’</div>
-        <div>Culturgest</div>
-      `,
-    };
+    const sectionHtml = `
+      <h1>Da Terra à Lua</h1>
+      <div>16 Out / 11:30 / 104’</div>
+      <div>Culturgest - Pequeno Auditório</div>
+      <div>18 Out / 15:00 / 104’</div>
+      <div>Cinema São Jorge - Sala 3</div>
+
+      <h3><a href="/filmes/the-vanishing-point/">The Vanishing Point</a></h3>
+      <div>Noghteh-e-Goriz</div>
+      <div>Bani Khoshnoudi</div>
+      <div>2025 Irão, EUA, França 104’</div>
+      <div>Sinopse</div>
+
+      <div>16 Out / 15:00 / 72’</div>
+      <div>Cinema São Jorge - Sala 3</div>
+      <h3><a href="/filmes/a-scary-movie/">A Scary Movie</a></h3>
+      <div>Una película de miedo</div>
+      <div>Sergio Oksman</div>
+      <div>2025 Espanha, Portugal 72’</div>
+    `;
 
     const result = await fetchDoclisboaProgramme({
       fetchImpl: async (input) => {
         const url = String(input);
-        const body = url === "https://doclisboa.test/seccoes/" ? indexHtml : pages[url] ?? "";
-        return new Response(body, { status: body ? 200 : 404 });
+        const body = url === "https://doclisboa.test/seccoes/" ? indexHtml : sectionHtml;
+        return new Response(body, { status: 200 });
       },
       url: "https://doclisboa.test/seccoes/",
     });
 
-    expect(result).toHaveLength(2);
+    expect(result).toHaveLength(3);
     expect(result[0]).toMatchObject({
-      title: "Complô",
-      date: "2026-10-17",
-      time: "22:45",
-      venue: "Cinema São Jorge - Sala M. Oliveira",
-      section: "Riscos",
-      editionYear: DOCLISBOA_EDITION_YEAR,
-      durationMinutes: 86,
+      title: "The Vanishing Point",
+      date: "2026-10-16",
+      time: "11:30",
+      venue: "Culturgest - Pequeno Auditório",
+      section: "Da Terra à Lua",
+      director: "Bani Khoshnoudi",
+      year: 2025,
+      country: "Irão, EUA, França",
+      durationMinutes: 104,
     });
     expect(result[1]).toMatchObject({
-      title: "Cover-Up",
-      date: "2026-10-21",
-      time: "20:15",
-      venue: "Culturgest",
-      section: "Da Terra à Lua",
-      durationMinutes: 117,
+      title: "The Vanishing Point",
+      date: "2026-10-18",
+      time: "15:00",
+      venue: "Cinema São Jorge - Sala 3",
+    });
+    expect(result[2]).toMatchObject({
+      title: "A Scary Movie",
+      date: "2026-10-16",
+      time: "15:00",
+      venue: "Cinema São Jorge - Sala 3",
+      director: "Sergio Oksman",
+      year: 2025,
     });
   });
 
-  it("deduplicates sessions repeated across sections", async () => {
+  it("deduplicates repeated section links and sessions", async () => {
     const indexHtml = `
       <a href="/seccoes/a/">A</a>
-      <a href="/seccoes/b/">B</a>
+      <a href="/seccoes/a/">A duplicate</a>
     `;
-    const pageHtml = `
-      <h1>Section</h1>
-      <div>Film</div>
-      <div>17.10 / 22:45 / 86’</div>
+    const sectionHtml = `
+      <h1>A</h1>
+      <div>16 Out / 11:30 / 104’</div>
       <div>Culturgest</div>
+      <h3><a href="/filmes/film/">Film</a></h3>
+      <div>Director</div>
+      <div>2025 Portugal 104’</div>
     `;
     const result = await fetchDoclisboaProgramme({
       fetchImpl: async (input) =>
-        new Response(String(input) === "https://doclisboa.test/seccoes/" ? indexHtml : pageHtml, { status: 200 }),
+        new Response(String(input) === "https://doclisboa.test/seccoes/" ? indexHtml : sectionHtml, { status: 200 }),
       url: "https://doclisboa.test/seccoes/",
     });
     expect(result).toHaveLength(1);
