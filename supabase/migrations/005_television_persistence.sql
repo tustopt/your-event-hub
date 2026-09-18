@@ -28,7 +28,6 @@ declare
   v_channel text;
   v_start_at timestamptz;
   v_end_at timestamptz;
-  v_film_id uuid;
 begin
   select id into v_source_id
   from public.sources
@@ -51,19 +50,13 @@ begin
   if v_channel is null then raise exception 'TV programme channel is required'; end if;
   if v_start_at is null then raise exception 'TV programme startAt is required'; end if;
 
-  select id into v_film_id
-  from public.films
-  where lower(title) = lower(v_title)
-    and (p_program->>'year' is null or year = (p_program->>'year')::integer)
-  order by id
-  limit 1;
 
   insert into public.tv_programs (
     film_id, channel_id, title, description, start_at, end_at,
     source_id, source_url, source_external_id
   )
   values (
-    v_film_id,
+    null,
     null,
     v_title,
     nullif(p_program->>'description',''),
