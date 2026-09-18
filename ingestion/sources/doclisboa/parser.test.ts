@@ -21,10 +21,15 @@ const item = {
   section: "Competição Nacional",
   venue: "Culturgest",
   venueType: "cultural_center" as const,
+  durationMinutes: 90,
+  films: [
+    { title: "EXEMPLO DE SESSÃO", year: 2026, director: "Realizador Um" },
+    { title: "SEGUNDO FILME", year: 2025, director: "Realizador Dois" },
+  ],
 };
 
 describe("Doclisboa parser", () => {
-  it("returns festival metadata, edition and screening", () => {
+  it("returns festival metadata, edition and a multi-film screening", () => {
     const result = parseProgrammeItems(input, [item]);
 
     expect(result.warnings).toEqual([]);
@@ -33,6 +38,8 @@ describe("Doclisboa parser", () => {
       expect.objectContaining({ festivalKey: "doclisboa", year: 2026 }),
     ]);
     expect(result.screenings).toHaveLength(1);
+    expect(result.screenings[0].films).toHaveLength(2);
+    expect(result.screenings[0].films[1].film.title).toBe("SEGUNDO FILME");
     expect(result.events).toHaveLength(1);
     expect(result.events[0]).toMatchObject({
       eventType: "screening",
