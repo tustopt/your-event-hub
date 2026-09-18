@@ -7,6 +7,16 @@ export type ScreeningLike = {
   provenance?: { sourceKey?: string; sourceExternalId?: string } & Record<string, unknown>;
 } & Record<string, unknown>;
 
+/** Normalized television documentary payload passed to public.ingest_tv_program(). */
+export type TVProgramLike = {
+  provenance?: { sourceKey?: string; sourceExternalId?: string } & Record<string, unknown>;
+  eventType?: "television";
+  title?: string;
+  channel?: string;
+  broadcasterKey?: string;
+  startAt?: string;
+} & Record<string, unknown>;
+
 export type SourceStatus =
   | "candidate"
   | "validated"
@@ -37,7 +47,11 @@ export type AdapterLike = {
   parse: (
     input: ParsedSourceItemLike,
     sourceItem?: unknown,
-  ) => { screenings: ScreeningLike[]; warnings: string[] };
+  ) => {
+    screenings: ScreeningLike[];
+    tvPrograms?: TVProgramLike[];
+    warnings: string[];
+  };
 };
 
 export type IngestionLibrary = {
