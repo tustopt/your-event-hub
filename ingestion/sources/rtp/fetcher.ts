@@ -68,7 +68,7 @@ export function parseRtpProgrammePage(html: string, sourceUrl: string, fallbackY
   const genreMatch = text.match(/G[eé]neros\s+Document[aá]rios/i);
   if (!genreMatch) return [];
 
-  const heading = html.match(/<h1\\b[^>]*>([\\s\\S]*?)<\/h1>/i);
+  const heading = html.match(/<h1\\b[^>]*>([\s\\S]*?)<\/h1>/i);
   const title = heading ? stripTags(heading[1]) : undefined;
   if (!title) return [];
 
@@ -83,7 +83,7 @@ export function parseRtpProgrammePage(html: string, sourceUrl: string, fallbackY
     Jan: 1, Fev: 2, Mar: 3, Abr: 4, Mai: 5, Jun: 6,
     Jul: 7, Ago: 8, Set: 9, Out: 10, Nov: 11, Dez: 12,
   };
-  const emissionRe = /(\d{1,2})\\s+(Jan|Fev|Mar|Abr|Mai|Jun|Jul|Ago|Set|Out|Nov|Dez)\\s+(\d{4})?\\s+(\d{1,2}:\d{2})\\s+((?:RTP(?:\\s+[A-Za-zÀ-ÿ0-9]+){0,3}))/g;
+  const emissionRe = /(\d{1,2})\s+(Jan|Fev|Mar|Abr|Mai|Jun|Jul|Ago|Set|Out|Nov|Dez)\s+(\d{4})?\s+(\d{1,2}:\d{2})\s+((?:RTP(?:\s+[A-Za-zÀ-ÿ0-9]+){0,3}))/g;
   const items: RtpProgrammeItem[] = [];
   const seen = new Set<string>();
 
