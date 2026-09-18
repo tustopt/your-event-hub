@@ -3,6 +3,12 @@
 
 alter table public.tv_programs
   add column if not exists source_external_id text;
+alter table public.tv_programs add column if not exists series_title text;
+alter table public.tv_programs add column if not exists episode_title text;
+alter table public.tv_programs add column if not exists season integer;
+alter table public.tv_programs add column if not exists episode integer;
+alter table public.tv_programs add column if not exists year integer;
+alter table public.tv_programs add column if not exists genre text;
 
 create unique index if not exists uq_tv_programs_source_external_id
   on public.tv_programs(source_id, source_external_id)
@@ -53,7 +59,7 @@ begin
 
   insert into public.tv_programs (
     film_id, channel_id, title, description, start_at, end_at,
-    source_id, source_url, source_external_id
+    source_id, source_url, source_external_id, series_title, episode_title, season, episode, year, genre
   )
   values (
     null,
@@ -64,7 +70,13 @@ begin
     v_end_at,
     v_source_id,
     nullif(p_program->>'sourceUrl',''),
-    v_external_id
+    v_external_id,
+    nullif(p_program->>'seriesTitle',''),
+    nullif(p_program->>'episodeTitle',''),
+    nullif(p_program->>'season','')::integer,
+    nullif(p_program->>'episode','')::integer,
+    nullif(p_program->>'year','')::integer,
+    nullif(p_program->>'genre','')
   )
   on conflict (source_id, source_external_id)
   do update set
@@ -73,7 +85,13 @@ begin
     description = excluded.description,
     start_at = excluded.start_at,
     end_at = excluded.end_at,
-    source_url = excluded.source_url;
+    source_url = excluded.source_url,
+    series_title = excluded.series_title,
+    episode_title = excluded.episode_title,
+    season = excluded.season,
+    episode = excluded.episode,
+    year = excluded.year,
+    genre = excluded.genre;
 
   select id into v_id
   from public.tv_programs
