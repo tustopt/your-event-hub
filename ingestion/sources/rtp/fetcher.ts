@@ -73,6 +73,11 @@ export function parseRtpProgrammePage(html: string, sourceUrl: string, fallbackY
   if (!title) return [];
 
   const duration = parseDuration(text);
+  const seriesTitle = title;
+  const episodeMatch = text.match(/Epis[oó]dio(?:\s+n\.?[ºo]?)?\s*(\d+)\s+de\s+(\d+)/i);
+  const episode = episodeMatch ? Number(episodeMatch[1]) : undefined;
+  const descriptionMatch = text.match(/Informa[cç][aã]o Adicional\s+(.+?)\s+Pr[oó]ximas emiss[oõ]es/i);
+  const description = descriptionMatch?.[1]?.trim();
   const sectionStart = text.search(/Pr[oó]ximas emiss[oõ]es deste programa/i);
   const sectionEnd = text.search(/Rever [uú]ltimos epis[oó]dios/i);
   const scheduleText = sectionStart >= 0
@@ -106,6 +111,9 @@ export function parseRtpProgrammePage(html: string, sourceUrl: string, fallbackY
       broadcasterKey: "rtp",
       channel,
       title,
+      seriesTitle,
+      ...(episode !== undefined ? { episode } : {}),
+      ...(description ? { description } : {}),
       genre: "Documentários",
       startAt: date + "T" + time + ":00" + lisbonOffset(date, time),
       ...(duration !== undefined ? { durationMinutes: duration } : {}),
