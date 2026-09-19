@@ -10,12 +10,24 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as ExplorarRouteImport } from './routes/explorar'
 import { Route as ApiPublicIngestCinematecaRouteImport } from './routes/api/public/ingest/cinemateca'
 import { Route as ApiPublicIngestSourceSourceKeyRouteImport } from './routes/api/public/ingest/source.$sourceKey'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ExplorarRoute = ExplorarRouteImport.update({
+  id: '/explorar',
+  path: '/explorar',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicIngestCinematecaRoute =
@@ -33,6 +45,8 @@ const ApiPublicIngestSourceSourceKeyRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/login': typeof LoginRoute
+  '/explorar': typeof ExplorarRoute
   '/api/public/ingest/cinemateca': typeof ApiPublicIngestCinematecaRoute
   '/api/public/ingest/source/$sourceKey': typeof ApiPublicIngestSourceSourceKeyRoute
 }
@@ -51,6 +65,8 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/login'
+    | '/explorar'
     | '/api/public/ingest/cinemateca'
     | '/api/public/ingest/source/$sourceKey'
   fileRoutesByTo: FileRoutesByTo
@@ -67,6 +83,8 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  LoginRoute: typeof LoginRoute
+  ExplorarRoute: typeof ExplorarRoute
   ApiPublicIngestCinematecaRoute: typeof ApiPublicIngestCinematecaRoute
   ApiPublicIngestSourceSourceKeyRoute: typeof ApiPublicIngestSourceSourceKeyRoute
 }
@@ -99,6 +117,8 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  LoginRoute: LoginRoute,
+  ExplorarRoute: ExplorarRoute,
   ApiPublicIngestCinematecaRoute: ApiPublicIngestCinematecaRoute,
   ApiPublicIngestSourceSourceKeyRoute: ApiPublicIngestSourceSourceKeyRoute,
 }
