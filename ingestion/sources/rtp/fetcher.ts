@@ -122,7 +122,7 @@ export async function fetchRtpProgramme(options: FetchRtpOptions = {}): Promise<
     if (!template) throw new Error("RTP EPG feed URL not found (" + channel.url + ")");
 
     const date = (options.now ? options.now() : new Date()).toISOString().slice(0, 10);
-    const epgUrl = template.replace("{date}", date);
+    const epgUrl = new URL(template.replace("{date}", date), channel.url).toString();
     const epgResponse = await fetchImpl(epgUrl);
     if (!epgResponse.ok) throw new Error("RTP EPG fetch failed: " + epgResponse.status + " (" + epgUrl + ")");
 
