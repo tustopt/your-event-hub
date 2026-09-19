@@ -52,12 +52,16 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/login': typeof LoginRoute
+  '/explorar': typeof ExplorarRoute
   '/api/public/ingest/cinemateca': typeof ApiPublicIngestCinematecaRoute
   '/api/public/ingest/source/$sourceKey': typeof ApiPublicIngestSourceSourceKeyRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/login': typeof LoginRoute
+  '/explorar': typeof ExplorarRoute
   '/api/public/ingest/cinemateca': typeof ApiPublicIngestCinematecaRoute
   '/api/public/ingest/source/$sourceKey': typeof ApiPublicIngestSourceSourceKeyRoute
 }
@@ -91,6 +95,21 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/explorar': {
+      id: '/explorar'
+      path: '/explorar'
+      fullPath: '/explorar'
+      preLoaderRoute: typeof ExplorarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+
     '/': {
       id: '/'
       path: '/'
