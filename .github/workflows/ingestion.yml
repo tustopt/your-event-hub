@@ -1,0 +1,46 @@
+name: Production Ingestion
+
+on:
+  workflow_dispatch:
+    inputs:
+      source:
+        description: "Optional source key (for example cinemateca_pt)"
+        required: false
+        type: string
+      limit:
+        description: "Optional maximum number of source items per source"
+        required: false
+        type: string
+  schedule:
+    - cron: "17 */6 * * *"
+      timezone: "Europe/Lisbon"
+
+concurrency:
+  group: production-ingestion
+  cancel-in-progress: false
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      INGEST_SOURCE: ${{ inputs.source }}
+      INGEST_LIMIT: ${{ inputs.limit }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run production ingestion
+        run: npx tsx ingestion/runners/production-ingestion-cli.ts
