@@ -74,7 +74,11 @@ function post(body?: unknown, auth = `Bearer ${SECRET}`): Request {
 }
 
 function deps(library: IngestionLibrary, persist = vi.fn(async () => {})): Deps {
-  return { loadLibrary: async () => library, createPersist: async () => persist };
+  return {
+    loadLibrary: async () => library,
+    createPersist: async () => persist,
+    createPersistTVProgram: async () => async () => {},
+  };
 }
 
 beforeEach(() => {
