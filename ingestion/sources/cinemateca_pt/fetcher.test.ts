@@ -57,6 +57,24 @@ describe("fetchCinematecaProgramme", () => {
     expect(items[1]).toMatchObject({ title: "ARIA", director: "Robert Altman, Bruce Beresford, Bill Bryden, Jean-Luc Godard, Derek Jarman, Franc Roddam, Nicolas Roeg, Ken Russell, Charles Sturridge, Julien Temple", country: "Reino Unido, França, Estados Unidos", year: 1987, durationMinutes: 90 });
   });
 
+  it("decodes HTML entities and repairs UTF-8 mojibake in programme metadata", async () => {
+    const html = `
+      <div>01/09/2026, 21h30 | Sala M. F\u00e9lix Ribeiro</div>
+      <div>Ciclo CINE-&amp;#211;PERA</div>
+      <div>E LA NAVE VA</div><div>O Navio</div><div>de Federico Fellini</div>
+      <div>It\u00e1lia, 1983 - 128 min</div>
+    `.replace("&amp;#211;", "Ã“");
+
+    const items = await fetchCinematecaProgramme({ fetchImpl: mockFetch(html) });
+
+    expect(items).toHaveLength(1);
+    expect(items[0]).toMatchObject({
+      venue: "Sala M. F\u00e9lix Ribeiro",
+      cycle: "CINE-ÓPERA",
+      country: "Itália",
+    });
+  });
+
   it("deduplicates repeated programme blocks by sourceExternalId", async () => {
     const html = `
       <div>01/09/2026, 21h30 | Sala M. Félix Ribeiro</div><div>Ciclo CINE-ÓPERA</div><div>E LA NAVE VA</div><div>O Navio</div><div>de Federico Fellini</div><div>Itália, 1983 - 128 min</div>
