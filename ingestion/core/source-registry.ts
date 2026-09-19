@@ -47,6 +47,7 @@ export const sourceRegistry: readonly SourceDefinition[] = [
   {
     key: "doclisboa", name: "Doclisboa", category: "festival",
     sourceType: "website", countryCode: "PT", languageCode: "pt", status: "production",
+    adapterKey: "doclisboa",
     canonicalUrl: "https://doclisboa.org/", fetchIntervalMinutes: 360,
     description: "Candidate festival source. Edition-aware ingestion for Doclisboa programme, screenings and festival venues.",
   },
