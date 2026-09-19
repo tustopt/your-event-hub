@@ -84,7 +84,7 @@ describe("each production adapter runs through the generic runner", () => {
     it(`does not write in dryRun for ${sourceKey}`, async () => {
       const persist = vi.fn(async () => {});
       const resolved = resolveRunnableSource(library, sourceKey, fetcherOptions(html));
-      const result = await runSourceIngestion(resolved, persist, { dryRun: true });
+      const result = await runSourceIngestion(resolved, persist, undefined, { dryRun: true });
 
       expect(persist).not.toHaveBeenCalled();
       expect(result.persisted).toBe(0);
