@@ -16,11 +16,46 @@ function text(value: string | null | undefined): string {
 
 function repairUtf8Mojibake(value: string): string {
   // Some legacy HTML responses can arrive with UTF-8 bytes decoded once as
-  // Latin-1/Windows-1252. Only attempt the repair when typical mojibake
-  // markers are present and the reverse conversion is valid UTF-8.
+  // Latin-1/Windows-1252. Windows-1252 has printable characters such as
+  // “ (0x93), so using charCodeAt() directly would produce the wrong byte.
   if (!/[ÃÂ]/.test(value)) return value;
 
-  const bytes = new Uint8Array([...value].map((character) => character.charCodeAt(0) & 0xff));
+  const windows1252Bytes: Record<string, number> = {
+    "€": 0x80,
+    "‚": 0x82,
+    "ƒ": 0x83,
+    "„": 0x84,
+    "…": 0x85,
+    "†": 0x86,
+    "‡": 0x87,
+    "ˆ": 0x88,
+    "‰": 0x89,
+    "Š": 0x8a,
+    "‹": 0x8b,
+    "Œ": 0x8c,
+    "Ž": 0x8e,
+    "‘": 0x91,
+    "’": 0x92,
+    "“": 0x93,
+    "”": 0x94,
+    "•": 0x95,
+    "–": 0x96,
+    "—": 0x97,
+    "˜": 0x98,
+    "™": 0x99,
+    "š": 0x9a,
+    "›": 0x9b,
+    "œ": 0x9c,
+    "ž": 0x9e,
+    "Ÿ": 0x9f,
+  };
+
+  const bytes = new Uint8Array(
+    [...value].map((character) =>
+      windows1252Bytes[character] ?? character.charCodeAt(0),
+    ),
+  );
+
   try {
     return new TextDecoder("utf-8", { fatal: true }).decode(bytes);
   } catch {
