@@ -23,6 +23,14 @@ const featured = [
   },
 ];
 
+const quickFilters = [
+  { label: "Hoje", filter: "today" },
+  { label: "Este fim de semana", filter: "weekend" },
+  { label: "Lisboa", filter: "city-lisboa" },
+  { label: "Porto", filter: "city-porto" },
+  { label: "Festivais", filter: "festivals" },
+];
+
 function Index() {
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -33,42 +41,22 @@ function Index() {
           </a>
 
           <nav className="hidden items-center gap-6 text-sm md:flex">
-            <a href="#descobrir" className="text-foreground/80 transition-colors hover:text-foreground">
-              Descobrir
-            </a>
-            <a href="#agenda" className="text-foreground/80 transition-colors hover:text-foreground">
-              Agenda
-            </a>
-            <a href="#fontes" className="text-foreground/80 transition-colors hover:text-foreground">
-              Fontes
-            </a>
+            <a href="#descobrir" className="text-foreground/80 transition-colors hover:text-foreground">Descobrir</a>
+            <a href="#agenda" className="text-foreground/80 transition-colors hover:text-foreground">Agenda</a>
+            <a href="#fontes" className="text-foreground/80 transition-colors hover:text-foreground">Fontes</a>
           </nav>
 
           <div className="ml-auto flex items-center gap-2">
-            <a
-              href="#pesquisa"
-              aria-label="Pesquisar"
-              className="inline-flex size-10 items-center justify-center rounded-full hover:bg-muted"
-            >
+            <a href="#pesquisa" aria-label="Pesquisar" className="inline-flex size-10 items-center justify-center rounded-full hover:bg-muted">
               <Search className="size-5" />
             </a>
-            <a
-              href="/login"
-              className="hidden rounded-lg px-3 py-2 text-sm font-medium text-foreground/80 transition-colors hover:bg-muted hover:text-foreground sm:inline-flex"
-            >
+            <a href="/login" className="hidden rounded-lg px-3 py-2 text-sm font-medium text-foreground/80 transition-colors hover:bg-muted hover:text-foreground sm:inline-flex">
               Entrar
             </a>
-            <a
-              href="/login?mode=signup"
-              className="rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
-            >
+            <a href="/login?mode=signup" className="rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90">
               Criar conta
             </a>
-            <a
-              href="/login"
-              aria-label="Perfil"
-              className="inline-flex size-10 items-center justify-center rounded-full hover:bg-muted"
-            >
+            <a href="/login" aria-label="Perfil" className="inline-flex size-10 items-center justify-center rounded-full hover:bg-muted">
               <UserRound className="size-5" />
             </a>
           </div>
@@ -90,26 +78,28 @@ function Index() {
                 organizados para encontrar rapidamente aquilo que lhe interessa.
               </p>
 
-              <div className="mt-8 flex max-w-2xl items-center gap-3 rounded-xl border bg-card p-2 shadow-sm">
+              <form action="/explorar" method="get" className="mt-8 flex max-w-2xl items-center gap-3 rounded-xl border bg-card p-2 shadow-sm">
                 <Search className="ml-3 size-5 shrink-0 text-muted-foreground" />
                 <input
+                  name="q"
                   aria-label="Pesquisar documentários, filmes, realizadores ou eventos"
                   placeholder="Filmes, realizadores, festivais, locais..."
                   className="min-w-0 flex-1 bg-transparent px-1 py-3 text-sm outline-none placeholder:text-muted-foreground"
                 />
-                <a href="/explorar" className="rounded-lg bg-primary px-5 py-3 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90">
+                <button type="submit" className="rounded-lg bg-primary px-5 py-3 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90">
                   Pesquisar
-                </a>
-              </div>
+                </button>
+              </form>
 
               <div className="mt-6 flex flex-wrap gap-2 text-sm">
-                {["Hoje", "Este fim de semana", "Lisboa", "Porto", "Festivais"].map((item) => (
-                  <button
-                    key={item}
+                {quickFilters.map((item) => (
+                  <a
+                    key={item.filter}
+                    href={`/explorar?filter=${item.filter}`}
                     className="rounded-full border px-4 py-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                   >
-                    {item}
-                  </button>
+                    {item.label}
+                  </a>
                 ))}
               </div>
             </div>
@@ -132,9 +122,7 @@ function Index() {
                 </div>
                 <h3 className="mt-6 text-lg font-semibold">{title}</h3>
                 <p className="mt-2 text-sm leading-6 text-muted-foreground">{description}</p>
-                <a href="/explorar" className="mt-6 inline-flex text-sm font-medium hover:underline">
-                  Explorar →
-                </a>
+                <a href="/explorar" className="mt-6 inline-flex text-sm font-medium hover:underline">Explorar →</a>
               </article>
             ))}
           </div>
@@ -173,9 +161,7 @@ function Index() {
 
           <div className="mt-8 flex flex-wrap gap-3">
             {["Cinemateca Portuguesa", "Doclisboa", "Cinema São Jorge", "Cinema Fernando Lopes", "RTP"].map((source) => (
-              <span key={source} className="rounded-full border px-4 py-2 text-sm">
-                {source}
-              </span>
+              <span key={source} className="rounded-full border px-4 py-2 text-sm">{source}</span>
             ))}
           </div>
         </section>
