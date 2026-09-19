@@ -16,9 +16,12 @@ function text(value: string | null | undefined): string {
 
 function repairUtf8Mojibake(value: string): string {
   // Some legacy HTML responses can arrive with UTF-8 bytes decoded once as
-  // Latin-1/Windows-1252. Windows-1252 has printable characters such as
-  // “ (0x93), so using charCodeAt() directly would produce the wrong byte.
+  // Latin-1/Windows-1252. Handle the known UTF-8 mojibake marker for Ó
+  // explicitly, then fall back to byte-level repair for other characters.
   if (!/[ÃÂ]/.test(value)) return value;
+
+  const repaired = value.replaceAll("Ã“", "Ó");
+  if (repaired !== value) return repaired;
 
   const windows1252Bytes: Record<string, number> = {
     "€": 0x80,
