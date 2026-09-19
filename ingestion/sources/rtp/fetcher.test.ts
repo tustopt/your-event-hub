@@ -1,31 +1,66 @@
 import { describe, expect, it } from "vitest";
-import { parseRtpProgrammePage } from "./fetcher";
+import {
+  extractRtpEpgFeedUrl,
+  isRtpDocumentaryPage,
+  parseRtpEpg,
+} from "./fetcher";
 
-describe("RTP programme parser", () => {
-  it("parses a documentary programme and its next emission", () => {
-    const html = `<h1>RTP Sempre</h1>
-      <div>Géneros</div><div>Documentários</div>
-      <div>Informação Adicional</div><div>Série de 26 episódios que marcam a identidade portuguesa</div>
-      <div>Próximas emissões deste programa</div>
-      <div>25 Set 2026</div><div>00:33</div><div>RTP Memória</div>
-      <div>Rever últimos episódios no RTP Play</div>`;
-    const result = parseRtpProgrammePage(html, "https://www.rtp.pt/programa/tv/p31980", 2026);
+describe("RTP EPG parser", () => {
+  it("extracts the EPG feed template", () => {
+    expect(
+      extractRtpEpgFeedUrl(
+        '<script>var epgFeedUrl = \'/EPG/json/rtp-channels-page/list-grid/tv/1/{0}\';</script>',
+      ),
+    ).toBe("/EPG/json/rtp-channels-page/list-grid/tv/1/{date}");
+  });
+
+  it("parses EPG entries using the channel reported by RTP", () => {
+    const result = parseRtpEpg(
+      {
+        _info: { name: "RTP1", timeZone: "lis" },
+        result: {
+          morning: [
+            {
+              id: "951524",
+              date: "2026-09-19 10:30:00",
+              name: "Os Primeiros Alentejanos",
+              series: "",
+              description: "Documentário sobre os monumentos megalíticos do Alentejo central",
+              url: "https://www.rtp.pt/programa/tv/p17100/e951524",
+              episode: { number: "", title: "", sinopse: "" },
+            },
+          ],
+        },
+      },
+      "RTP",
+    );
+
     expect(result).toHaveLength(1);
     expect(result[0]).toMatchObject({
-      title: "RTP Sempre", channel: "RTP Memória", genre: "Documentários",
-      startAt: "2026-09-25T00:33:00+01:00", seriesTitle: "RTP Sempre",
-      description: "Série de 26 episódios que marcam a identidade portuguesa",
+      sourceExternalId: "951524-2026-09-19-rtp1",
+      title: "Os Primeiros Alentejanos",
+      channel: "RTP1",
+      broadcasterKey: "rtp",
+      genre: "Documentários",
+      startAt: "2026-09-19T10:30:00+01:00",
     });
   });
+});
 
-  it("extracts episode number when present", () => {
-    const html = `<h1>Como Se Faz</h1><div>Géneros Documentários</div><div>Episódio n.º 9 de 12</div><div>Próximas emissões deste programa</div><div>25 Set 2026</div><div>20:30</div><div>RTP Madeira</div>`;
-    const result = parseRtpProgrammePage(html, "https://www.rtp.pt/programa/tv/p48773/e9", 2026);
-    expect(result[0]).toMatchObject({ seriesTitle: "Como Se Faz", episode: 9 });
+describe("RTP documentary classification", () => {
+  it("accepts RTP Play documentary sections", () => {
+    expect(
+      isRtpDocumentaryPage(
+        "<main>Género: Cultura</main><footer>Este conteúdo faz parte de Documentários de Ciência e Natureza</footer>",
+      ),
+    ).toBe(true);
   });
 
-  it("rejects non-documentary programme pages", () => {
-    const html = `<h1>Programa X</h1><div>Géneros</div><div>Informação</div>`;
-    expect(parseRtpProgrammePage(html, "https://www.rtp.pt/programa/tv/p1", 2026)).toEqual([]);
+  it("rejects a normal RTP Play programme page", () => {
+    expect(
+      isRtpDocumentaryPage(
+        "<main>Género: Cultura</main><footer>Este conteúdo faz parte de Programas de Informação</footer>",
+      ),
+    ).toBe(false);
   });
 });
