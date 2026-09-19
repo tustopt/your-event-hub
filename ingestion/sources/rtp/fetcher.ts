@@ -65,7 +65,7 @@ function parseEpisodeNumber(value?: string): number | undefined {
 
 export function isRtpDocumentaryPage(html: string): boolean {
   const text = stripTags(html).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-  return /este conteudo faz parte de documentarios(?:\s|$)/i.test(text);
+  return /este conteudo faz parte de documentarios(?:\s|$)/i.test(text) || /generos\s+documentarios(?:\s|$)/i.test(text);
 }
 
 export function extractRtpEpgFeedUrl(html: string): string | undefined {
