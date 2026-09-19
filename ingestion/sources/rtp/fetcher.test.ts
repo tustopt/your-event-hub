@@ -6,6 +6,14 @@ import {
 } from "./fetcher";
 
 describe("RTP EPG parser", () => {
+  it("resolves relative EPG feed URLs against the channel page", () => {
+    const template = extractRtpEpgFeedUrl(
+      '<script>var epgFeedUrl = \'/EPG/json/rtp-channels-page/list-grid/tv/1/{0}\';</script>',
+    );
+    expect(new URL(template!.replace("{date}", "2026-09-19"), "https://www.rtp.pt/rtp1/").toString())
+      .toBe("https://www.rtp.pt/EPG/json/rtp-channels-page/list-grid/tv/1/2026-09-19");
+  });
+
   it("extracts the EPG feed template", () => {
     expect(
       extractRtpEpgFeedUrl(
