@@ -2,6 +2,9 @@ import type { RtpProgrammeItem } from "./types";
 
 export const RTP_SOURCE_KEY = "rtp";
 
+/** Backwards-compatible primary RTP programme URL for existing ingestion exports. */
+export const RTP_PROGRAMMES_URL = "https://www.rtp.pt/rtp1/";
+
 export const RTP_CHANNEL_PAGES = [
   { key: "rtp1", channel: "RTP1", url: "https://www.rtp.pt/rtp1/" },
   { key: "rtp2", channel: "RTP2", url: "https://www.rtp.pt/rtp2/" },
