@@ -14,15 +14,33 @@ function text(value: string | null | undefined): string {
   return (value ?? "").replace(/\s+/g, " ").trim();
 }
 
+function repairUtf8Mojibake(value: string): string {
+  // Some legacy HTML responses can arrive with UTF-8 bytes decoded once as
+  // Latin-1/Windows-1252. Only attempt the repair when typical mojibake
+  // markers are present and the reverse conversion is valid UTF-8.
+  if (!/[ÃÂ]/.test(value)) return value;
+
+  const bytes = new Uint8Array([...value].map((character) => character.charCodeAt(0) & 0xff));
+  try {
+    return new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+  } catch {
+    return value;
+  }
+}
+
 function decodeHtml(value: string): string {
-  return value
+  const decoded = value
     .replace(/&nbsp;/gi, " ")
     .replace(/&amp;/gi, "&")
+    .replace(/&#(\\d+);/g, (_, code: string) => String.fromCodePoint(Number(code)))
+    .replace(/&#x([0-9a-f]+);/gi, (_, code: string) => String.fromCodePoint(Number.parseInt(code, 16)))
     .replace(/&#8211;|&ndash;/gi, "–")
     .replace(/&#8217;|&rsquo;/gi, "’")
     .replace(/&#8216;|&lsquo;/gi, "‘")
     .replace(/&#39;|&apos;/gi, "'")
     .replace(/&quot;/gi, '"');
+
+  return repairUtf8Mojibake(decoded);
 }
 
 function parseDateTime(value: string): { date: string; time: string } | undefined {
