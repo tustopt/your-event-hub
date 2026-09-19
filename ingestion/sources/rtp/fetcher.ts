@@ -40,7 +40,7 @@ function stripTags(value: string): string {
   return value.replace(/<script[\s\S]*?<\/script>/gi, " ")
     .replace(/<style[\s\S]*?<\/style>/gi, " ").replace(/<[^>]+>/g, " ")
     .replace(/&nbsp;/gi, " ").replace(/&amp;/gi, "&").replace(/&quot;/gi, '"')
-    .replace(/&#39;/gi, "'").replace(/\s+/g, " ").trim();
+    .replace(/&#39;/gi, "'").replace(/&([a-z]+);/gi, (_, name: string) => ({ aacute: "á", acirc: "â", agrave: "à", atilde: "ã", auml: "ä", ccedil: "ç", eacute: "é", ecirc: "ê", egrave: "è", iacute: "í", oacute: "ó", ocirc: "ô", otilde: "õ", uacute: "ú", ucirc: "û", ntilde: "ñ" }[name.toLowerCase()] || "&" + name + ";")).replace(/\s+/g, " ").trim();
 }
 
 function lisbonOffset(date: string, time: string): string {
