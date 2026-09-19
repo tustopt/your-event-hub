@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ExplorarRouteImport } from './routes/explorar'
 import { Route as FilmesIdRouteImport } from './routes/filmes/$id'
+import { Route as EventosIdRouteImport } from './routes/eventos/$id'
 import { Route as ApiPublicIngestCinematecaRouteImport } from './routes/api/public/ingest/cinemateca'
 import { Route as ApiPublicIngestSourceSourceKeyRouteImport } from './routes/api/public/ingest/source.$sourceKey'
 
@@ -36,6 +37,11 @@ const FilmesIdRoute = FilmesIdRouteImport.update({
   path: '/filmes/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EventosIdRoute = EventosIdRouteImport.update({
+  id: '/eventos/$id',
+  path: '/eventos/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicIngestCinematecaRoute =
   ApiPublicIngestCinematecaRouteImport.update({
     id: '/api/public/ingest/cinemateca',
@@ -54,8 +60,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/explorar': typeof ExplorarRoute
   '/filmes/$id': typeof FilmesIdRoute
-  '/filmes/$id': typeof FilmesIdRoute
-  '/filmes/$id': typeof FilmesIdRoute
+  '/eventos/$id': typeof EventosIdRoute
   '/api/public/ingest/cinemateca': typeof ApiPublicIngestCinematecaRoute
   '/api/public/ingest/source/$sourceKey': typeof ApiPublicIngestSourceSourceKeyRoute
 }
@@ -63,6 +68,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/explorar': typeof ExplorarRoute
+  '/eventos/$id': typeof EventosIdRoute
   '/api/public/ingest/cinemateca': typeof ApiPublicIngestCinematecaRoute
   '/api/public/ingest/source/$sourceKey': typeof ApiPublicIngestSourceSourceKeyRoute
 }
@@ -71,6 +77,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/explorar': typeof ExplorarRoute
+  '/eventos/$id': typeof EventosIdRoute
   '/api/public/ingest/cinemateca': typeof ApiPublicIngestCinematecaRoute
   '/api/public/ingest/source/$sourceKey': typeof ApiPublicIngestSourceSourceKeyRoute
 }
@@ -111,6 +118,13 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+      '/eventos/$id': {
+      id: '/eventos/$id'
+      path: '/eventos/$id'
+      fullPath: '/eventos/$id'
+      preLoaderRoute: typeof EventosIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/filmes/$id': {
@@ -157,6 +171,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   ExplorarRoute: ExplorarRoute,
   FilmesIdRoute: FilmesIdRoute,
+  EventosIdRoute: EventosIdRoute,
   ApiPublicIngestCinematecaRoute: ApiPublicIngestCinematecaRoute,
   ApiPublicIngestSourceSourceKeyRoute: ApiPublicIngestSourceSourceKeyRoute,
 }
