@@ -99,30 +99,22 @@ function Explore() {
     };
   }, []);
 
+  function replaceUrl(nextQuery: string, nextFilter: ExploreFilter | null) {
+    const params = new URLSearchParams();
+    if (nextQuery) params.set("q", nextQuery);
+    if (nextFilter) params.set("filter", nextFilter);
+    const suffix = params.toString();
+    window.history.replaceState(null, "", suffix ? `/explorar?${suffix}` : "/explorar");
+  }
+
   function updateSearch(nextQuery: string) {
     setQuery(nextQuery);
-    void navigate({
-      to: "/explorar",
-      search: (previous) => ({
-        ...previous,
-        q: nextQuery || undefined,
-        filter: filter ?? undefined,
-      }),
-      replace: true,
-    });
+    replaceUrl(nextQuery, filter);
   }
 
   function updateFilter(nextFilter: ExploreFilter | null) {
     setFilter(nextFilter);
-    void navigate({
-      to: "/explorar",
-      search: (previous) => ({
-        ...previous,
-        q: query || undefined,
-        filter: nextFilter ?? undefined,
-      }),
-      replace: true,
-    });
+    replaceUrl(query, nextFilter);
   }
 
   const filtered = useMemo(
