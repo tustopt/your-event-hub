@@ -203,9 +203,24 @@ export async function fetchCinematecaProgramme(
   );
 
   const blocks = sourceText.split(/(?=\d{2}\/\d{2}\/\d{4},\s*\d{1,2}h\d{2}\s*\|\s*Sala\b)/i);
-  const items = blocks
+  const parsedItems = blocks
     .map((block) => parseProgrammeBlock(block, url))
     .filter((item): item is CinematecaProgrammeItem => Boolean(item));
+
+  // Cinemateca also renders a second, detailed section for each screening.
+  // Those blocks repeat the cycle name as the film title but omit the
+  // "Ciclo ..." marker. Once the programme list has been parsed, use the
+  // cycles discovered on real programme entries to discard those summaries.
+  const cycleSlugs = new Set(
+    parsedItems
+      .map((item) => item.cycle)
+      .filter((cycle): cycle is string => Boolean(cycle))
+      .map(slug),
+  );
+
+  const items = parsedItems.filter(
+    (item) => item.cycle || !cycleSlugs.has(slug(item.title)),
+  );
 
   const unique = new Map<string, CinematecaProgrammeItem>();
   for (const item of items) {
