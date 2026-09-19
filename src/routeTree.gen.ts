@@ -10,10 +10,10 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as LoginRouteImport } from './routes/login'
 import { Route as ExplorarRouteImport } from './routes/explorar'
-import { Route as FilmesIdRouteImport } from './routes/filmes/$id'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as EventosIdRouteImport } from './routes/eventos/$id'
+import { Route as FilmesIdRouteImport } from './routes/filmes/$id'
 import { Route as ApiPublicIngestCinematecaRouteImport } from './routes/api/public/ingest/cinemateca'
 import { Route as ApiPublicIngestSourceSourceKeyRouteImport } from './routes/api/public/ingest/source.$sourceKey'
 
@@ -22,24 +22,24 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const LoginRoute = LoginRouteImport.update({
-  id: '/login',
-  path: '/login',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ExplorarRoute = ExplorarRouteImport.update({
   id: '/explorar',
   path: '/explorar',
   getParentRoute: () => rootRouteImport,
 } as any)
-const FilmesIdRoute = FilmesIdRouteImport.update({
-  id: '/filmes/$id',
-  path: '/filmes/$id',
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EventosIdRoute = EventosIdRouteImport.update({
   id: '/eventos/$id',
   path: '/eventos/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FilmesIdRoute = FilmesIdRouteImport.update({
+  id: '/filmes/$id',
+  path: '/filmes/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicIngestCinematecaRoute =
@@ -57,27 +57,29 @@ const ApiPublicIngestSourceSourceKeyRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/login': typeof LoginRoute
   '/explorar': typeof ExplorarRoute
-  '/filmes/$id': typeof FilmesIdRoute
+  '/login': typeof LoginRoute
   '/eventos/$id': typeof EventosIdRoute
+  '/filmes/$id': typeof FilmesIdRoute
   '/api/public/ingest/cinemateca': typeof ApiPublicIngestCinematecaRoute
   '/api/public/ingest/source/$sourceKey': typeof ApiPublicIngestSourceSourceKeyRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/login': typeof LoginRoute
   '/explorar': typeof ExplorarRoute
+  '/login': typeof LoginRoute
   '/eventos/$id': typeof EventosIdRoute
+  '/filmes/$id': typeof FilmesIdRoute
   '/api/public/ingest/cinemateca': typeof ApiPublicIngestCinematecaRoute
   '/api/public/ingest/source/$sourceKey': typeof ApiPublicIngestSourceSourceKeyRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/login': typeof LoginRoute
   '/explorar': typeof ExplorarRoute
+  '/login': typeof LoginRoute
   '/eventos/$id': typeof EventosIdRoute
+  '/filmes/$id': typeof FilmesIdRoute
   '/api/public/ingest/cinemateca': typeof ApiPublicIngestCinematecaRoute
   '/api/public/ingest/source/$sourceKey': typeof ApiPublicIngestSourceSourceKeyRoute
 }
@@ -85,30 +87,37 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/login'
     | '/explorar'
-    | '/filmes/$id'
+    | '/login'
     | '/eventos/$id'
+    | '/filmes/$id'
     | '/api/public/ingest/cinemateca'
     | '/api/public/ingest/source/$sourceKey'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/explorar'
+    | '/login'
     | '/eventos/$id'
+    | '/filmes/$id'
     | '/api/public/ingest/cinemateca'
     | '/api/public/ingest/source/$sourceKey'
   id:
     | '__root__'
     | '/'
+    | '/explorar'
+    | '/login'
     | '/eventos/$id'
+    | '/filmes/$id'
     | '/api/public/ingest/cinemateca'
     | '/api/public/ingest/source/$sourceKey'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  LoginRoute: typeof LoginRoute
   ExplorarRoute: typeof ExplorarRoute
+  LoginRoute: typeof LoginRoute
+  EventosIdRoute: typeof EventosIdRoute
   FilmesIdRoute: typeof FilmesIdRoute
   ApiPublicIngestCinematecaRoute: typeof ApiPublicIngestCinematecaRoute
   ApiPublicIngestSourceSourceKeyRoute: typeof ApiPublicIngestSourceSourceKeyRoute
@@ -116,6 +125,20 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/explorar': {
+      id: '/explorar'
+      path: '/explorar'
+      fullPath: '/explorar'
+      preLoaderRoute: typeof ExplorarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
@@ -123,7 +146,7 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
-      '/eventos/$id': {
+    '/eventos/$id': {
       id: '/eventos/$id'
       path: '/eventos/$id'
       fullPath: '/eventos/$id'
@@ -135,21 +158,6 @@ declare module '@tanstack/react-router' {
       path: '/filmes/$id'
       fullPath: '/filmes/$id'
       preLoaderRoute: typeof FilmesIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/explorar': {
-      id: '/explorar'
-      path: '/explorar'
-      fullPath: '/explorar'
-      preLoaderRoute: typeof ExplorarRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/ingest/cinemateca': {
@@ -171,10 +179,10 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  LoginRoute: LoginRoute,
   ExplorarRoute: ExplorarRoute,
-  FilmesIdRoute: FilmesIdRoute,
+  LoginRoute: LoginRoute,
   EventosIdRoute: EventosIdRoute,
+  FilmesIdRoute: FilmesIdRoute,
   ApiPublicIngestCinematecaRoute: ApiPublicIngestCinematecaRoute,
   ApiPublicIngestSourceSourceKeyRoute: ApiPublicIngestSourceSourceKeyRoute,
 }

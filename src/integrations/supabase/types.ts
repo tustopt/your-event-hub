@@ -895,39 +895,60 @@ export type Database = {
           created_at: string
           description: string | null
           end_at: string | null
+          episode: number | null
+          episode_title: string | null
           film_id: string | null
+          genre: string | null
           id: string
+          season: number | null
+          series_title: string | null
+          source_external_id: string | null
           source_id: string | null
           source_url: string | null
           start_at: string
           title: string
           updated_at: string
+          year: number | null
         }
         Insert: {
           channel_id: string
           created_at?: string
           description?: string | null
           end_at?: string | null
+          episode?: number | null
+          episode_title?: string | null
           film_id?: string | null
+          genre?: string | null
           id?: string
+          season?: number | null
+          series_title?: string | null
+          source_external_id?: string | null
           source_id?: string | null
           source_url?: string | null
           start_at: string
           title: string
           updated_at?: string
+          year?: number | null
         }
         Update: {
           channel_id?: string
           created_at?: string
           description?: string | null
           end_at?: string | null
+          episode?: number | null
+          episode_title?: string | null
           film_id?: string | null
+          genre?: string | null
           id?: string
+          season?: number | null
+          series_title?: string | null
+          source_external_id?: string | null
           source_id?: string | null
           source_url?: string | null
           start_at?: string
           title?: string
           updated_at?: string
+          year?: number | null
         }
         Relationships: [
           {
@@ -1109,6 +1130,19 @@ export type Database = {
     Functions: {
       ingest_screening: {
         Args: { p_screening: Json; p_source_key: string }
+        Returns: Json
+      }
+      ingest_tv_program: {
+        Args: { p_program: Json; p_source_key: string }
+        Returns: Json
+      }
+      link_event_festival: {
+        Args: {
+          p_festival_key: string
+          p_festival_year: number
+          p_source_external_id: string
+          p_source_key: string
+        }
         Returns: Json
       }
     }

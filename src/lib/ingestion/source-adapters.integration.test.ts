@@ -164,6 +164,7 @@ describe("Cinemateca route stays a thin wrapper", () => {
     const res = await handleCinematecaIngest(request, {
       loadLibrary: async () => stubLibrary(),
       createPersist: async () => persist,
+      createPersistTVProgram: async () => vi.fn(async () => {}),
     });
     const body = (await res.json()) as { source: string; persisted: number };
 
