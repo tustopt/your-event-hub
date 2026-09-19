@@ -79,6 +79,7 @@ function EventDetail() {
         .from("screenings")
         .select("id,start_at,end_at,ticket_url,price,currency,language,subtitle_language,format,venue:venues(name,city)")
         .eq("event_id", id)
+        .gte("start_at", new Date().toISOString())
         .maybeSingle();
 
       if (!active) return;
