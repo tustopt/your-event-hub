@@ -48,6 +48,8 @@ describe("RTP EPG parser", () => {
 });
 
 describe("RTP documentary classification", () => {
+  it("accepts current RTP Play documentary markup with HTML entities", () => { expect(isRtpDocumentaryPage('<h2 class="section-title">Este conte&uacute;do faz parte de Document&aacute;rios de Patrim&oacute;nio, Tradi&ccedil;&otilde;es e Gastronomia</h2>')).toBe(true); });
+
   it("accepts RTP Play documentary sections", () => {
     expect(
       isRtpDocumentaryPage(
