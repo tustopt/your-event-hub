@@ -28,7 +28,7 @@ describe("fetchCinematecaProgramme", () => {
       <div>de Robert Altman, Bruce Beresford, Bill Bryden, Jean-Luc Godard, Derek Jarman, Franc Roddam, Nicolas Roeg, Ken Russell, Charles Sturridge, Julien Temple</div>
       <div>Reino Unido, França, Estados Unidos, 1987 - 90 min</div>
       <div>01/09/2026, 21h30 | Sala M. Félix Ribeiro</div>
-      <div>Ciclo CINE-ÓPERA</div><div>CINE-ÓPERA</div>
+      <div>CINE-ÓPERA</div>
       <div>Em colaboração com o Operafest Lisboa e Oeiras 2026</div>
       <div>de Federico Fellini</div><div>Itália, 1983 - 128 min</div>
     `;
