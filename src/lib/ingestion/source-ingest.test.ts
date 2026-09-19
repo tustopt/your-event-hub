@@ -214,9 +214,10 @@ describe("authoritative ingestion library", () => {
     }
   });
 
-  it("keeps Doclisboa a candidate that cannot be ingested", async () => {
+  it("resolves Doclisboa as a production source", async () => {
     const library = await loadIngestionLibrary();
-    expect(library.getSourceDefinition("doclisboa")?.status).toBe("candidate");
-    expect(() => resolveRunnableSource(library, "doclisboa")).toThrow(/candidate/);
+    expect(library.getSourceDefinition("doclisboa")?.status).toBe("production");
+    const resolved = resolveRunnableSource(library, "doclisboa");
+    expect(resolved.adapterKey).toBe("doclisboa");
   });
 });
