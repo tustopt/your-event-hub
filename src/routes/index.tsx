@@ -85,9 +85,9 @@ function Index() {
                   placeholder="Filmes, realizadores, festivais, locais..."
                   className="min-w-0 flex-1 bg-transparent px-1 py-3 text-sm outline-none placeholder:text-muted-foreground"
                 />
-                <button className="rounded-lg bg-primary px-5 py-3 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90">
+                <a href="/explorar" className="rounded-lg bg-primary px-5 py-3 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90">
                   Pesquisar
-                </button>
+                </a>
               </div>
 
               <div className="mt-6 flex flex-wrap gap-2 text-sm">
@@ -120,7 +120,7 @@ function Index() {
                 </div>
                 <h3 className="mt-6 text-lg font-semibold">{title}</h3>
                 <p className="mt-2 text-sm leading-6 text-muted-foreground">{description}</p>
-                <a href="#agenda" className="mt-6 inline-flex text-sm font-medium hover:underline">
+                <a href="/explorar" className="mt-6 inline-flex text-sm font-medium hover:underline">
                   Explorar →
                 </a>
               </article>
