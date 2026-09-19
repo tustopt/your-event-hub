@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { CalendarDays, MapPin, Search, UserRound } from "lucide-react";
+import { CalendarDays, Clapperboard, MapPin, Search, UserRound } from "lucide-react";
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -9,6 +9,7 @@ type ExploreEvent = { id: string; title: string; description: string | null; typ
 function Explore() {
   const navigate = useNavigate();
   const [events, setEvents] = useState<ExploreEvent[]>([]);
+  const [films, setFilms] = useState<{ id: string; title: string; year: number | null; synopsis: string | null; poster_url: string | null }[]>([]);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [authenticated, setAuthenticated] = useState(false);
@@ -21,9 +22,15 @@ function Explore() {
       if (!active) return;
       if (!sessionData.session) { setAuthenticated(false); setLoading(false); return; }
       setAuthenticated(true);
-      const { data, error: queryError } = await supabase.from("events").select("id,title,description,type,start_at,end_at,source_url,venues(name,city)").order("start_at", { ascending: true, nullsFirst: false }).limit(100);
+      const [eventsResult, filmsResult] = await Promise.all([
+        supabase.from("events").select("id,title,description,type,start_at,end_at,source_url,venues(name,city)").order("start_at", { ascending: true, nullsFirst: false }).limit(100),
+        supabase.from("films").select("id,title,year,synopsis,poster_url").order("updated_at", { ascending: false }).limit(100),
+      ]);
+      const data = eventsResult.data;
+      const queryError = eventsResult.error;
+      const filmsError = filmsResult.error;
       if (!active) return;
-      if (queryError) setError(queryError.message); else setEvents((data ?? []) as ExploreEvent[]);
+      if (queryError || filmsError) setError((queryError || filmsError)!.message); else { setEvents((data ?? []) as ExploreEvent[]); setFilms(filmsResult.data ?? []); }
       setLoading(false);
     }
     void load();
@@ -35,6 +42,12 @@ function Explore() {
     if (!term) return events;
     return events.filter((event) => [event.title, event.description, event.type, event.venues?.name, event.venues?.city].filter(Boolean).some((value) => value!.toLocaleLowerCase("pt-PT").includes(term)));
   }, [events, query]);
+
+  const filteredFilms = useMemo(() => {
+    const term = query.trim().toLocaleLowerCase("pt-PT");
+    if (!term) return films;
+    return films.filter((film) => [film.title, film.synopsis, film.year?.toString()].filter(Boolean).some((value) => value!.toLocaleLowerCase("pt-PT").includes(term)));
+  }, [films, query]);
 
   async function signOut() { await supabase.auth.signOut(); await navigate({ to: "/" }); }
 
@@ -50,7 +63,7 @@ function Explore() {
           <div><p className="text-sm font-medium text-muted-foreground">Explorar</p><h1 className="mt-1 text-3xl font-semibold tracking-tight">Agenda documental</h1><p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">Eventos reais provenientes das fontes integradas no catálogo.</p></div>
           {error && <div className="mt-8 rounded-xl border p-4 text-sm text-muted-foreground">Não foi possível carregar a agenda: {error}</div>}
           {!loading && !error && filtered.length === 0 && <div className="mt-8 rounded-2xl border bg-card p-10 text-center"><CalendarDays className="mx-auto size-8 text-muted-foreground" /><h2 className="mt-4 font-semibold">Ainda não há eventos para mostrar</h2><p className="mx-auto mt-2 max-w-lg text-sm leading-6 text-muted-foreground">A estrutura de catálogo está ligada ao Supabase. À medida que as fontes forem ingeridas, os eventos aparecerão aqui automaticamente.</p></div>}
-          <div className="mt-8 grid gap-4 md:grid-cols-2">{filtered.map((event) => <article key={event.id} className="rounded-2xl border bg-card p-6"><p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{event.type}</p><h2 className="mt-2 text-lg font-semibold">{event.title}</h2>{event.description && <p className="mt-2 line-clamp-3 text-sm leading-6 text-muted-foreground">{event.description}</p>}<div className="mt-5 space-y-2 text-sm text-muted-foreground">{event.start_at && <div className="flex items-center gap-2"><CalendarDays className="size-4" />{new Date(event.start_at).toLocaleString("pt-PT", { dateStyle: "medium", timeStyle: "short" })}</div>}{event.venues && <div className="flex items-center gap-2"><MapPin className="size-4" />{event.venues.name}{event.venues.city ? " · " + event.venues.city : ""}</div>}</div></article>)}</div>
+          <section className="mt-10"><div className="flex items-end justify-between gap-4"><div><p className="text-sm font-medium text-muted-foreground">Cinema</p><h2 className="mt-1 text-2xl font-semibold">Documentários</h2></div><span className="text-sm text-muted-foreground">{filteredFilms.length} títulos</span></div><div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">{filteredFilms.map((film) => <article key={film.id} className="overflow-hidden rounded-2xl border bg-card">{film.poster_url ? <img src={film.poster_url} alt="" className="aspect-[2/3] w-full object-cover" /> : <div className="flex aspect-[2/3] items-center justify-center bg-muted"><Clapperboard className="size-10 text-muted-foreground" /></div>}<div className="p-4"><h3 className="font-semibold">{film.title}</h3>{film.year && <p className="mt-1 text-sm text-muted-foreground">{film.year}</p>}{film.synopsis && <p className="mt-2 line-clamp-3 text-sm leading-5 text-muted-foreground">{film.synopsis}</p>}</div></article>)}</div></section><section className="mt-14"><div className="flex items-end justify-between gap-4"><div><p className="text-sm font-medium text-muted-foreground">Agenda</p><h2 className="mt-1 text-2xl font-semibold">Próximas sessões</h2></div><span className="text-sm text-muted-foreground">{filtered.length} eventos</span></div><div className="mt-6 grid gap-4 md:grid-cols-2">{filtered.map((event) => <article key={event.id} className="rounded-2xl border bg-card p-6"><p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{event.type}</p><h2 className="mt-2 text-lg font-semibold">{event.title}</h2>{event.description && <p className="mt-2 line-clamp-3 text-sm leading-6 text-muted-foreground">{event.description}</p>}<div className="mt-5 space-y-2 text-sm text-muted-foreground">{event.start_at && <div className="flex items-center gap-2"><CalendarDays className="size-4" />{new Date(event.start_at).toLocaleString("pt-PT", { dateStyle: "medium", timeStyle: "short" })}</div>}{event.venues && <div className="flex items-center gap-2"><MapPin className="size-4" />{event.venues.name}{event.venues.city ? " · " + event.venues.city : ""}</div>}</div></article>)}</div>
         </>}
       </main>
     </div>
