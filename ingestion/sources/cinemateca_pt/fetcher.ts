@@ -1,7 +1,7 @@
 import type { CinematecaProgrammeItem } from "./types.js";
 
 const DEFAULT_SOURCE_URL =
-  "https://www.cinemateca.pt/Programacao%20.aspx?ciclo=2098";
+  "https://www.cinemateca.pt/Programacao.aspx";
 const DEFAULT_SOURCE_KEY = "cinemateca_pt";
 
 export interface FetchCinematecaOptions {
