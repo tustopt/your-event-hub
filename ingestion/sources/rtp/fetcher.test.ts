@@ -22,6 +22,24 @@ describe("RTP EPG parser", () => {
     ).toBe("/EPG/json/rtp-channels-page/list-grid/tv/1/{date}");
   });
 
+  it("builds RTP Play URLs for EPG entries", () => {
+    const result = parseRtpEpg(
+      {
+        result: {
+          morning: [{
+            id: "951524",
+            date: "2026-09-19 10:30:00",
+            name: "Os Primeiros Alentejanos",
+            url: "https://www.rtp.pt/programa/tv/p17100/e951524",
+          }],
+        },
+      },
+      "RTP1",
+    );
+    expect(result[0].sourceUrl)
+      .toBe("https://www.rtp.pt/play/p17100/e951524/os-primeiros-alentejanos");
+  });
+
   it("parses EPG entries using the channel reported by RTP", () => {
     const result = parseRtpEpg(
       {
