@@ -88,16 +88,19 @@ export interface FileRouteTypes {
     | '/login'
     | '/explorar'
     | '/filmes/$id'
+    | '/eventos/$id'
     | '/api/public/ingest/cinemateca'
     | '/api/public/ingest/source/$sourceKey'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/eventos/$id'
     | '/api/public/ingest/cinemateca'
     | '/api/public/ingest/source/$sourceKey'
   id:
     | '__root__'
     | '/'
+    | '/eventos/$id'
     | '/api/public/ingest/cinemateca'
     | '/api/public/ingest/source/$sourceKey'
   fileRoutesById: FileRoutesById
