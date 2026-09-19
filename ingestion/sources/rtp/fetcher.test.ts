@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   extractRtpEpgFeedUrl,
   isRtpDocumentaryPage,
+  fetchRtpProgramme,
   parseRtpEpg,
 } from "./fetcher";
 
@@ -69,6 +70,40 @@ describe("RTP EPG parser", () => {
       broadcasterKey: "rtp",
       genre: "Documentários",
       startAt: "2026-09-19T10:30:00+01:00",
+    });
+  });
+});
+
+describe("RTP historical ingestion", () => {
+  it("ingests a known historical documentary from the EPG", async () => {
+    const responses = [
+      new Response('<script>var epgFeedUrl = "/EPG/json/rtp-channels-page/list-grid/tv/1/{0}";</script>', { status: 200 }),
+      new Response(JSON.stringify({
+        _info: { name: "RTP1" },
+        result: {
+          late: [{
+            id: "49401",
+            date: "2026-09-03 23:28:00",
+            name: "Os Primeiros Alentejanos",
+            url: "https://www.rtp.pt/programa/tv/p17100/e951524",
+          }],
+        },
+      }), { status: 200, headers: { "content-type": "application/json" } }),
+      new Response('<h2 class="section-title">Este conte&uacute;do faz parte de Document&aacute;rios de Patrim&oacute;nio, Tradi&ccedil;&otilde;es e Gastronomia</h2>', { status: 200 }),
+    ];
+
+    const result = await fetchRtpProgramme({
+      now: () => new Date("2026-09-03T12:00:00Z"),
+      channelPages: [{ key: "rtp1", channel: "RTP1", url: "https://www.rtp.pt/rtp1/" }],
+      fetchImpl: async () => responses.shift() ?? new Response("", { status: 500 }),
+    });
+
+    expect(result).toHaveLength(1);
+    expect(result[0]).toMatchObject({
+      title: "Os Primeiros Alentejanos",
+      channel: "RTP1",
+      sourceExternalId: "49401-2026-09-03-rtp1",
+      startAt: "2026-09-03T23:28:00+01:00",
     });
   });
 });
