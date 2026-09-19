@@ -53,7 +53,19 @@ function Index() {
               <Search className="size-5" />
             </a>
             <a
-              href="#perfil"
+              href="/login"
+              className="hidden rounded-lg px-3 py-2 text-sm font-medium text-foreground/80 transition-colors hover:bg-muted hover:text-foreground sm:inline-flex"
+            >
+              Entrar
+            </a>
+            <a
+              href="/login?mode=signup"
+              className="rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
+            >
+              Criar conta
+            </a>
+            <a
+              href="/login"
               aria-label="Perfil"
               className="inline-flex size-10 items-center justify-center rounded-full hover:bg-muted"
             >
