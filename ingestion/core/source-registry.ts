@@ -46,13 +46,13 @@ export const sourceRegistry: readonly SourceDefinition[] = [
   },
   {
     key: "doclisboa", name: "Doclisboa", category: "festival",
-    sourceType: "website", countryCode: "PT", languageCode: "pt", status: "candidate",
+    sourceType: "website", countryCode: "PT", languageCode: "pt", status: "production",
     canonicalUrl: "https://doclisboa.org/", fetchIntervalMinutes: 360,
     description: "Candidate festival source. Edition-aware ingestion for Doclisboa programme, screenings and festival venues.",
   },
   {
     key: "rtp", name: "RTP", category: "television",
-    sourceType: "website", countryCode: "PT", languageCode: "pt", status: "candidate",
+    sourceType: "website", countryCode: "PT", languageCode: "pt", status: "production",
     adapterKey: "rtp",
     canonicalUrl: "https://www.rtp.pt/", fetchIntervalMinutes: 360,
     description: "Television source restricted to documentaries and documentary series.",
