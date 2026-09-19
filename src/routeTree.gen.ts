@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ExplorarRouteImport } from './routes/explorar'
+import { Route as FilmesIdRouteImport } from './routes/filmes/$id'
 import { Route as ApiPublicIngestCinematecaRouteImport } from './routes/api/public/ingest/cinemateca'
 import { Route as ApiPublicIngestSourceSourceKeyRouteImport } from './routes/api/public/ingest/source.$sourceKey'
 
@@ -28,6 +29,11 @@ const LoginRoute = LoginRouteImport.update({
 const ExplorarRoute = ExplorarRouteImport.update({
   id: '/explorar',
   path: '/explorar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FilmesIdRoute = FilmesIdRouteImport.update({
+  id: '/filmes/$id',
+  path: '/filmes/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicIngestCinematecaRoute =
@@ -47,6 +53,9 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/explorar': typeof ExplorarRoute
+  '/filmes/$id': typeof FilmesIdRoute
+  '/filmes/$id': typeof FilmesIdRoute
+  '/filmes/$id': typeof FilmesIdRoute
   '/api/public/ingest/cinemateca': typeof ApiPublicIngestCinematecaRoute
   '/api/public/ingest/source/$sourceKey': typeof ApiPublicIngestSourceSourceKeyRoute
 }
@@ -71,6 +80,7 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/explorar'
+    | '/filmes/$id'
     | '/api/public/ingest/cinemateca'
     | '/api/public/ingest/source/$sourceKey'
   fileRoutesByTo: FileRoutesByTo
@@ -89,6 +99,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LoginRoute: typeof LoginRoute
   ExplorarRoute: typeof ExplorarRoute
+  FilmesIdRoute: typeof FilmesIdRoute
   ApiPublicIngestCinematecaRoute: typeof ApiPublicIngestCinematecaRoute
   ApiPublicIngestSourceSourceKeyRoute: typeof ApiPublicIngestSourceSourceKeyRoute
 }
@@ -100,6 +111,13 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/filmes/$id': {
+      id: '/filmes/$id'
+      path: '/filmes/$id'
+      fullPath: '/filmes/$id'
+      preLoaderRoute: typeof FilmesIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/explorar': {
@@ -138,6 +156,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LoginRoute: LoginRoute,
   ExplorarRoute: ExplorarRoute,
+  FilmesIdRoute: FilmesIdRoute,
   ApiPublicIngestCinematecaRoute: ApiPublicIngestCinematecaRoute,
   ApiPublicIngestSourceSourceKeyRoute: ApiPublicIngestSourceSourceKeyRoute,
 }
