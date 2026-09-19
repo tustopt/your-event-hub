@@ -52,7 +52,7 @@ function FilmDetail() {
       if (ids.length) {
         const { data: rows, error: screeningError } = await supabase.from("screenings").select("id,start_at,end_at,ticket_url,venue:venues(name,city)").in("id", ids).gte("start_at", new Date().toISOString()).order("start_at").limit(50);
         if (screeningError) setError(screeningError.message);
-        else setScreenings((rows ?? []) as Screening[]);
+        else setScreenings(((rows ?? []) as Screening[]).filter((row) => new Date(row.start_at).getTime() >= Date.now()));
       }
       setLoading(false);
     }
