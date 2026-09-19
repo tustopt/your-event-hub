@@ -23,7 +23,7 @@ function Explore() {
       if (!sessionData.session) { setAuthenticated(false); setLoading(false); return; }
       setAuthenticated(true);
       const [eventsResult, filmsResult] = await Promise.all([
-        supabase.from("events").select("id,title,description,type,start_at,end_at,source_url,venues(name,city)").order("start_at", { ascending: true, nullsFirst: false }).limit(100),
+        supabase.from("events").select("id,title,description,type,start_at,end_at,source_url,venues(name,city)").gte("start_at", new Date().toISOString()).order("start_at", { ascending: true, nullsFirst: false }).limit(100),
         supabase.from("films").select("id,title,year,synopsis,poster_url").order("updated_at", { ascending: false }).limit(100),
       ]);
       const data = eventsResult.data;
