@@ -38,14 +38,14 @@ const defaultDeps: Deps = {
       } as never);
       if (error) throw new Error(error.message);
 
-      if (screening.festivalKey && screening.festivalEditionYear) {
+      if (screening["festivalKey"] && screening["festivalEditionYear"]) {
         const externalId = screening.provenance?.sourceExternalId;
         if (externalId) {
           const { error: festivalError } = await supabaseAdmin.rpc("link_event_festival", {
             p_source_key: sourceKey,
             p_source_external_id: externalId,
-            p_festival_key: screening.festivalKey,
-            p_festival_year: screening.festivalEditionYear,
+            p_festival_key: screening["festivalKey"],
+            p_festival_year: screening["festivalEditionYear"],
           } as never);
           if (festivalError) throw new Error(festivalError.message);
         }

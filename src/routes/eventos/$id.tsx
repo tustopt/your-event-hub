@@ -187,7 +187,7 @@ function EventDetail() {
               <h2 className="font-semibold">Data e local</h2>
               <div className="mt-5 space-y-4 text-sm">
                 <div className="flex gap-3"><CalendarDays className="mt-0.5 size-5 text-muted-foreground" /><div><p className="font-medium">{new Date(date).toLocaleString("pt-PT", { dateStyle: "full", timeStyle: "short" })}</p>{displayScreening?.end_at && <p className="mt-1 text-muted-foreground">Termina às {new Date(displayScreening.end_at).toLocaleTimeString("pt-PT", { hour: "2-digit", minute: "2-digit" })}</p>}</div></div>
-                {venue && <div className="flex gap-3"><MapPin className="mt-0.5 size-5 text-muted-foreground" /><div><p className="font-medium">{venue.name}</p>{venue.address && "address" in venue && <p className="mt-1 text-muted-foreground">{venue.address}</p>}{venue.city && <p className="text-muted-foreground">{venue.city}</p>}</div></div>}
+                {venue && <div className="flex gap-3"><MapPin className="mt-0.5 size-5 text-muted-foreground" /><div><p className="font-medium">{venue.name}</p>{venue.city && <p className="text-muted-foreground">{venue.city}</p>}</div></div>}
               </div>
             </div>
 
