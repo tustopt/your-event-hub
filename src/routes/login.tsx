@@ -13,6 +13,9 @@ function Login() {
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("mode") === "signup") setMode("signup");
+
     let active = true;
     supabase.auth.getSession().then(({ data }) => {
       if (active && data.session) void navigate({ to: "/explorar" });
