@@ -4,11 +4,11 @@ on:
   workflow_dispatch:
     inputs:
       source:
-        description: "Optional source key (for example cinemateca_pt)"
+        description: "Optional source key (currently cinemateca_pt)"
         required: false
         type: string
       limit:
-        description: "Optional maximum number of source items per source"
+        description: "Optional maximum number of source items"
         required: false
         type: string
   schedule:
@@ -26,9 +26,8 @@ jobs:
     permissions:
       contents: read
     env:
-      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-      SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
-      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      DOCUEVENTS_APP_URL: ${{ secrets.DOCUEVENTS_APP_URL }}
+      DOCUEVENTS_INGEST_AUTOMATION_TOKEN: ${{ secrets.DOCUEVENTS_INGEST_AUTOMATION_TOKEN }}
       INGEST_SOURCE: ${{ inputs.source }}
       INGEST_LIMIT: ${{ inputs.limit }}
     steps:
@@ -37,7 +36,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
 
       - name: Install dependencies
         run: npm install
