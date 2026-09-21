@@ -46,13 +46,30 @@ function normalizeFilm(item: DoclisboaFilmItem, sourceExternalId: string, source
     durationMinutes: item.durationMinutes,
     synopsis: item.synopsis,
     people: item.director ? [{ name: item.director, role: "director" as const }] : undefined,
-    countries: item.country ? item.country.split(/\s*[,/]\s*/).filter(Boolean) : undefined,
+    countries: item.country
+      ? item.country
+          .split(/\s*[,/]\s*/)
+          .map((country) => country.replace(/^•\s*/, "").trim())
+          .filter(Boolean)
+      : undefined,
     provenance: {
       sourceKey: DOCLISBOA_FESTIVAL_KEY,
       sourceExternalId,
       sourceUrl,
     },
   };
+}
+
+function formatEndDateTimeWithOffset(
+  date: string,
+  time: string,
+  durationMinutes: number,
+): string {
+  const [year, month, day] = date.split("-").map(Number);
+  const [hours, minutes] = time.split(":").map(Number);
+  const end = new Date(Date.UTC(year, month - 1, day, hours, minutes + durationMinutes));
+
+  return `${end.getUTCFullYear()}-${String(end.getUTCMonth() + 1).padStart(2, "0")}-${String(end.getUTCDate()).padStart(2, "0")}T${String(end.getUTCHours()).padStart(2, "0")}:${String(end.getUTCMinutes()).padStart(2, "0")}:00+01:00`;
 }
 
 export function normalizeProgrammeItem(item: DoclisboaProgrammeItem): NormalizedScreening {
@@ -85,7 +102,7 @@ export function normalizeProgrammeItem(item: DoclisboaProgrammeItem): Normalized
     title: item.title,
     startAt: `${item.date}T${item.time}:00+01:00`,
     endAt: item.durationMinutes
-      ? new Date(Date.parse(`${item.date}T${item.time}:00+01:00`) + item.durationMinutes * 60_000).toISOString()
+      ? formatEndDateTimeWithOffset(item.date, item.time, item.durationMinutes)
       : undefined,
     venue,
     language: item.language,
