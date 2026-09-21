@@ -24,7 +24,7 @@ const SESSION_CONTINUATION_RE =
   /^\d{1,2}\s+(Jan|Fev|Mar|Abr|Mai|Jun|Jul|Ago|Set|Out|Nov|Dez)\s*\/\s*\d{1,2}[.:]\d{2}\s*,\s*$/i;
 
 const METADATA_RE =
-  /^(\d{4}(?:[–-]\d{4})?)\s+(.+?)\s+•\s+(\d{1,4})[’']\s+•\s+(.+)$/;
+  /^(\d{4}(?:[\u2010-\u2015-]\d{4})?)\s+(.+?)\s+•\s+(\d{1,4})[’']\s+•\s+(.+)$/;
 
 const SECTION_NAMES = [
   "Competição Internacional",
@@ -130,8 +130,12 @@ function parseFilmFromMetadata(
   if (candidates.length === 1) {
     title = candidates[0];
   } else if (candidates.length === 2) {
-    title = candidates[0];
-    originalTitle = candidates[1];
+    if (/[:\[\u2013\u2014-]$/.test(candidates[0])) {
+      title = candidates.join(" ");
+    } else {
+      title = candidates[0];
+      originalTitle = candidates[1];
+    }
   } else if (candidates.length === 4) {
     title = candidates.slice(0, 2).join(" ");
     originalTitle = candidates.slice(2).join(" ");
