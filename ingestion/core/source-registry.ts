@@ -48,7 +48,7 @@ export const sourceRegistry: readonly SourceDefinition[] = [
     key: "doclisboa", name: "Doclisboa", category: "festival",
     sourceType: "website", countryCode: "PT", languageCode: "pt", status: "production",
     adapterKey: "doclisboa",
-    canonicalUrl: "https://doclisboa.org/2026/programa/", fetchIntervalMinutes: 360,
+    canonicalUrl: "https://doclisboa.org/seccoes/", fetchIntervalMinutes: 360,
     description: "Candidate festival source. Edition-aware ingestion for Doclisboa programme, screenings and festival venues.",
   },
   {
