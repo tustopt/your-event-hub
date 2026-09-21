@@ -5,6 +5,7 @@ import {
   matchesExploreFilter,
   matchesExploreQuery,
   matchesFilmQuery,
+  getDateFilterRange,
   type ExploreFilter,
 } from "@/lib/explore/filters";
 import { supabase } from "@/integrations/supabase/client";
@@ -88,7 +89,7 @@ function Explore() {
       }
       setAuthenticated(true);
 
-      const now = new Date().toISOString();
+      const todayStart = getDateFilterRange("today").from.toISOString();
 
       const [eventsResult, filmsResult, screeningsResult] = await Promise.all([
         supabase
@@ -96,7 +97,7 @@ function Explore() {
           .select(
             "id,title,description,type,start_at,end_at,source_url,venues(name,city),festivals(name)",
           )
-          .gte("start_at", now)
+          .gte("start_at", todayStart)
           .order("start_at", { ascending: true, nullsFirst: false })
           .limit(500),
         supabase
@@ -109,7 +110,7 @@ function Explore() {
           .select(
             "id,start_at,end_at,venues(name,city),events(id,type,festivals(name)),screening_films(film_id)",
           )
-          .gte("start_at", now)
+          .gte("start_at", todayStart)
           .order("start_at", { ascending: true })
           .limit(500),
       ]);
@@ -207,10 +208,25 @@ function Explore() {
 
   const nextScreeningByFilm = useMemo(() => {
     const result = new Map<string, FilmScreening>();
+    const now = Date.now();
 
     for (const screening of filmScreenings) {
       for (const relation of screening.screening_films ?? []) {
-        if (!result.has(relation.film_id)) {
+        const current = result.get(relation.film_id);
+        if (!current) {
+          result.set(relation.film_id, screening);
+          continue;
+        }
+
+        const currentTime = new Date(current.start_at).getTime();
+        const screeningTime = new Date(screening.start_at).getTime();
+        const currentIsFuture = currentTime >= now;
+        const screeningIsFuture = screeningTime >= now;
+
+        if (
+          (screeningIsFuture && !currentIsFuture) ||
+          (screeningIsFuture === currentIsFuture && screeningTime < currentTime)
+        ) {
           result.set(relation.film_id, screening);
         }
       }
