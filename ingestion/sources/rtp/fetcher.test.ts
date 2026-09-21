@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   extractRtpEpgFeedUrl,
+  extractRtpProgrammeImageUrl,
   isRtpDocumentaryPage,
   fetchRtpProgramme,
   parseRtpEpg,
@@ -46,17 +47,15 @@ describe("RTP EPG parser", () => {
       {
         _info: { name: "RTP1", timeZone: "lis" },
         result: {
-          morning: [
-            {
-              id: "951524",
-              date: "2026-09-19 10:30:00",
-              name: "Os Primeiros Alentejanos",
-              series: "",
-              description: "Documentário sobre os monumentos megalíticos do Alentejo central",
-              url: "https://www.rtp.pt/programa/tv/p17100/e951524",
-              episode: { number: "", title: "", sinopse: "" },
-            },
-          ],
+          morning: [{
+            id: "951524",
+            date: "2026-09-19 10:30:00",
+            name: "Os Primeiros Alentejanos",
+            series: "",
+            description: "Documentário sobre os monumentos megalíticos do Alentejo central",
+            url: "https://www.rtp.pt/programa/tv/p17100/e951524",
+            episode: { number: "", title: "", sinopse: "" },
+          }],
         },
       },
       "RTP",
@@ -71,6 +70,15 @@ describe("RTP EPG parser", () => {
       genre: "Documentários",
       startAt: "2026-09-19T10:30:00+01:00",
     });
+  });
+
+  it("extracts an Open Graph promotional image URL", () => {
+    expect(
+      extractRtpProgrammeImageUrl(
+        '<meta property="og:image" content="/images/programmes/doc.jpg">',
+        "https://www.rtp.pt/play/p17100/e951524/os-primeiros-alentejanos",
+      ),
+    ).toBe("https://www.rtp.pt/images/programmes/doc.jpg");
   });
 });
 
@@ -89,7 +97,7 @@ describe("RTP historical ingestion", () => {
           }],
         },
       }), { status: 200, headers: { "content-type": "application/json" } }),
-      new Response('<h2 class="section-title">Este conte&uacute;do faz parte de Document&aacute;rios de Patrim&oacute;nio, Tradi&ccedil;&otilde;es e Gastronomia</h2>', { status: 200 }),
+      new Response('<meta property="og:image" content="/images/programmes/doc.jpg"><h2 class="section-title">Este conte&uacute;do faz parte de Document&aacute;rios de Patrim&oacute;nio, Tradi&ccedil;&otilde;es e Gastronomia</h2>', { status: 200 }),
     ];
 
     const result = await fetchRtpProgramme({
@@ -104,6 +112,7 @@ describe("RTP historical ingestion", () => {
       channel: "RTP1",
       sourceExternalId: "49401-2026-09-03-rtp1",
       startAt: "2026-09-03T23:28:00+01:00",
+      imageUrl: "https://www.rtp.pt/images/programmes/doc.jpg",
     });
   });
 });
