@@ -20,6 +20,9 @@ const MONTHS: Record<string, number> = {
 const SESSION_RE =
   /^(\d{1,2})\s+(Jan|Fev|Mar|Abr|Mai|Jun|Jul|Ago|Set|Out|Nov|Dez)\s*\/\s*(\d{1,2})[.:](\d{2})\s*,\s*(.+)$/i;
 
+const SESSION_CONTINUATION_RE =
+  /^\d{1,2}\s+(Jan|Fev|Mar|Abr|Mai|Jun|Jul|Ago|Set|Out|Nov|Dez)\s*\/\s*\d{1,2}[.:]\d{2}\s*,\s*$/i;
+
 const METADATA_RE =
   /^(\d{4})\s+(.+?)\s+•\s+(\d{1,4})[’']\s+•\s+(.+)$/;
 
@@ -52,11 +55,18 @@ function normalizeLines(text: string): string[] {
   const lines: string[] = [];
   for (let i = 0; i < raw.length; i += 1) {
     const line = raw[i];
+
+    if (SESSION_CONTINUATION_RE.test(line) && raw[i + 1]) {
+      lines.push(normalizeText(line + raw[++i]));
+      continue;
+    }
+
     if (/\/\s*$/.test(line) && raw[i + 1] && !SESSION_RE.test(line)) {
       lines.push(normalizeText(line + " " + raw[++i]));
-    } else {
-      lines.push(line);
+      continue;
     }
+
+    lines.push(line);
   }
 
   return lines;
@@ -130,17 +140,16 @@ function parseFilmFromMetadata(
     originalTitle = candidates.slice(Math.ceil(candidates.length / 2)).join(" ");
   }
 
-  const meta = metadata;
-  const country = meta[2].split(" / ")[0].trim();
+  const country = metadata[2].split(" / ")[0].trim();
 
   return {
     title,
     originalTitle,
     director: directorParts.join(" "),
-    year: Number(meta[1]),
+    year: Number(metadata[1]),
     country,
-    durationMinutes: Number(meta[3]),
-    format: meta[4].trim(),
+    durationMinutes: Number(metadata[3]),
+    format: metadata[4].trim(),
   };
 }
 
@@ -157,11 +166,12 @@ function parseProgrammeText(text: string, sourceUrl: string): DoclisboaProgramme
 
     for (const session of activeSessions) {
       for (const film of activeFilms) {
-        const sourceExternalId =
-          `${session.date}-${session.time.replace(":", "")}-${session.venue.toLowerCase().replace(/[^a-z0-9]+/gi, "-")}-${film.title.toLowerCase().replace(/[^a-z0-9]+/gi, "-")}`;
+        const slug = (value: string) =>
+          value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+            .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 
         items.push({
-          sourceExternalId,
+          sourceExternalId: `${session.date}-${session.time.replace(":", "")}-${slug(session.venue)}-${slug(film.title)}`,
           sourceUrl,
           editionYear: DOCLISBOA_EDITION_YEAR,
           date: session.date,
@@ -185,8 +195,8 @@ function parseProgrammeText(text: string, sourceUrl: string): DoclisboaProgramme
 
   for (let i = 0; i < lines.length; i += 1) {
     const line = lines[i];
-
     const section = sectionFromLine(line);
+
     if (section) {
       flush();
       currentSection = section;
@@ -224,9 +234,7 @@ async function fetchPdf(fetchImpl: typeof fetch, url: string): Promise<Uint8Arra
   if (!response.ok) {
     throw new Error(`Doclisboa PDF fetch failed: ${response.status} (${url})`);
   }
-
-  const buffer = await response.arrayBuffer();
-  return new Uint8Array(buffer);
+  return new Uint8Array(await response.arrayBuffer());
 }
 
 export async function fetchDoclisboaProgramme(
@@ -235,8 +243,8 @@ export async function fetchDoclisboaProgramme(
   const fetchImpl = options.fetchImpl ?? fetch;
   const sourceUrl = options.url ?? DOCLISBOA_PROGRAMME_URL;
   const pdf = await fetchPdf(fetchImpl, sourceUrl);
-
   const parser = new PDFParse({ data: pdf });
+
   try {
     const result = await parser.getText();
     return parseProgrammeText(result.text, sourceUrl);
