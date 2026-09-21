@@ -167,7 +167,20 @@ export async function fetchDoclisboaProgramme(options: FetchDoclisboaOptions = {
   const fetchImpl = options.fetchImpl ?? fetch;
   const sourceUrl = options.url ?? DOCLISBOA_PROGRAMME_URL;
   const indexHtml = await fetchText(fetchImpl, sourceUrl);
-  const sectionUrls = extractSectionUrls(indexHtml, sourceUrl).slice(0, options.maxSectionPages ?? 100);
+  const discoveredSectionUrls = extractSectionUrls(indexHtml, sourceUrl);
+  const fallbackSectionUrls = [
+    "competicao-internacional",
+    "competicao-portuguesa",
+    "riscos",
+    "da-terra-a-lua",
+    "heart-beat",
+    "verdes-anos",
+    "na-companhia-de-william-greaves-retrospectiva",
+    "sessao-de-abertura",
+    "sessao-de-encerramento",
+  ].map((slug) => new URL(`/seccoes/${slug}/`, sourceUrl).toString());
+  const sectionUrls = (discoveredSectionUrls.length > 0 ? discoveredSectionUrls : fallbackSectionUrls)
+    .slice(0, options.maxSectionPages ?? 100);
   const results = await Promise.all(sectionUrls.map(async (sectionUrl) => parseSectionPage(await fetchText(fetchImpl, sectionUrl), sectionUrl)));
   const seen = new Set<string>();
   return results.flat().filter((item) => {
