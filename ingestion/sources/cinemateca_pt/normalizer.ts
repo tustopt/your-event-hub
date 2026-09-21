@@ -37,6 +37,7 @@ function normalizeVenue(item: CinematecaProgrammeItem, sourceKey: string): Norma
   return {
     name: item.venue.trim(),
     type: "cinema",
+    city: "Lisboa",
     countryCode: "PT",
     provenance: provenance(item, sourceKey),
   };
