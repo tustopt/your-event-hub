@@ -1,191 +1,246 @@
+import { PDFParse } from "pdf-parse";
 import type { DoclisboaFilmItem, DoclisboaProgrammeItem } from "./types";
 
 export const DOCLISBOA_SOURCE_KEY = "doclisboa";
-export const DOCLISBOA_PROGRAMME_URL = "https://doclisboa.org/seccoes/";
+export const DOCLISBOA_PROGRAMME_URL = "https://doclisboa.org/doclisboa2026_programa.pdf";
 export const DOCLISBOA_EDITION_YEAR = 2026;
 
 export interface FetchDoclisboaOptions {
   url?: string;
   fetchImpl?: typeof fetch;
-  maxSectionPages?: number;
-}
-
-const VENUE_RE = /(Culturgest|Cinema São Jorge|Cinemateca Portuguesa|Cinema Ideal)(?:\s*-\s*[^\n]+)?/i;
-const SESSION_RE = /^(\d{1,2})\s+(Jan|Fev|Mar|Abr|Mai|Jun|Jul|Ago|Set|Out|Nov|Dez)\s*\/\s*(\d{1,2}):(\d{2})\s*\/\s*(\d{1,4})[’']?$/i;
-const MONTHS: Record<string, number> = { jan:1, fev:2, mar:3, abr:4, mai:5, jun:6, jul:7, ago:8, set:9, out:10, nov:11, dez:12 };
-const METADATA_RE = /^(\d{4})\s+(.+?)\s+(\d{1,4})[’']$/;
-
-function decodeHtml(value: string): string {
-  return value.replace(/&nbsp;/gi, " ").replace(/&amp;/gi, "&").replace(/&quot;/gi, '"')
-    .replace(/&#39;|&#x27;/gi, "'").replace(/&#8211;|&#x2013;/gi, "–").replace(/&#8212;|&#x2014;/gi, "—")
-    .replace(/&#x2019;/gi, "’").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
-}
-
-function htmlToLines(html: string): string[] {
-  return html.replace(/<script[\s\S]*?<\/script>/gi, "").replace(/<style[\s\S]*?<\/style>/gi, "")
-    .replace(/<br\s*\/?\s*>/gi, "\n").replace(/<h[1-2][^>]*>/gi, "\n")
-    .replace(/<h3[^>]*>/gi, "\n@@TITLE@@\n").replace(/<\/(?:p|div|li|h[1-6]|article|section|header|footer|a|button)>/gi, "\n")
-    .replace(/<[^>]+>/g, " ").split(/\r?\n+/).map(decodeHtml).filter(Boolean);
-}
-
-function slug(value: string): string {
-  return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-}
-
-function extractSectionUrls(indexHtml: string, indexUrl: string): string[] {
-  const urls = new Set<string>();
-  const re = /href\s*=\s*["']([^"']*\/seccoes\/[^"'#?]+\/?)["']/gi;
-  for (const match of indexHtml.matchAll(re)) {
-    try {
-      const url = new URL(match[1], indexUrl).toString().replace(/\/$/, "") + "/";
-      if (/\/seccoes\/(?!$)/i.test(new URL(url).pathname)) urls.add(url);
-    } catch {}
-  }
-  return [...urls];
 }
 
 type Session = { date: string; time: string; venue: string; duration: number };
 
-function parseFilm(lines: string[], titleIndex: number): DoclisboaFilmItem | undefined {
-  const title = lines[titleIndex + 1];
-  if (!title) return undefined;
+const MONTHS: Record<string, number> = {
+  jan: 1, fev: 2, mar: 3, abr: 4, mai: 5, jun: 6,
+  jul: 7, ago: 8, set: 9, out: 10, nov: 11, dez: 12,
+};
 
-  let metadataIndex = -1;
-  for (let j = titleIndex + 2; j < Math.min(lines.length, titleIndex + 12); j += 1) {
-    if (METADATA_RE.test(lines[j])) {
-      metadataIndex = j;
-      break;
+const SESSION_RE =
+  /^(\d{1,2})\s+(Jan|Fev|Mar|Abr|Mai|Jun|Jul|Ago|Set|Out|Nov|Dez)\s*\/\s*(\d{1,2})[.:](\d{2})\s*,\s*(.+)$/i;
+
+const METADATA_RE =
+  /^(\d{4})\s+(.+?)\s+•\s+(\d{1,4})[’']\s+•\s+(.+)$/;
+
+const SECTION_NAMES = [
+  "Competição Internacional",
+  "Competição Portuguesa",
+  "Riscos",
+  "Heart Beat",
+  "Da Terra à Lua",
+  "Verdes Anos",
+  "Na Companhia de William Greaves",
+  "Lino Brocka",
+];
+
+function normalizeText(value: string): string {
+  return value
+    .replace(/\u00ad/g, "")
+    .replace(/[ \t]+/g, " ")
+    .replace(/\s+([,.;:!?])/g, "$1")
+    .trim();
+}
+
+function normalizeLines(text: string): string[] {
+  const raw = text
+    .replace(/\r/g, "")
+    .split("\n")
+    .map(normalizeText)
+    .filter(Boolean);
+
+  const lines: string[] = [];
+  for (let i = 0; i < raw.length; i += 1) {
+    const line = raw[i];
+    if (/\/\s*$/.test(line) && raw[i + 1] && !SESSION_RE.test(line)) {
+      lines.push(normalizeText(line + " " + raw[++i]));
+    } else {
+      lines.push(line);
     }
   }
-  if (metadataIndex < 0) return undefined;
 
-  const meta = lines[metadataIndex].match(METADATA_RE)!;
-  const candidateDirector = lines[metadataIndex - 1];
-  const director =
-    candidateDirector && !/^(Bilhete|Image|Estreia|Prémio)/i.test(candidateDirector)
-      ? candidateDirector
-      : undefined;
+  return lines;
+}
 
-  const originalTitle =
-    metadataIndex - 2 > titleIndex + 1 &&
-    candidateDirector !== lines[metadataIndex - 2] &&
-    !/^\d{4}\s/.test(lines[metadataIndex - 2])
-      ? lines[metadataIndex - 2]
-      : undefined;
+function parseSession(value: string): Session | undefined {
+  const match = value.match(SESSION_RE);
+  if (!match) return undefined;
+
+  const month = MONTHS[match[2].toLowerCase()];
+  if (!month) return undefined;
+
+  return {
+    date: `${DOCLISBOA_EDITION_YEAR}-${String(month).padStart(2, "0")}-${String(Number(match[1])).padStart(2, "0")}`,
+    time: `${String(Number(match[3])).padStart(2, "0")}:${match[4]}`,
+    venue: match[5].trim(),
+    duration: 0,
+  };
+}
+
+function isSectionLine(line: string): boolean {
+  return SECTION_NAMES.some((name) => line.startsWith(name + " ̸") || line === name);
+}
+
+function sectionFromLine(line: string): string | undefined {
+  return SECTION_NAMES.find((name) => line.startsWith(name + " ̸") || line === name);
+}
+
+function isNoise(line: string): boolean {
+  return /^(CP \/ PC|CI \/ IC|R \/ NV|A PROPÓSITO|PASSA COM|REALIZADOR|REALIZADORA|HOMENAGEM|OUTROS RISCOS|SOPHIE ROGER|JOHN TORRES|CINEMA ETERNO|EM TERRENO DESCONHECIDO|FANTASMAS E APARIÇÕES|POR DENTRO, POR FORA|A LÍNGUA DO LUGAR)/i.test(line);
+}
+
+function parseFilmFromMetadata(
+  lines: string[],
+  metadataIndex: number,
+  metadata: RegExpMatchArray,
+): DoclisboaFilmItem | undefined {
+  let cursor = metadataIndex - 1;
+  const directorParts: string[] = [];
+
+  if (cursor < 0) return undefined;
+  directorParts.unshift(lines[cursor--]);
+
+  if (cursor >= 0 && /,$/.test(lines[cursor])) {
+    directorParts.unshift(lines[cursor--]);
+  }
+
+  const candidates: string[] = [];
+  while (cursor >= 0 && candidates.length < 4) {
+    const line = lines[cursor];
+    if (SESSION_RE.test(line) || METADATA_RE.test(line) || isSectionLine(line) || isNoise(line)) break;
+    candidates.unshift(line);
+    cursor -= 1;
+  }
+
+  if (!candidates.length) return undefined;
+
+  let title: string;
+  let originalTitle: string | undefined;
+
+  if (candidates.length === 1) {
+    title = candidates[0];
+  } else if (candidates.length === 2) {
+    title = candidates[0];
+    originalTitle = candidates[1];
+  } else if (candidates.length === 4) {
+    title = candidates.slice(0, 2).join(" ");
+    originalTitle = candidates.slice(2).join(" ");
+  } else {
+    title = candidates.slice(0, Math.ceil(candidates.length / 2)).join(" ");
+    originalTitle = candidates.slice(Math.ceil(candidates.length / 2)).join(" ");
+  }
+
+  const meta = metadata;
+  const country = meta[2].split(" / ")[0].trim();
 
   return {
     title,
     originalTitle,
-    director,
+    director: directorParts.join(" "),
     year: Number(meta[1]),
-    country: meta[2],
+    country,
     durationMinutes: Number(meta[3]),
+    format: meta[4].trim(),
   };
 }
 
-function parseSectionPage(html: string, sourceUrl: string): DoclisboaProgrammeItem[] {
-  const lines = htmlToLines(html);
-  const sectionMatch = html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i);
-  const section = sectionMatch ? decodeHtml(sectionMatch[1]) : undefined;
+function parseProgrammeText(text: string, sourceUrl: string): DoclisboaProgrammeItem[] {
+  const lines = normalizeLines(text);
   const items: DoclisboaProgrammeItem[] = [];
   const pendingSessions: Session[] = [];
   let activeSessions: Session[] = [];
   let activeFilms: DoclisboaFilmItem[] = [];
+  let currentSection: string | undefined;
 
   const flush = () => {
     if (!activeFilms.length || !activeSessions.length) return;
+
     for (const session of activeSessions) {
-      const firstFilm = activeFilms[0];
-      const sourceExternalId = `${session.date}-${session.time.replace(":", "")}-${slug(session.venue)}-${slug(firstFilm.title)}`;
-      items.push({
-        sourceExternalId,
-        sourceUrl,
-        editionYear: DOCLISBOA_EDITION_YEAR,
-        date: session.date,
-        time: session.time,
-        title: firstFilm.title,
-        films: [...activeFilms],
-        section,
-        venue: session.venue,
-        venueType: /cinemateca|cinema/i.test(session.venue) ? "cinema" : "cultural_center",
-        durationMinutes: session.duration,
-        director: firstFilm.director,
-        country: firstFilm.country,
-        year: firstFilm.year,
-        synopsis: firstFilm.synopsis,
-      });
+      for (const film of activeFilms) {
+        const sourceExternalId =
+          `${session.date}-${session.time.replace(":", "")}-${session.venue.toLowerCase().replace(/[^a-z0-9]+/gi, "-")}-${film.title.toLowerCase().replace(/[^a-z0-9]+/gi, "-")}`;
+
+        items.push({
+          sourceExternalId,
+          sourceUrl,
+          editionYear: DOCLISBOA_EDITION_YEAR,
+          date: session.date,
+          time: session.time,
+          title: film.title,
+          films: [film],
+          section: currentSection,
+          venue: session.venue,
+          venueType: /cinema/i.test(session.venue) ? "cinema" : "cultural_center",
+          durationMinutes: film.durationMinutes,
+          director: film.director,
+          country: film.country,
+          year: film.year,
+        });
+      }
     }
+
     activeSessions = [];
     activeFilms = [];
   };
 
   for (let i = 0; i < lines.length; i += 1) {
-    const session = lines[i].match(SESSION_RE);
-    if (session) {
+    const line = lines[i];
+
+    const section = sectionFromLine(line);
+    if (section) {
       flush();
-      const month = MONTHS[session[2].toLowerCase()];
-      if (!month) continue;
-      let venue: string | undefined;
-      for (let j = i + 1; j < Math.min(lines.length, i + 5); j += 1) {
-        if (VENUE_RE.test(lines[j])) {
-          venue = lines[j];
-          break;
-        }
-      }
-      if (!venue) continue;
-      pendingSessions.push({
-        date: `${DOCLISBOA_EDITION_YEAR}-${String(month).padStart(2, "0")}-${String(Number(session[1])).padStart(2, "0")}`,
-        time: `${String(Number(session[3])).padStart(2, "0")}:${session[4]}`,
-        venue,
-        duration: Number(session[5]),
-      });
+      currentSection = section;
       continue;
     }
 
-    if (lines[i] !== "@@TITLE@@") continue;
-    const film = parseFilm(lines, i);
+    const session = parseSession(line);
+    if (session) {
+      flush();
+      pendingSessions.push(session);
+      continue;
+    }
+
+    const metadata = line.match(METADATA_RE);
+    if (!metadata) continue;
+
+    const film = parseFilmFromMetadata(lines, i, metadata);
     if (!film) continue;
 
     if (!activeFilms.length && pendingSessions.length) {
       activeSessions = pendingSessions.splice(0);
     }
-    if (activeSessions.length) activeFilms.push(film);
+
+    if (activeSessions.length) {
+      activeFilms.push(film);
+    }
   }
 
   flush();
   return items;
 }
 
-async function fetchText(fetchImpl: typeof fetch, url: string): Promise<string> {
+async function fetchPdf(fetchImpl: typeof fetch, url: string): Promise<Uint8Array> {
   const response = await fetchImpl(url);
-  if (!response.ok) throw new Error(`Doclisboa fetch failed: ${response.status} (${url})`);
-  return response.text();
+  if (!response.ok) {
+    throw new Error(`Doclisboa PDF fetch failed: ${response.status} (${url})`);
+  }
+
+  const buffer = await response.arrayBuffer();
+  return new Uint8Array(buffer);
 }
 
-export async function fetchDoclisboaProgramme(options: FetchDoclisboaOptions = {}): Promise<readonly DoclisboaProgrammeItem[]> {
+export async function fetchDoclisboaProgramme(
+  options: FetchDoclisboaOptions = {},
+): Promise<readonly DoclisboaProgrammeItem[]> {
   const fetchImpl = options.fetchImpl ?? fetch;
   const sourceUrl = options.url ?? DOCLISBOA_PROGRAMME_URL;
-  const indexHtml = await fetchText(fetchImpl, sourceUrl);
-  const discoveredSectionUrls = extractSectionUrls(indexHtml, sourceUrl);
-  const fallbackSectionUrls = [
-    "competicao-internacional",
-    "competicao-portuguesa",
-    "riscos",
-    "da-terra-a-lua",
-    "heart-beat",
-    "verdes-anos",
-    "na-companhia-de-william-greaves-retrospectiva",
-    "sessao-de-abertura",
-    "sessao-de-encerramento",
-  ].map((slug) => new URL(`/seccoes/${slug}/`, sourceUrl).toString());
-  const sectionUrls = (discoveredSectionUrls.length > 0 ? discoveredSectionUrls : fallbackSectionUrls)
-    .slice(0, options.maxSectionPages ?? 100);
-  const results = await Promise.all(sectionUrls.map(async (sectionUrl) => parseSectionPage(await fetchText(fetchImpl, sectionUrl), sectionUrl)));
-  const seen = new Set<string>();
-  return results.flat().filter((item) => {
-    if (seen.has(item.sourceExternalId)) return false;
-    seen.add(item.sourceExternalId);
-    return true;
-  });
+  const pdf = await fetchPdf(fetchImpl, sourceUrl);
+
+  const parser = new PDFParse({ data: pdf });
+  try {
+    const result = await parser.getText();
+    return parseProgrammeText(result.text, sourceUrl);
+  } finally {
+    await parser.destroy();
+  }
 }
