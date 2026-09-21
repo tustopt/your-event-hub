@@ -46,11 +46,11 @@ export const Route = createFileRoute(
         const authError = authenticateAutomationRequest(request);
         if (authError) return authError;
 
-        if (params.sourceKey !== "cinemateca_pt") {
+        if (!["cinemateca_pt", "doclisboa"].includes(params.sourceKey)) {
           return Response.json(
             {
               error:
-                "Automated ingestion is currently enabled only for cinemateca_pt.",
+                "Automated ingestion is currently enabled only for cinemateca_pt and doclisboa.",
             },
             { status: 409 },
           );
