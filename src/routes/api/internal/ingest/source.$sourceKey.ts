@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { getSourceDefinition } from "@/../ingestion/core/source-registry";
 
 const payloadItemSchema = z.record(z.string(), z.unknown());
 
@@ -46,11 +47,11 @@ export const Route = createFileRoute(
         const authError = authenticateAutomationRequest(request);
         if (authError) return authError;
 
-        if (!["cinemateca_pt", "doclisboa"].includes(params.sourceKey)) {
+        const source = getSourceDefinition(params.sourceKey);
+        if (!source || source.status !== "production" || !source.adapterKey) {
           return Response.json(
             {
-              error:
-                "Automated ingestion is currently enabled only for cinemateca_pt and doclisboa.",
+              error: `Automated ingestion is not enabled for source "${params.sourceKey}".`,
             },
             { status: 409 },
           );
