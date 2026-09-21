@@ -24,7 +24,7 @@ const SESSION_CONTINUATION_RE =
   /^\d{1,2}\s+(Jan|Fev|Mar|Abr|Mai|Jun|Jul|Ago|Set|Out|Nov|Dez)\s*\/\s*\d{1,2}[.:]\d{2}\s*,\s*$/i;
 
 const METADATA_RE =
-  /^(\d{4})\s+(.+?)\s+•\s+(\d{1,4})[’']\s+•\s+(.+)$/;
+  /^(\d{4}(?:[–-]\d{4})?)\s+(.+?)\s+•\s+(\d{1,4})[’']\s+•\s+(.+)$/;
 
 const SECTION_NAMES = [
   "Competição Internacional",
@@ -146,7 +146,7 @@ function parseFilmFromMetadata(
     title,
     originalTitle,
     director: directorParts.join(" "),
-    year: Number(metadata[1]),
+    year: Number(metadata[1].slice(0, 4)),
     country,
     durationMinutes: Number(metadata[3]),
     format: metadata[4].trim(),
