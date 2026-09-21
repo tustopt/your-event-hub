@@ -162,7 +162,6 @@ function parseFilmFromMetadata(
     year: Number(metadata[1].slice(0, 4)),
     country,
     durationMinutes: Number(metadata[3]),
-    format: metadata[4].trim(),
   };
 }
 
