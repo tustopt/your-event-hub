@@ -12,9 +12,12 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ExplorarRouteImport } from './routes/explorar'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as AdminIngestionRouteImport } from './routes/admin/ingestion'
 import { Route as EventosIdRouteImport } from './routes/eventos/$id'
 import { Route as FilmesIdRouteImport } from './routes/filmes/$id'
 import { Route as ApiPublicIngestCinematecaRouteImport } from './routes/api/public/ingest/cinemateca'
+import { Route as ApiAdminIngestSourceSourceKeyRouteImport } from './routes/api/admin/ingest/source.$sourceKey'
+import { Route as ApiInternalIngestSourceSourceKeyRouteImport } from './routes/api/internal/ingest/source.$sourceKey'
 import { Route as ApiPublicIngestSourceSourceKeyRouteImport } from './routes/api/public/ingest/source.$sourceKey'
 
 const IndexRoute = IndexRouteImport.update({
@@ -30,6 +33,11 @@ const ExplorarRoute = ExplorarRouteImport.update({
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminIngestionRoute = AdminIngestionRouteImport.update({
+  id: '/admin/ingestion',
+  path: '/admin/ingestion',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EventosIdRoute = EventosIdRouteImport.update({
@@ -48,6 +56,18 @@ const ApiPublicIngestCinematecaRoute =
     path: '/api/public/ingest/cinemateca',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiAdminIngestSourceSourceKeyRoute =
+  ApiAdminIngestSourceSourceKeyRouteImport.update({
+    id: '/api/admin/ingest/source/$sourceKey',
+    path: '/api/admin/ingest/source/$sourceKey',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiInternalIngestSourceSourceKeyRoute =
+  ApiInternalIngestSourceSourceKeyRouteImport.update({
+    id: '/api/internal/ingest/source/$sourceKey',
+    path: '/api/internal/ingest/source/$sourceKey',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicIngestSourceSourceKeyRoute =
   ApiPublicIngestSourceSourceKeyRouteImport.update({
     id: '/api/public/ingest/source/$sourceKey',
@@ -59,18 +79,24 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/explorar': typeof ExplorarRoute
   '/login': typeof LoginRoute
+  '/admin/ingestion': typeof AdminIngestionRoute
   '/eventos/$id': typeof EventosIdRoute
   '/filmes/$id': typeof FilmesIdRoute
   '/api/public/ingest/cinemateca': typeof ApiPublicIngestCinematecaRoute
+  '/api/admin/ingest/source/$sourceKey': typeof ApiAdminIngestSourceSourceKeyRoute
+  '/api/internal/ingest/source/$sourceKey': typeof ApiInternalIngestSourceSourceKeyRoute
   '/api/public/ingest/source/$sourceKey': typeof ApiPublicIngestSourceSourceKeyRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/explorar': typeof ExplorarRoute
   '/login': typeof LoginRoute
+  '/admin/ingestion': typeof AdminIngestionRoute
   '/eventos/$id': typeof EventosIdRoute
   '/filmes/$id': typeof FilmesIdRoute
   '/api/public/ingest/cinemateca': typeof ApiPublicIngestCinematecaRoute
+  '/api/admin/ingest/source/$sourceKey': typeof ApiAdminIngestSourceSourceKeyRoute
+  '/api/internal/ingest/source/$sourceKey': typeof ApiInternalIngestSourceSourceKeyRoute
   '/api/public/ingest/source/$sourceKey': typeof ApiPublicIngestSourceSourceKeyRoute
 }
 export interface FileRoutesById {
@@ -78,9 +104,12 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/explorar': typeof ExplorarRoute
   '/login': typeof LoginRoute
+  '/admin/ingestion': typeof AdminIngestionRoute
   '/eventos/$id': typeof EventosIdRoute
   '/filmes/$id': typeof FilmesIdRoute
   '/api/public/ingest/cinemateca': typeof ApiPublicIngestCinematecaRoute
+  '/api/admin/ingest/source/$sourceKey': typeof ApiAdminIngestSourceSourceKeyRoute
+  '/api/internal/ingest/source/$sourceKey': typeof ApiInternalIngestSourceSourceKeyRoute
   '/api/public/ingest/source/$sourceKey': typeof ApiPublicIngestSourceSourceKeyRoute
 }
 export interface FileRouteTypes {
@@ -89,27 +118,36 @@ export interface FileRouteTypes {
     | '/'
     | '/explorar'
     | '/login'
+    | '/admin/ingestion'
     | '/eventos/$id'
     | '/filmes/$id'
     | '/api/public/ingest/cinemateca'
+    | '/api/admin/ingest/source/$sourceKey'
+    | '/api/internal/ingest/source/$sourceKey'
     | '/api/public/ingest/source/$sourceKey'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/explorar'
     | '/login'
+    | '/admin/ingestion'
     | '/eventos/$id'
     | '/filmes/$id'
     | '/api/public/ingest/cinemateca'
+    | '/api/admin/ingest/source/$sourceKey'
+    | '/api/internal/ingest/source/$sourceKey'
     | '/api/public/ingest/source/$sourceKey'
   id:
     | '__root__'
     | '/'
     | '/explorar'
     | '/login'
+    | '/admin/ingestion'
     | '/eventos/$id'
     | '/filmes/$id'
     | '/api/public/ingest/cinemateca'
+    | '/api/admin/ingest/source/$sourceKey'
+    | '/api/internal/ingest/source/$sourceKey'
     | '/api/public/ingest/source/$sourceKey'
   fileRoutesById: FileRoutesById
 }
@@ -117,9 +155,12 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ExplorarRoute: typeof ExplorarRoute
   LoginRoute: typeof LoginRoute
+  AdminIngestionRoute: typeof AdminIngestionRoute
   EventosIdRoute: typeof EventosIdRoute
   FilmesIdRoute: typeof FilmesIdRoute
   ApiPublicIngestCinematecaRoute: typeof ApiPublicIngestCinematecaRoute
+  ApiAdminIngestSourceSourceKeyRoute: typeof ApiAdminIngestSourceSourceKeyRoute
+  ApiInternalIngestSourceSourceKeyRoute: typeof ApiInternalIngestSourceSourceKeyRoute
   ApiPublicIngestSourceSourceKeyRoute: typeof ApiPublicIngestSourceSourceKeyRoute
 }
 
@@ -146,6 +187,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/ingestion': {
+      id: '/admin/ingestion'
+      path: '/admin/ingestion'
+      fullPath: '/admin/ingestion'
+      preLoaderRoute: typeof AdminIngestionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/eventos/$id': {
       id: '/eventos/$id'
       path: '/eventos/$id'
@@ -167,6 +215,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicIngestCinematecaRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/admin/ingest/source/$sourceKey': {
+      id: '/api/admin/ingest/source/$sourceKey'
+      path: '/api/admin/ingest/source/$sourceKey'
+      fullPath: '/api/admin/ingest/source/$sourceKey'
+      preLoaderRoute: typeof ApiAdminIngestSourceSourceKeyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/internal/ingest/source/$sourceKey': {
+      id: '/api/internal/ingest/source/$sourceKey'
+      path: '/api/internal/ingest/source/$sourceKey'
+      fullPath: '/api/internal/ingest/source/$sourceKey'
+      preLoaderRoute: typeof ApiInternalIngestSourceSourceKeyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/ingest/source/$sourceKey': {
       id: '/api/public/ingest/source/$sourceKey'
       path: '/api/public/ingest/source/$sourceKey'
@@ -181,9 +243,12 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ExplorarRoute: ExplorarRoute,
   LoginRoute: LoginRoute,
+  AdminIngestionRoute: AdminIngestionRoute,
   EventosIdRoute: EventosIdRoute,
   FilmesIdRoute: FilmesIdRoute,
   ApiPublicIngestCinematecaRoute: ApiPublicIngestCinematecaRoute,
+  ApiAdminIngestSourceSourceKeyRoute: ApiAdminIngestSourceSourceKeyRoute,
+  ApiInternalIngestSourceSourceKeyRoute: ApiInternalIngestSourceSourceKeyRoute,
   ApiPublicIngestSourceSourceKeyRoute: ApiPublicIngestSourceSourceKeyRoute,
 }
 export const routeTree = rootRouteImport

@@ -18,7 +18,7 @@ const bodySchema = z
   })
   .strict();
 
-type User = { id: string; email?: string | null };
+type User = { id: string; email: string | null };
 
 async function authenticateAdminRequest(request: Request): Promise<
   { user: User } | { response: Response }
@@ -45,7 +45,7 @@ async function authenticateAdminRequest(request: Request): Promise<
     return { response: Response.json({ error: "Forbidden" }, { status: 403 }) };
   }
 
-  return { user: { id: data.user.id, email: data.user.email } };
+  return { user: { id: data.user.id, email: data.user.email ?? null } };
 }
 
 async function loadLibrary(): Promise<IngestionLibrary> {
@@ -100,7 +100,7 @@ export const Route = createFileRoute("/api/admin/ingest/source/$sourceKey")({
         const auth = await authenticateAdminRequest(request);
         if ("response" in auth) return auth.response;
 
-        let options: { dryRun?: boolean; limit?: number } = {};
+        let options: { dryRun?: boolean | undefined; limit?: number | undefined } = {};
         const rawBody = await request.text();
 
         if (rawBody.trim()) {
