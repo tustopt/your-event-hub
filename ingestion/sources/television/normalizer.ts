@@ -17,6 +17,7 @@ export function normalizeTelevisionProgramme(item: TelevisionProgrammeItem): Nor
     ...(item.episode !== undefined ? { episode: item.episode } : {}),
     ...(item.seriesTitle ? { seriesTitle: item.seriesTitle.trim() } : {}),
     ...(item.year !== undefined ? { year: item.year } : {}),
+    ...(item.imageUrl ? { imageUrl: item.imageUrl.trim() } : {}),
     genre: "documentary",
     provenance: item.provenance ?? {
       sourceKey: item.broadcasterKey,
