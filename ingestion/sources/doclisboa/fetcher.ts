@@ -1,7 +1,7 @@
 import type { DoclisboaFilmItem, DoclisboaProgrammeItem } from "./types";
 
 export const DOCLISBOA_SOURCE_KEY = "doclisboa";
-export const DOCLISBOA_PROGRAMME_URL = "https://doclisboa.org/2026/programa/";
+export const DOCLISBOA_PROGRAMME_URL = "https://doclisboa.org/seccoes/";
 export const DOCLISBOA_EDITION_YEAR = 2026;
 
 export interface FetchDoclisboaOptions {
@@ -23,7 +23,7 @@ function decodeHtml(value: string): string {
 
 function htmlToLines(html: string): string[] {
   return html.replace(/<script[\s\S]*?<\/script>/gi, "").replace(/<style[\s\S]*?<\/style>/gi, "")
-    .replace(/<br\s*\/?>/gi, "\n").replace(/<h[1-2][^>]*>/gi, "\n")
+    .replace(/<br\s*\/?\s*>/gi, "\n").replace(/<h[1-2][^>]*>/gi, "\n")
     .replace(/<h3[^>]*>/gi, "\n@@TITLE@@\n").replace(/<\/(?:p|div|li|h[1-6]|article|section|header|footer|a|button)>/gi, "\n")
     .replace(/<[^>]+>/g, " ").split(/\r?\n+/).map(decodeHtml).filter(Boolean);
 }
