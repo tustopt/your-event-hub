@@ -1,7 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { CalendarDays, Clapperboard, MapPin, Search, UserRound } from "lucide-react";
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
-import { matchesExploreFilter, matchesExploreQuery, matchesFilmQuery, type ExploreFilter } from "@/lib/explore/filters";
+import {
+  matchesExploreFilter,
+  matchesExploreQuery,
+  matchesFilmQuery,
+  getDateFilterRange,
+  type ExploreFilter,
+} from "@/lib/explore/filters";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/explorar")({ component: Explore });
@@ -26,6 +32,19 @@ type ExploreFilm = {
   poster_url: string | null;
 };
 
+type FilmScreening = {
+  id: string;
+  start_at: string;
+  end_at: string | null;
+  venues: { name: string; city: string | null } | null;
+  events: {
+    id: string;
+    type: string;
+    festivals: { name: string } | null;
+  } | null;
+  screening_films: { film_id: string }[];
+};
+
 const filterLabels: Record<ExploreFilter, string> = {
   today: "Hoje",
   weekend: "Este fim de semana",
@@ -47,6 +66,7 @@ function Explore() {
   const navigate = useNavigate();
   const [events, setEvents] = useState<ExploreEvent[]>([]);
   const [films, setFilms] = useState<ExploreFilm[]>([]);
+  const [filmScreenings, setFilmScreenings] = useState<FilmScreening[]>([]);
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<ExploreFilter | null>(null);
   const [loading, setLoading] = useState(true);
@@ -69,26 +89,63 @@ function Explore() {
       }
       setAuthenticated(true);
 
-      const [eventsResult, filmsResult] = await Promise.all([
-        supabase
-          .from("events")
-          .select("id,title,description,type,start_at,end_at,source_url,venues(name,city),festivals(name)")
-          .gte("start_at", new Date().toISOString())
-          .order("start_at", { ascending: true, nullsFirst: false })
-          .limit(100),
-        supabase
-          .from("films")
-          .select("id,title,year,synopsis,poster_url")
-          .order("updated_at", { ascending: false })
-          .limit(100),
-      ]);
+      const todayStart = getDateFilterRange("today").from.toISOString();
+
+      const [eventsResult, filmsResult, upcomingScreeningsResult, pastScreeningsResult] =
+        await Promise.all([
+          supabase
+            .from("events")
+            .select(
+              "id,title,description,type,start_at,end_at,source_url,venues(name,city),festivals(name)",
+            )
+            .gte("start_at", todayStart)
+            .order("start_at", { ascending: true, nullsFirst: false })
+            .limit(500),
+          supabase
+            .from("films")
+            .select("id,title,year,synopsis,poster_url")
+            .order("updated_at", { ascending: false })
+            .limit(500),
+          supabase
+            .from("screenings")
+            .select(
+              "id,start_at,end_at,venues(name,city),events(id,type,festivals(name)),screening_films(film_id)",
+            )
+            .gte("start_at", todayStart)
+            .order("start_at", { ascending: true })
+            .limit(500),
+          supabase
+            .from("screenings")
+            .select(
+              "id,start_at,end_at,venues(name,city),events(id,type,festivals(name)),screening_films(film_id)",
+            )
+            .lt("start_at", todayStart)
+            .order("start_at", { ascending: false })
+            .limit(500),
+        ]);
 
       if (!active) return;
-      if (eventsResult.error || filmsResult.error) {
-        setError((eventsResult.error || filmsResult.error)!.message);
+      if (
+        eventsResult.error ||
+        filmsResult.error ||
+        upcomingScreeningsResult.error ||
+        pastScreeningsResult.error
+      ) {
+        setError(
+          (
+            eventsResult.error ||
+            filmsResult.error ||
+            upcomingScreeningsResult.error ||
+            pastScreeningsResult.error
+          )!.message,
+        );
       } else {
         setEvents((eventsResult.data ?? []) as ExploreEvent[]);
         setFilms((filmsResult.data ?? []) as ExploreFilm[]);
+        setFilmScreenings([
+          ...((upcomingScreeningsResult.data ?? []) as unknown as FilmScreening[]),
+          ...((pastScreeningsResult.data ?? []) as unknown as FilmScreening[]),
+        ]);
       }
       setLoading(false);
     }
@@ -104,7 +161,11 @@ function Explore() {
     if (nextQuery) params.set("q", nextQuery);
     if (nextFilter) params.set("filter", nextFilter);
     const suffix = params.toString();
-    window.history.replaceState(null, "", suffix ? `/explorar?${suffix}` : "/explorar");
+    window.history.replaceState(
+      null,
+      "",
+      suffix ? `/explorar?${suffix}` : "/explorar",
+    );
   }
 
   function updateSearch(nextQuery: string) {
@@ -127,10 +188,71 @@ function Explore() {
     [events, query, filter],
   );
 
+  const screeningsByFilm = useMemo(() => {
+    const result = new Map<string, FilmScreening[]>();
+
+    for (const screening of filmScreenings) {
+      for (const relation of screening.screening_films ?? []) {
+        const current = result.get(relation.film_id) ?? [];
+        current.push(screening);
+        result.set(relation.film_id, current);
+      }
+    }
+
+    return result;
+  }, [filmScreenings]);
+
   const filteredFilms = useMemo(
-    () => films.filter((film) => matchesFilmQuery(film, query)),
-    [films, query],
+    () =>
+      films.filter((film) => {
+        if (!matchesFilmQuery(film, query)) return false;
+        if (!filter) return true;
+
+        return (screeningsByFilm.get(film.id) ?? []).some((screening) =>
+          matchesExploreFilter(
+            {
+              title: film.title,
+              description: null,
+              type: screening.events?.type ?? "screening",
+              start_at: screening.start_at,
+              venues: screening.venues,
+              festivals: screening.events?.festivals ?? null,
+            },
+            filter,
+          ),
+        );
+      }),
+    [films, query, filter, screeningsByFilm],
   );
+
+  const nextScreeningByFilm = useMemo(() => {
+    const result = new Map<string, FilmScreening>();
+    const now = Date.now();
+
+    for (const screening of filmScreenings) {
+      for (const relation of screening.screening_films ?? []) {
+        const current = result.get(relation.film_id);
+        if (!current) {
+          result.set(relation.film_id, screening);
+          continue;
+        }
+
+        const currentTime = new Date(current.start_at).getTime();
+        const screeningTime = new Date(screening.start_at).getTime();
+        const currentIsFuture = currentTime >= now;
+        const screeningIsFuture = screeningTime >= now;
+
+        if (
+          (screeningIsFuture && !currentIsFuture) ||
+          (screeningIsFuture === currentIsFuture && screeningTime < currentTime)
+        ) {
+          result.set(relation.film_id, screening);
+        }
+      }
+    }
+
+    return result;
+  }, [filmScreenings]);
 
   async function signOut() {
     await supabase.auth.signOut();
@@ -229,27 +351,63 @@ function Explore() {
               </div>
 
               <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                {filteredFilms.map((film) => (
-                  <Link
-                    key={film.id}
-                    to="/filmes/$id"
-                    params={{ id: film.id }}
-                    className="block overflow-hidden rounded-2xl border bg-card transition-shadow hover:shadow-md"
-                  >
-                    {film.poster_url ? (
-                      <img src={film.poster_url} alt="" className="aspect-[2/3] w-full object-cover" />
-                    ) : (
-                      <div className="flex aspect-[2/3] items-center justify-center bg-muted">
-                        <Clapperboard className="size-10 text-muted-foreground" />
+                {filteredFilms.map((film) => {
+                  const screening = nextScreeningByFilm.get(film.id);
+                  const screeningIsFuture = screening
+                    ? new Date(screening.start_at).getTime() >= Date.now()
+                    : false;
+
+                  return (
+                    <Link
+                      key={film.id}
+                      to="/filmes/$id"
+                      params={{ id: film.id }}
+                      className="block overflow-hidden rounded-2xl border bg-card transition-shadow hover:shadow-md"
+                    >
+                      {film.poster_url ? (
+                        <img src={film.poster_url} alt="" className="aspect-[2/3] w-full object-cover" />
+                      ) : (
+                        <div className="flex aspect-[2/3] w-full items-center justify-center bg-muted">
+                          <Clapperboard className="size-10 text-muted-foreground" />
+                        </div>
+                      )}
+                      <div className="p-4">
+                        <h3 className="font-semibold">{film.title}</h3>
+                        {film.year && <p className="mt-1 text-sm text-muted-foreground">{film.year}</p>}
+
+                        {screening && (
+                          <div className="mt-3 space-y-1.5 rounded-lg bg-muted/50 p-3 text-sm">
+                            <p className="font-medium text-foreground">
+                              {screeningIsFuture ? "Próxima sessão" : "Última sessão"}
+                            </p>
+                            <div className="flex items-center gap-2 text-muted-foreground">
+                              <CalendarDays className="size-4 shrink-0" />
+                              {new Date(screening.start_at).toLocaleString("pt-PT", {
+                                dateStyle: "medium",
+                                timeStyle: "short",
+                              })}
+                            </div>
+                            {screening.venues?.name && (
+                              <div className="flex items-center gap-2 text-muted-foreground">
+                                <MapPin className="size-4 shrink-0" />
+                                <span>
+                                  {screening.venues.name}
+                                  {screening.venues.city ? ` · ${screening.venues.city}` : ""}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {film.synopsis && (
+                          <p className="mt-3 line-clamp-3 text-sm leading-5 text-muted-foreground">
+                            {film.synopsis}
+                          </p>
+                        )}
                       </div>
-                    )}
-                    <div className="p-4">
-                      <h3 className="font-semibold">{film.title}</h3>
-                      {film.year && <p className="mt-1 text-sm text-muted-foreground">{film.year}</p>}
-                      {film.synopsis && <p className="mt-2 line-clamp-3 text-sm leading-5 text-muted-foreground">{film.synopsis}</p>}
-                    </div>
-                  </Link>
-                ))}
+                    </Link>
+                  );
+                })}
               </div>
             </section>
 

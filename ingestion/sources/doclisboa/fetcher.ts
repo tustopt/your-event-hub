@@ -1,7 +1,7 @@
 import type { DoclisboaFilmItem, DoclisboaProgrammeItem } from "./types";
 
 export const DOCLISBOA_SOURCE_KEY = "doclisboa";
-export const DOCLISBOA_PROGRAMME_URL = "https://doclisboa.org/seccoes/";
+export const DOCLISBOA_PROGRAMME_URL = "https://doclisboa.org/2026/programa/";
 export const DOCLISBOA_EDITION_YEAR = 2026;
 
 export interface FetchDoclisboaOptions {

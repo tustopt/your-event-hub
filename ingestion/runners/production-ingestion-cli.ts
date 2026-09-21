@@ -17,12 +17,6 @@ async function main(): Promise<void> {
   const requestedSource = process.env.INGEST_SOURCE?.trim();
   const sourceKey = requestedSource || "cinemateca_pt";
 
-  if (sourceKey !== "cinemateca_pt") {
-    throw new Error(
-      "Automated persistence is currently enabled only for cinemateca_pt.",
-    );
-  }
-
   const source = getProductionSources().find((item) => item.key === sourceKey);
   if (!source) {
     throw new Error(`Unknown production source: ${sourceKey}`);
