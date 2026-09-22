@@ -118,7 +118,7 @@ export function isRtpDocumentaryPage(html: string): boolean {
 
   const text = normalize(stripTags(html));
   if (
-    /este conteudo faz parte de documentarios(?:\\s|$)/i.test(text)
+    /este conteudo faz parte de documentarios(?:\s|$)/i.test(text)
     || /generos\s+documentarios(?:\\s|$)/i.test(text)
     || /todos\s+documentarios(?:\\s|$)/i.test(text)
   ) {
