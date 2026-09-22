@@ -197,6 +197,45 @@ describe("RTP production channel selection", () => {
   });
 });
 
+describe("RTP EPG documentary metadata", () => {
+  it("recognizes documentary descriptions and keeps the EPG image", async () => {
+    const responses = [
+      new Response(JSON.stringify({
+        _info: { name: "RTP Mundo" },
+        result: {
+          prime: [{
+            id: "49117",
+            date: "2026-09-22 21:01:00",
+            name: "Chamada de Emergência",
+            description: "Série documental que oferece um olhar sem filtros sobre os bastidores da linha 112",
+            url: "https://www.rtp.pt/programa/tv/p49117/e12",
+            image: [{ width: "160", src: "https://cdn.example/160.jpg" }, { width: "384", src: "https://cdn.example/384.jpg" }],
+          }],
+        },
+      }), { status: 200 }),
+    ];
+
+    const result = await fetchRtpProgramme({
+      now: () => new Date("2026-09-22T12:00:00Z"),
+      channelPages: [{
+        key: "rtp_mundo",
+        channel: "RTP Mundo",
+        url: "https://www.rtp.pt/",
+        epgFeedUrl: "/EPG/json/rtp-channels-page/list-grid/tv/6/{date}",
+      }],
+      fetchImpl: async () => responses.shift() ?? new Response("", { status: 500 }),
+    });
+
+    expect(result).toHaveLength(1);
+    expect(result[0]).toMatchObject({
+      title: "Chamada de Emergência",
+      channel: "RTP Mundo",
+      imageUrl: "https://cdn.example/384.jpg",
+      genre: "Documentários",
+    });
+  });
+});
+
 describe("RTP historical ingestion", () => {
   it("ingests a known historical documentary from the EPG", async () => {
     const responses = [
