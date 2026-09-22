@@ -121,8 +121,14 @@ export function isRtpDocumentaryPage(html: string): boolean {
     }
   }
 
-  const raw = normalize(html);
-  return /(?:generos|genre|faz parte de|todos)[^<]{0,300}documentarios/i.test(raw);
+  const decodeEscapes = (value: string): string =>
+    value
+      .replace(/\\u([0-9a-f]{4})/gi, (_, hex: string) => String.fromCharCode(Number.parseInt(hex, 16)))
+      .replace(/\\x([0-9a-f]{2})/gi, (_, hex: string) => String.fromCharCode(Number.parseInt(hex, 16)));
+
+  const raw = normalize(decodeEscapes(html));
+  return /(?:generos|genre|faz parte de|todos)[\\s\\S]{0,500}documentarios/i.test(raw)
+    || /documentarios[\\s\\S]{0,500}(?:generos|genre|faz parte de|todos)/i.test(raw);
 }
 
 export interface RtpEditorialBroadcast {
