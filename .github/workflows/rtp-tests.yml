@@ -20,5 +20,5 @@ jobs:
           node-version: 22
       - name: Install dependencies
         run: npm install
-      - name: Run RTP tests
-        run: npx vitest run ingestion/sources/rtp/fetcher.test.ts ingestion/sources/television/types.test.ts ingestion/sources/television/normalizer.test.ts
+      - name: Run television ingestion tests
+        run: npx vitest run ingestion/sources/rtp/fetcher.test.ts ingestion/sources/television/types.test.ts ingestion/sources/television/normalizer.test.ts ingestion/sources/television/channels.test.ts
