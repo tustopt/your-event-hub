@@ -5,7 +5,7 @@ export const RTP_SOURCE_KEY = "rtp";
 /** Backwards-compatible primary RTP programme URL for existing ingestion exports. */
 export const RTP_PROGRAMMES_URL = "https://www.rtp.pt/rtp1/";
 
-export const RTP_CHANNEL_PAGES = [
+export const RTP_CHANNEL_PAGES: readonly { key: string; channel: string; url: string; epgFeedUrl?: string }[] = [
   { key: "rtp1", channel: "RTP1", url: "https://www.rtp.pt/rtp1/" },
   { key: "rtp2", channel: "RTP2", url: "https://www.rtp.pt/rtp2/" },
   { key: "rtp3", channel: "RTP3", url: "https://www.rtp.pt/rtp3/" },
@@ -14,7 +14,7 @@ export const RTP_CHANNEL_PAGES = [
   { key: "rtp_mundo", channel: "RTP Mundo", url: "https://www.rtp.pt/", epgFeedUrl: "/EPG/json/rtp-channels-page/list-grid/tv/6/{date}" },
   { key: "rtp_acores", channel: "RTP Açores", url: "https://www.rtp.pt/", epgFeedUrl: "/EPG/json/rtp-channels-page/list-grid/tv/7/{date}" },
   { key: "rtp_madeira", channel: "RTP Madeira", url: "https://www.rtp.pt/", epgFeedUrl: "/EPG/json/rtp-channels-page/list-grid/tv/8/{date}" },
-] as const;
+];
 
 export interface FetchRtpOptions {
   url?: string;
