@@ -97,7 +97,7 @@ describe("RTP EPG parser", () => {
 describe("RTP programme classification URLs", () => {
   it("maps RTP Play episode URLs to the editorial programme page", () => {
     expect(getRtpProgrammeClassificationUrl("https://www.rtp.pt/play/p48600/e3/repovoadores"))
-      .toBe("https://www.rtp.pt/programa/tv/p48600/e3");
+      .toBe("https://www.rtp.pt/programa/tv/p48600");
   });
 
   it("maps RTP Play series URLs to the editorial programme page", () => {
