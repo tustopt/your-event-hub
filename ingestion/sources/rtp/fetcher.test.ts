@@ -94,6 +94,17 @@ describe("RTP EPG parser", () => {
   });
 });
 
+describe("RTP programme classification links", () => {
+  it("extracts the editorial programme URL from an RTP Play page", async () => {
+    expect(
+      (await import("./fetcher")).extractRtpProgrammeClassificationUrlFromHtml(
+        '<a href="/programa/tv/p48600">Sobre o programa</a>',
+        "https://www.rtp.pt/play/p16302/repovoadores",
+      ),
+    ).toBe("https://www.rtp.pt/programa/tv/p48600");
+  });
+});
+
 describe("RTP programme classification URLs", () => {
   it("maps RTP Play episode URLs to the editorial programme page", () => {
     expect(getRtpProgrammeClassificationUrl("https://www.rtp.pt/play/p48600/e3/repovoadores"))
