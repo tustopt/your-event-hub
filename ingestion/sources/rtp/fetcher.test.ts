@@ -107,6 +107,32 @@ describe("RTP programme classification URLs", () => {
 });
 
 describe("RTP production channel selection", () => {
+  it("supports a configurable historical and future EPG window", async () => {
+    const requestedDates: string[] = [];
+    const responses: Response[] = [];
+    for (let i = 0; i < 3; i++) {
+      responses.push(
+        new Response('<script>var epgFeedUrl = "/EPG/json/rtp-channels-page/list-grid/tv/1/{0}";</script>', { status: 200 }),
+        new Response(JSON.stringify({ result: {} }), { status: 200 }),
+      );
+    }
+
+    await fetchRtpEpgProgrammeItems({
+      now: () => new Date("2026-09-22T12:00:00Z"),
+      daysBack: 1,
+      daysAhead: 1,
+      channelPages: [{ key: "rtp1", channel: "RTP1", url: "https://www.rtp.pt/rtp1/" }],
+      fetchImpl: async (input) => {
+        const url = String(input);
+        const match = url.match(/\/(2026-09-2[123])$/);
+        if (match) requestedDates.push(match[1]);
+        return responses.shift() ?? new Response("", { status: 500 });
+      },
+    });
+
+    expect(requestedDates).toEqual(["2026-09-21", "2026-09-22", "2026-09-23"]);
+  });
+
   it("uses RTP channel pages when the canonical root URL is passed", async () => {
     const requestedUrls: string[] = [];
     const responses = [
