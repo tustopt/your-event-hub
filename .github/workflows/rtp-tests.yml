@@ -21,4 +21,4 @@ jobs:
       - name: Install dependencies
         run: npm install
       - name: Run television ingestion tests
-        run: npx vitest run ingestion/sources/rtp/fetcher.test.ts ingestion/sources/television/types.test.ts ingestion/sources/television/normalizer.test.ts ingestion/sources/television/channels.test.ts
+        run: npx vitest run ingestion/sources/rtp/fetcher.test.ts ingestion/sources/television/types.test.ts ingestion/sources/television/normalizer.test.ts ingestion/sources/television/channels.test.ts ingestion/sources/television/parser.test.ts
