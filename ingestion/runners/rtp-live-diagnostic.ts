@@ -20,10 +20,14 @@ async function main(): Promise<void> {
       signal: AbortSignal.timeout(15000),
     });
     const payload = response.ok ? await response.json() as { result?: Record<string, unknown[]> } : undefined;
+    const matchingEntries = payload?.result
+      ? Object.values(payload.result).flat().filter((entry: any) => /chamada de emergência/i.test(String(entry?.name || "")))
+      : [];
     directFeedChecks.push({
       service,
       status: response.status,
       entries: payload?.result ? Object.values(payload.result).flat().length : 0,
+      matchingEntries,
     });
   }
 
