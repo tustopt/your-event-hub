@@ -31,7 +31,7 @@ async function main(): Promise<void> {
     });
   }
 
-  const editorialUrl = "https://www.rtp.pt/programa/tv/p49117?mobile-app=true&theme=dark";
+  const editorialUrl = "https://www.rtp.pt/programa/tv/p49117";
   const editorialResponse = await fetch(editorialUrl, {
     headers: { "User-Agent": "Mozilla/5.0 (compatible; DocuEvents/1.0; +https://www.rtp.pt/)" },
     signal: AbortSignal.timeout(15000),
