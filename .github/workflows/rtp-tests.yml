@@ -21,4 +21,4 @@ jobs:
       - name: Install dependencies
         run: npm install
       - name: Run RTP tests
-        run: npx vitest run ingestion/sources/rtp/fetcher.test.ts
+        run: npx vitest run ingestion/sources/rtp/fetcher.test.ts ingestion/sources/television/types.test.ts ingestion/sources/television/normalizer.test.ts
