@@ -153,7 +153,7 @@ function parseFilmFromMetadata(
   };
 }
 
-function parseProgrammeText(text: string, sourceUrl: string): DoclisboaProgrammeItem[] {
+export function parseDoclisboaProgrammeText(text: string, sourceUrl: string): DoclisboaProgrammeItem[] {
   const lines = normalizeLines(text);
   const items: DoclisboaProgrammeItem[] = [];
   const pendingSessions: Session[] = [];
@@ -247,7 +247,7 @@ export async function fetchDoclisboaProgramme(
 
   try {
     const result = await parser.getText();
-    return parseProgrammeText(result.text, sourceUrl);
+    return parseDoclisboaProgrammeText(result.text, sourceUrl);
   } finally {
     await parser.destroy();
   }
