@@ -20,6 +20,9 @@ jobs:
           node-version: 22
       - name: Install dependencies
         run: npm install
+      - name: Diagnose RTP EPG collection
+        run: |
+          npx tsx -e 'import { fetchRtpEpgProgrammeItems } from "./ingestion/sources/rtp/fetcher.ts"; (async () => { const items = await fetchRtpEpgProgrammeItems(); console.log(JSON.stringify({ count: items.length, channels: [...new Set(items.map((item) => item.channel))], documentaryCandidates: items.filter((item) => /repovoadores|document/i.test(item.title)).slice(0, 10).map((item) => ({ title: item.title, channel: item.channel, sourceUrl: item.sourceUrl })) }, null, 2)); })();'
       - name: Run television ingestion tests
         run: npx vitest run ingestion/sources/rtp/fetcher.test.ts ingestion/sources/television/types.test.ts ingestion/sources/television/normalizer.test.ts ingestion/sources/television/channels.test.ts ingestion/sources/television/parser.test.ts
 
