@@ -34,6 +34,23 @@ async function main(): Promise<void> {
     signal: AbortSignal.timeout(15000),
   });
   const editorialHtml = editorialResponse.ok ? await editorialResponse.text() : "";
+  const normalizedEditorial = editorialHtml
+    .replace(/<script[\\s\\S]*?<\\/script>/gi, " ")
+    .replace(/<style[\\s\\S]*?<\\/style>/gi, " ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&quot;/gi, '"')
+    .replace(/&#(x[0-9a-f]+|\\d+);/gi, (_, value: string) => {
+      const codePoint = value.toLowerCase().startsWith("x")
+        ? Number.parseInt(value.slice(1), 16)
+        : Number.parseInt(value, 10);
+      return Number.isFinite(codePoint) ? String.fromCodePoint(codePoint) : "";
+    })
+    .replace(/\\s+/g, " ")
+    .trim();
+  const genreIndex = normalizedEditorial.toLowerCase().indexOf("géneros");
+  const documentaryIndex = normalizedEditorial.toLowerCase().indexOf("documentários");
 
   console.log(JSON.stringify({
     now: now.toISOString(),
@@ -44,6 +61,8 @@ async function main(): Promise<void> {
       status: editorialResponse.status,
       isDocumentary: isRtpDocumentaryPage(editorialHtml),
       htmlLength: editorialHtml.length,
+      genreContext: genreIndex >= 0 ? normalizedEditorial.slice(genreIndex, genreIndex + 500) : "",
+      documentaryContext: documentaryIndex >= 0 ? normalizedEditorial.slice(Math.max(0, documentaryIndex - 250), documentaryIndex + 500) : "",
     },
   }, null, 2));
 }
