@@ -5,8 +5,16 @@ import {
 } from "../sources/rtp/fetcher";
 
 async function main(): Promise<void> {
-  const items = await fetchRtpEpgProgrammeItems({ now: () => new Date() });
-  const targets = items.filter((item) => /repovoadores|mesa portuguesa|teia|guerra a[eé]rea|mao/i.test(item.title));
+  const now = new Date();
+  const items = await fetchRtpEpgProgrammeItems({
+    now: () => now,
+    daysBack: 1,
+    daysAhead: 3,
+  });
+
+  const targets = items.filter((item) =>
+    /repovoadores|mesa portuguesa|teia|guerra a[eé]rea|chamada de emergência|rtp sempre/i.test(item.title),
+  );
 
   const checks = [];
   for (const item of targets) {
@@ -23,9 +31,11 @@ async function main(): Promise<void> {
         })
       : undefined;
     const classificationHtml = classificationResponse?.ok ? await classificationResponse.text() : "";
+
     checks.push({
       title: item.title,
       channel: item.channel,
+      startAt: item.startAt,
       sourceUrl: item.sourceUrl,
       programmeStatus: response.status,
       editorialUrl,
@@ -38,6 +48,7 @@ async function main(): Promise<void> {
   }
 
   console.log(JSON.stringify({
+    now: now.toISOString(),
     epgCount: items.length,
     targets: checks,
   }, null, 2));
