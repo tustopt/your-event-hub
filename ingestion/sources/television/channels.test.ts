@@ -27,6 +27,18 @@ describe("Portuguese television channel catalog", () => {
     });
   });
 
+  it("has unique broadcaster and channel keys", () => {
+    const keys = PORTUGUESE_TELEVISION_CHANNELS.map((channel) => `${channel.broadcasterKey}:${channel.channelKey}`);
+    expect(new Set(keys).size).toBe(keys.length);
+  });
+
+  it("has canonical URLs for every channel", () => {
+    for (const channel of PORTUGUESE_TELEVISION_CHANNELS) {
+      expect(() => new URL(channel.canonicalUrl)).not.toThrow();
+      expect(channel.canonicalUrl).toMatch(/^https:\/\//);
+    }
+  });
+
   it("does not resolve a channel under the wrong broadcaster", () => {
     expect(getTelevisionChannel("tvi", "sic_noticias")).toBeUndefined();
   });
