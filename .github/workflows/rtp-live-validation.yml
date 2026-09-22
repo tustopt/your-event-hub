@@ -1,9 +1,9 @@
 name: RTP Live Ingestion Validation
 
 on:
-  push:
+  pull_request:
     branches:
-      - "fix/rtp-production-channels"
+      - main
 
 jobs:
   validate:
