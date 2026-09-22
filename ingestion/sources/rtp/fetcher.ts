@@ -77,7 +77,7 @@ function lisbonOffset(date: string, time: string): string {
 function documentarySignalFromText(value?: string): boolean | undefined {
   if (!value) return undefined;
   const normalized = value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-  if (/\bdocumentari(?:o|os|a|as)\b/.test(normalized)) return true;
+  if (/\bdocumentari(?:o|os|a|as)|documental(?:is)?\b/.test(normalized)) return true;
   return false;
 }
 
