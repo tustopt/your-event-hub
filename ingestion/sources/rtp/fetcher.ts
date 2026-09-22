@@ -93,6 +93,12 @@ export function isRtpDocumentaryPage(html: string): boolean {
   return /este conteudo faz parte de documentarios(?:\s|$)/i.test(text) || /generos\s+documentarios(?:\s|$)/i.test(text);
 }
 
+export function getRtpProgrammeClassificationUrl(sourceUrl: string): string | undefined {
+  const match = sourceUrl.match(/^https?:\/\/www\.rtp\.pt\/play\/(p\d+)(?:\/(e\d+))?(?:\/[^/?#]+)?(?:[?#].*)?$/i);
+  if (!match) return undefined;
+  return "https://www.rtp.pt/programa/tv/" + match[1] + (match[2] ? "/" + match[2] : "");
+}
+
 export function extractRtpEpgFeedUrl(html: string): string | undefined {
   const match = html.match(/epgFeedUrl\s*=\s*["']([^"']+)["']/i);
   if (!match) return undefined;
@@ -184,9 +190,19 @@ export async function fetchRtpProgramme(options: FetchRtpOptions = {}): Promise<
     const programmeResponse = await fetchImpl(item.sourceUrl);
     if (!programmeResponse.ok) continue;
     const programmeHtml = await programmeResponse.text();
-    if (!isRtpDocumentaryPage(programmeHtml)) continue;
 
-    const imageUrl = extractRtpProgrammeImageUrl(programmeHtml, item.sourceUrl);
+    let classificationHtml = programmeHtml;
+    if (!isRtpDocumentaryPage(classificationHtml)) {
+      const classificationUrl = getRtpProgrammeClassificationUrl(item.sourceUrl);
+      if (!classificationUrl) continue;
+      const classificationResponse = await fetchImpl(classificationUrl);
+      if (!classificationResponse.ok) continue;
+      classificationHtml = await classificationResponse.text();
+    }
+    if (!isRtpDocumentaryPage(classificationHtml)) continue;
+
+    const imageUrl = extractRtpProgrammeImageUrl(programmeHtml, item.sourceUrl)
+      || extractRtpProgrammeImageUrl(classificationHtml, classificationHtml);
     all.push(imageUrl ? { ...item, imageUrl } : item);
     if (options.limit && all.length >= options.limit) return all.slice(0, options.limit);
   }
