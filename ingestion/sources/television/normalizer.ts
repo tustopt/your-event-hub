@@ -5,6 +5,8 @@ export function normalizeTelevisionProgramme(item: TelevisionProgrammeItem): Nor
   if (!isDocumentaryProgramme(item)) return undefined;
   return {
     eventType: "television",
+    sourceExternalId: item.sourceExternalId,
+    sourceUrl: item.sourceUrl,
     title: item.title.trim(),
     ...(item.description ? { description: item.description.trim() } : {}),
     channel: item.channel.trim(),
