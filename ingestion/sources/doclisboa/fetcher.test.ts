@@ -82,8 +82,7 @@ describe("Doclisboa PDF text parser", () => {
       "The Summit",
       "One Sun, a Shadow Each",
     ]);
-    expect(result.every((item) => item.films).length).toBe(4);
-    expect(result.every((item) => item.films.length === 1)).toBe(true);
+    expect(result.filter((item) => item.films.length === 1)).toHaveLength(4);
   });
 
   it("preserves film format metadata extracted from the PDF", () => {
