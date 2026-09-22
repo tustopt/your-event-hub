@@ -108,6 +108,18 @@ export function isRtpDocumentaryPage(html: string): boolean {
     || /documentarios[^<]{0,200}(?:generos|faz parte de|todos)/i.test(raw);
 }
 
+export function extractRtpProgrammeClassificationUrlFromHtml(html: string, baseUrl: string): string | undefined {
+  const pattern = /<a[^>]+href=["']([^"']*\/programa\/tv\/p\d+[^"']*)["'][^>]*>/gi;
+  for (const match of html.matchAll(pattern)) {
+    try {
+      return new URL(match[1], baseUrl).toString();
+    } catch {
+      continue;
+    }
+  }
+  return undefined;
+}
+
 export function getRtpProgrammeClassificationUrl(sourceUrl: string): string | undefined {
   const match = sourceUrl.match(/^https?:\/\/www\.rtp\.pt\/play\/(p\d+)(?:\/(e\d+))?(?:\/[^/?#]+)?(?:[?#].*)?$/i);
   if (!match) return undefined;
@@ -220,7 +232,9 @@ export async function fetchRtpProgramme(options: FetchRtpOptions = {}): Promise<
     if (!programmeResponse.ok) continue;
     const programmeHtml = await programmeResponse.text();
 
-    const classificationUrl = getRtpProgrammeClassificationUrl(item.sourceUrl);
+    const classificationUrl =
+      extractRtpProgrammeClassificationUrlFromHtml(programmeHtml, item.sourceUrl)
+      || getRtpProgrammeClassificationUrl(item.sourceUrl);
     let isDocumentary = isRtpDocumentaryPage(programmeHtml);
 
     if (!isDocumentary && classificationUrl) {
