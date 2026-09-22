@@ -5,6 +5,7 @@ import {
   fetchRtpProgramme,
   parseRtpEpg,
   extractRtpProgrammeImageUrl,
+  getRtpProgrammeClassificationUrl,
 } from "./fetcher";
 
 describe("RTP EPG parser", () => {
@@ -90,6 +91,18 @@ describe("RTP EPG parser", () => {
       genre: "Documentários",
       startAt: "2026-09-19T10:30:00+01:00",
     });
+  });
+});
+
+describe("RTP programme classification URLs", () => {
+  it("maps RTP Play episode URLs to the editorial programme page", () => {
+    expect(getRtpProgrammeClassificationUrl("https://www.rtp.pt/play/p48600/e3/repovoadores"))
+      .toBe("https://www.rtp.pt/programa/tv/p48600/e3");
+  });
+
+  it("maps RTP Play series URLs to the editorial programme page", () => {
+    expect(getRtpProgrammeClassificationUrl("https://www.rtp.pt/play/p48600/repovoadores"))
+      .toBe("https://www.rtp.pt/programa/tv/p48600");
   });
 });
 
