@@ -52,11 +52,7 @@ export const sourceFetcherFactories: Readonly<Record<string, FetcherFactory>> = 
   doclisboa: (options) =>
     websiteFetcher("doclisboa", (o) => fetchDoclisboaProgramme(o), options),
   rtp: (options) =>
-    websiteFetcher(
-      "rtp",
-      (o) => fetchRtpProgramme({ ...o, daysBack: 7, daysAhead: 2 }),
-      options,
-    ),
+    websiteFetcher("rtp", (o) => fetchRtpProgramme(o), options),
 };
 
 export function hasSourceFetcher(sourceKey: string): boolean {
