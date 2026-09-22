@@ -181,9 +181,13 @@ export function extractRtpProgrammeClassificationUrlFromHtml(html: string, baseU
 }
 
 export function getRtpProgrammeClassificationUrl(sourceUrl: string): string | undefined {
-  const match = sourceUrl.match(/^https?:\/\/www\.rtp\.pt\/play\/(p\d+)(?:\/(e\d+))?(?:\/[^/?#]+)?(?:[?#].*)?$/i);
-  if (!match) return undefined;
-  return "https://www.rtp.pt/programa/tv/" + match[1];
+  const playMatch = sourceUrl.match(/^https?:\/\/www\.rtp\.pt\/play\/(p\d+)(?:\/(e\d+))?(?:\/[^/?#]+)?(?:[?#].*)?$/i);
+  if (playMatch) return "https://www.rtp.pt/programa/tv/" + playMatch[1];
+
+  const programmeMatch = sourceUrl.match(/^https?:\/\/www\.rtp\.pt\/programa\/tv\/(p\d+)(?:\/e\d+)?(?:[?#].*)?$/i);
+  if (programmeMatch) return "https://www.rtp.pt/programa/tv/" + programmeMatch[1];
+
+  return undefined;
 }
 
 export function extractRtpEpgFeedUrl(html: string): string | undefined {
@@ -210,7 +214,7 @@ export function parseRtpEpg(payload: RtpEpgPayload, fallbackChannel: string): Rt
       ? entry.id + "-" + date + "-" + slug(channel)
       : slug(entry.name) + "-" + date + "-" + time.replace(":", "") + "-" + slug(channel);
 
-    const sourceUrl = entry.url.includes("/play/")
+    const sourceUrl = entry.url.includes("/play/") || entry.url.includes("/programa/tv/")
       ? entry.url
       : entry.url.replace(
           "/programa/tv/",
