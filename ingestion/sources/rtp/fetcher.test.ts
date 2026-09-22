@@ -3,6 +3,7 @@ import {
   extractRtpEpgFeedUrl,
   isRtpDocumentaryPage,
   fetchRtpProgramme,
+  fetchRtpEpgProgrammeItems,
   parseRtpEpg,
   extractRtpProgrammeImageUrl,
   getRtpProgrammeClassificationUrl,
