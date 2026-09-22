@@ -17,9 +17,8 @@ jobs:
           node-version: 22
       - name: Install dependencies
         run: npm install
-      - name: Diagnose RTP EPG collection
-        run: |
-          npx tsx -e 'import { fetchRtpEpgProgrammeItems } from "./ingestion/sources/rtp/fetcher.ts"; (async () => { const items = await fetchRtpEpgProgrammeItems(); console.log(JSON.stringify({ count: items.length, channels: [...new Set(items.map((item) => item.channel))], sample: items.slice(0, 10).map((item) => ({ title: item.title, channel: item.channel, startAt: item.startAt, sourceUrl: item.sourceUrl })) }, null, 2)); })();'
+      - name: Diagnose RTP EPG and documentary classification
+        run: npx tsx ingestion/runners/rtp-live-diagnostic.ts
       - name: Run RTP live ingestion
         env:
           DOCUEVENTS_APP_URL: ${{ secrets.DOCUEVENTS_APP_URL }}
