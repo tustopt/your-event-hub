@@ -92,6 +92,8 @@ export interface NormalizedScreening {
 
 export interface NormalizedTVProgram {
   eventType: "television";
+  sourceExternalId: string;
+  sourceUrl: string;
   title: string;
   description?: string;
   channel: string;
