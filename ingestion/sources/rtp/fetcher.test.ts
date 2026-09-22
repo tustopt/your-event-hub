@@ -1,9 +1,10 @@
-import { extractRtpProgrammeImageUrl, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import {
   extractRtpEpgFeedUrl,
   isRtpDocumentaryPage,
   fetchRtpProgramme,
   parseRtpEpg,
+  extractRtpProgrammeImageUrl,
 } from "./fetcher";
 
 describe("RTP EPG parser", () => {
