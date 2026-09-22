@@ -136,13 +136,12 @@ describe("RTP programme classification URLs", () => {
 describe("RTP production channel selection", () => {
   it("supports a configurable historical and future EPG window", async () => {
     const requestedDates: string[] = [];
-    const responses: Response[] = [];
-    for (let i = 0; i < 3; i++) {
-      responses.push(
-        new Response('<script>var epgFeedUrl = "/EPG/json/rtp-channels-page/list-grid/tv/1/{0}";</script>', { status: 200 }),
-        new Response(JSON.stringify({ result: {} }), { status: 200 }),
-      );
-    }
+    const responses: Response[] = [
+      new Response('<script>var epgFeedUrl = "/EPG/json/rtp-channels-page/list-grid/tv/1/{0}";</script>', { status: 200 }),
+      new Response(JSON.stringify({ result: {} }), { status: 200 }),
+      new Response(JSON.stringify({ result: {} }), { status: 200 }),
+      new Response(JSON.stringify({ result: {} }), { status: 200 }),
+    ];
 
     await fetchRtpEpgProgrammeItems({
       now: () => new Date("2026-09-22T12:00:00Z"),
