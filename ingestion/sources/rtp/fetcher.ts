@@ -119,8 +119,8 @@ export function isRtpDocumentaryPage(html: string): boolean {
   const text = normalize(stripTags(html));
   if (
     /este conteudo faz parte de documentarios(?:\\s|$)/i.test(text)
-    || /generos\\s+documentarios(?:\\s|$)/i.test(text)
-    || /todos\\s+documentarios(?:\\s|$)/i.test(text)
+    || /generos\s+documentarios(?:\\s|$)/i.test(text)
+    || /todos\s+documentarios(?:\\s|$)/i.test(text)
   ) {
     return true;
   }
@@ -144,8 +144,8 @@ export function isRtpDocumentaryPage(html: string): boolean {
       .replace(/\\x([0-9a-f]{2})/gi, (_, hex: string) => String.fromCharCode(Number.parseInt(hex, 16)));
 
   const raw = normalize(decodeEscapes(html));
-  return /(?:generos|genre|faz parte de|todos)[\\s\\S]{0,500}documentarios/i.test(raw)
-    || /documentarios[\\s\\S]{0,500}(?:generos|genre|faz parte de|todos)/i.test(raw);
+  return /(?:generos|genre|faz parte de|todos)[\s\S]{0,500}documentarios/i.test(raw)
+    || /documentarios[\s\S]{0,500}(?:generos|genre|faz parte de|todos)/i.test(raw);
 }
 
 export interface RtpEditorialBroadcast {
