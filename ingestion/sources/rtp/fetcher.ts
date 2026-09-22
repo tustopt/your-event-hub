@@ -95,7 +95,11 @@ export function isRtpDocumentaryPage(html: string): boolean {
     value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 
   const text = normalize(stripTags(html));
-  if (/este conteudo faz parte de documentarios(?:\s|$)/i.test(text) || /generos\s+documentarios(?:\s|$)/i.test(text)) {
+  if (
+    /este conteudo faz parte de documentarios(?:\s|$)/i.test(text)
+    || /generos\s+documentarios(?:\s|$)/i.test(text)
+    || /todos\s+documentarios(?:\s|$)/i.test(text)
+  ) {
     return true;
   }
 
