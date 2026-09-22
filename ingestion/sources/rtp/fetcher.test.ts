@@ -159,6 +159,14 @@ describe("RTP historical ingestion", () => {
 describe("RTP documentary classification", () => {
   it("accepts current RTP Play documentary markup with HTML entities", () => { expect(isRtpDocumentaryPage('<h2 class="section-title">Este conte&uacute;do faz parte de Document&aacute;rios de Patrim&oacute;nio, Tradi&ccedil;&otilde;es e Gastronomia</h2>')).toBe(true); });
 
+  it("accepts numeric HTML entities used by RTP pages", () => {
+    expect(
+      isRtpDocumentaryPage(
+        "<div>G&#233;neros</div><div>Document&#225;rios</div>",
+      ),
+    ).toBe(true);
+  });
+
   it("accepts RTP programme pages classified as Documentários", () => {
     expect(
       isRtpDocumentaryPage(
