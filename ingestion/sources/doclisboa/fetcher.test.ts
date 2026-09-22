@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { fetchDoclisboaProgramme } from "./fetcher";
+import { fetchDoclisboaProgramme, parseDoclisboaProgrammeText } from "./fetcher";
 
 describe("Doclisboa fetcher", () => {
   it("parses sessions that precede a film heading", async () => {
@@ -24,13 +24,7 @@ describe("Doclisboa fetcher", () => {
       <div>2025 Espanha, Portugal 72’</div>
     `;
 
-    const result = await fetchDoclisboaProgramme({
-      fetchImpl: async (input) => {
-        const url = String(input);
-        return new Response(url === "https://doclisboa.test/seccoes/" ? indexHtml : sectionHtml, { status: 200 });
-      },
-      url: "https://doclisboa.test/seccoes/",
-    });
+    const result = parseDoclisboaProgrammeText(sectionHtml, "https://doclisboa.test/doclisboa2026_programa.pdf");
 
     expect(result).toHaveLength(3);
     expect(result[0]).toMatchObject({
@@ -79,10 +73,7 @@ describe("Doclisboa fetcher", () => {
       <div>2025 França 58’</div>
     `;
 
-    const result = await fetchDoclisboaProgramme({
-      fetchImpl: async (input) => new Response(String(input) === "https://doclisboa.test/seccoes/" ? indexHtml : sectionHtml, { status: 200 }),
-      url: "https://doclisboa.test/seccoes/",
-    });
+    const result = parseDoclisboaProgrammeText(sectionHtml, "https://doclisboa.test/doclisboa2026_programa.pdf");
 
     expect(result).toHaveLength(1);
     expect(result[0].films).toHaveLength(4);
@@ -107,17 +98,13 @@ describe("Doclisboa fetcher", () => {
       <div>Director</div>
       <div>2025 Portugal 104’</div>
     `;
-    const result = await fetchDoclisboaProgramme({
-      fetchImpl: async (input) =>
-        new Response(String(input) === "https://doclisboa.test/seccoes/" ? indexHtml : sectionHtml, { status: 200 }),
-      url: "https://doclisboa.test/seccoes/",
-    });
+    const result = parseDoclisboaProgrammeText(sectionHtml, "https://doclisboa.test/doclisboa2026_programa.pdf");
     expect(result).toHaveLength(1);
   });
 
   it("rejects failed source responses", async () => {
     await expect(
       fetchDoclisboaProgramme({ fetchImpl: async () => new Response("", { status: 503 }) }),
-    ).rejects.toThrow("Doclisboa fetch failed: 503");
+    ).rejects.toThrow("Doclisboa PDF fetch failed: 503");
   });
 });
