@@ -17,8 +17,8 @@ describe("television parser", () => {
     expect(result.screenings).toEqual([]);
     expect(result.events).toEqual([]);
     expect(result.warnings).toEqual([]);
-    expect(result.tvPrograms).toHaveLength(1);
-    expect(result.tvPrograms[0]).toMatchObject({
+    expect(result.tvPrograms ?? []).toHaveLength(1);
+    expect((result.tvPrograms ?? [])[0]).toMatchObject({
       title: "Exemplo Documentário",
       broadcasterKey: "sic",
       channel: "SIC",
