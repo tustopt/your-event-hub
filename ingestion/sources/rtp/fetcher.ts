@@ -115,9 +115,13 @@ export function parseRtpEpg(payload: RtpEpgPayload, fallbackChannel: string): Rt
 
 export async function fetchRtpProgramme(options: FetchRtpOptions = {}): Promise<readonly RtpProgrammeItem[]> {
   const fetchImpl = options.fetchImpl || fetch;
-  const channelPages = options.url
-    ? [{ key: RTP_SOURCE_KEY, channel: "RTP", url: options.url }]
-    : options.channelPages || RTP_CHANNEL_PAGES;
+  // Production ingestion passes the source canonical URL (https://www.rtp.pt/).
+  // RTP EPG discovery is channel-specific, so the canonical root must not
+  // override the RTP1/RTP2/RTP3 channel pages.
+  const channelPages = options.channelPages
+    || (options.url && options.url !== "https://www.rtp.pt/"
+      ? [{ key: RTP_SOURCE_KEY, channel: "RTP", url: options.url }]
+      : RTP_CHANNEL_PAGES);
 
   const all: RtpProgrammeItem[] = [];
   const seen = new Set<string>();
