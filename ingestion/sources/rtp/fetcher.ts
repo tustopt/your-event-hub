@@ -112,10 +112,12 @@ export function parseRtpEpg(payload: RtpEpgPayload, fallbackChannel: string): Rt
       ? entry.id + "-" + date + "-" + slug(channel)
       : slug(entry.name) + "-" + date + "-" + time.replace(":", "") + "-" + slug(channel);
 
-    const sourceUrl = entry.url.replace(
-      "/programa/tv/",
-      "/play/",
-    ) + "/" + slug(entry.name.trim());
+    const sourceUrl = entry.url.includes("/play/")
+      ? entry.url
+      : entry.url.replace(
+          "/programa/tv/",
+          "/play/",
+        ) + "/" + slug(entry.name.trim());
 
     items.push({
       sourceExternalId, sourceUrl, broadcasterKey: "rtp", channel,
