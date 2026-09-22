@@ -108,6 +108,42 @@ export function isRtpDocumentaryPage(html: string): boolean {
     || /documentarios[^<]{0,200}(?:generos|faz parte de|todos)/i.test(raw);
 }
 
+export interface RtpEditorialBroadcast {
+  date: string;
+  startAt: string;
+  channel: string;
+}
+
+const RTP_MONTHS: Record<string, number> = {
+  jan: 0, fev: 1, mar: 2, abr: 3, mai: 4, jun: 5,
+  jul: 6, ago: 7, set: 8, out: 9, nov: 10, dez: 11,
+};
+
+export function parseRtpEditorialBroadcasts(html: string): RtpEditorialBroadcast[] {
+  const text = stripTags(html).replace(/\s+/g, " ").trim();
+  const sectionStart = text.toLowerCase().indexOf("proximas emissoes deste programa");
+  if (sectionStart < 0) return [];
+  const sectionEnd = text.toLowerCase().indexOf("rever ultimos episodios", sectionStart);
+  const section = text.slice(sectionStart, sectionEnd >= 0 ? sectionEnd : sectionStart + 3000);
+
+  const pattern = /(\d{1,2})\s+(Jan|Fev|Mar|Abr|Mai|Jun|Jul|Ago|Set|Out|Nov|Dez)\s+(\d{4})\s+(\d{1,2}:\d{2})\s+(RTP(?:\s+[A-Za-z0-9À-ÿ]+(?:\s+[A-Za-z0-9À-ÿ]+)*)?)/gi;
+  const results: RtpEditorialBroadcast[] = [];
+
+  for (const match of section.matchAll(pattern)) {
+    const [, day, monthName, year, time, channel] = match;
+    const month = RTP_MONTHS[monthName.toLowerCase()];
+    if (month === undefined) continue;
+    const date = year + "-" + String(month + 1).padStart(2, "0") + "-" + String(Number(day)).padStart(2, "0");
+    results.push({
+      date,
+      startAt: date + "T" + time + ":00",
+      channel: channel.trim(),
+    });
+  }
+
+  return results;
+}
+
 export function extractRtpProgrammeClassificationUrlFromHtml(html: string, baseUrl: string): string | undefined {
   const pattern = /<a[^>]+href=["']([^"']*\/programa\/tv\/p\d+[^"']*)["'][^>]*>/gi;
   for (const match of html.matchAll(pattern)) {
