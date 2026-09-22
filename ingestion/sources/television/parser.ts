@@ -7,7 +7,7 @@ export function parseTelevisionProgrammeItem(
   item: TelevisionProgrammeItem,
 ): AdapterResult {
   const normalized = normalizeTelevisionProgramme(item);
-  if (!normalized) return { events: [], screenings: [], warnings: [] };
+  if (!normalized) return { events: [], screenings: [], tvPrograms: [], warnings: [] };
   return { events: [], screenings: [], tvPrograms: [normalized], warnings: [] };
 }
 
@@ -18,7 +18,12 @@ export function createTelevisionAdapter(sourceKey: string): SourceAdapter<Televi
     parse(input, sourceItem) {
       return sourceItem
         ? parseTelevisionProgrammeItem(input, sourceItem)
-        : { events: [], screenings: [], warnings: ["Television adapter received no source item."] };
+        : {
+            events: [],
+            screenings: [],
+            tvPrograms: [],
+            warnings: ["Television adapter received no source item."],
+          };
     },
   };
 }
