@@ -42,6 +42,24 @@ describe("RTP EPG parser", () => {
       .toBe("https://www.rtp.pt/play/p17100/e951524/os-primeiros-alentejanos");
   });
 
+  it("preserves an RTP Play URL when the EPG already provides one", () => {
+    const result = parseRtpEpg(
+      {
+        result: {
+          evening: [{
+            id: "48600",
+            date: "2026-09-22 22:38:00",
+            name: "Repovoadores",
+            url: "https://www.rtp.pt/play/p16302/repovoadores",
+          }],
+        },
+      },
+      "RTP1",
+    );
+
+    expect(result[0].sourceUrl).toBe("https://www.rtp.pt/play/p16302/repovoadores");
+  });
+
   it("parses EPG entries using the channel reported by RTP", () => {
     const result = parseRtpEpg(
       {
