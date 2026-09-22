@@ -73,14 +73,17 @@ describe("Doclisboa PDF text parser", () => {
       "https://doclisboa.test/doclisboa2026_programa.pdf",
     );
 
-    expect(result).toHaveLength(1);
-    expect(result[0].films).toHaveLength(4);
-    expect(result[0].films.map((film) => film.title)).toEqual([
+    expect(result).toHaveLength(4);
+    expect(result.every((item) => item.date === "2026-10-20")).toBe(true);
+    expect(result.every((item) => item.time === "16:30")).toBe(true);
+    expect(result.map((item) => item.title)).toEqual([
       "Two Days and Two Nights",
       "Panic in Nowhere",
       "The Summit",
       "One Sun, a Shadow Each",
     ]);
+    expect(result.every((item) => item.films).length).toBe(4);
+    expect(result.every((item) => item.films.length === 1)).toBe(true);
   });
 
   it("preserves film format metadata extracted from the PDF", () => {
