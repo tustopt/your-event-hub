@@ -126,7 +126,7 @@ export function parseRtpEditorialBroadcasts(html: string): RtpEditorialBroadcast
   const sectionEnd = text.toLowerCase().indexOf("rever ultimos episodios", sectionStart);
   const section = text.slice(sectionStart, sectionEnd >= 0 ? sectionEnd : sectionStart + 3000);
 
-  const pattern = /(\d{1,2})\s+(Jan|Fev|Mar|Abr|Mai|Jun|Jul|Ago|Set|Out|Nov|Dez)\s+(\d{4})\s+(\d{1,2}:\d{2})\s+(RTP(?:\s+[A-Za-z0-9À-ÿ]+(?:\s+[A-Za-z0-9À-ÿ]+)*)?)/gi;
+  const pattern = /(\d{1,2})\s+(Jan|Fev|Mar|Abr|Mai|Jun|Jul|Ago|Set|Out|Nov|Dez)\s+(\d{4})\s+(\d{1,2}:\d{2})\s+(RTP(?:\s+(?:1|2|3|Notícias|Mundo(?:\s+(?:América|Ásia))?|Memória|África|Açores|Madeira))?)/gi;
   const results: RtpEditorialBroadcast[] = [];
 
   for (const match of section.matchAll(pattern)) {
