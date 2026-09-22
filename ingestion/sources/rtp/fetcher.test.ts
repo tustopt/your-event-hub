@@ -204,6 +204,10 @@ describe("RTP documentary classification", () => {
     ).toBe(true);
   });
 
+  it("accepts the RTP Play documentary category", () => {
+    expect(isRtpDocumentaryPage("<div>Todos Documentários</div>")).toBe(true);
+  });
+
   it("rejects a normal RTP Play programme page", () => {
     expect(
       isRtpDocumentaryPage(
