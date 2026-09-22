@@ -121,7 +121,8 @@ export function isRtpDocumentaryPage(html: string): boolean {
     }
   }
 
-  return false;
+  const raw = normalize(html);
+  return /(?:generos|genre|faz parte de|todos)[^<]{0,300}documentarios/i.test(raw);
 }
 
 export interface RtpEditorialBroadcast {
@@ -237,12 +238,14 @@ async function fetchRtpEpgProgrammeItemsInternal(options: FetchRtpOptions = {}):
   const seen = new Set<string>();
 
   for (const channel of channelPages) {
-    const pageResponse = await fetchImpl(channel.url);
-    if (!pageResponse.ok) throw new Error("RTP channel page fetch failed: " + pageResponse.status + " (" + channel.url + ")");
-
-    const template = channel.epgFeedUrl
-      ? channel.epgFeedUrl.replace(/\{0\}/g, "{date}").replace(/%7B0%7D/gi, "{date}")
-      : extractRtpEpgFeedUrl(await pageResponse.text());
+    let template: string | undefined;
+    if (channel.epgFeedUrl) {
+      template = channel.epgFeedUrl.replace(/\{0\}/g, "{date}").replace(/%7B0\%}/gi, "{date}");
+    } else {
+      const pageResponse = await fetchImpl(channel.url);
+      if (!pageResponse.ok) throw new Error("RTP channel page fetch failed: " + pageResponse.status + " (" + channel.url + ")");
+      template = extractRtpEpgFeedUrl(await pageResponse.text());
+    }
     if (!template) throw new Error("RTP EPG feed URL not found (" + channel.url + ")");
 
     const baseDate = options.now ? options.now() : new Date();
