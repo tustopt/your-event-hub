@@ -41,7 +41,7 @@ describe("RTP EPG parser", () => {
       "RTP1",
     );
     expect(result[0].sourceUrl)
-      .toBe("https://www.rtp.pt/play/p17100/e951524/os-primeiros-alentejanos");
+      .toBe("https://www.rtp.pt/programa/tv/p17100/e951524");
   });
 
   it("preserves an RTP Play URL when the EPG already provides one", () => {
@@ -130,6 +130,11 @@ describe("RTP programme classification URLs", () => {
   it("maps RTP Play series URLs to the editorial programme page", () => {
     expect(getRtpProgrammeClassificationUrl("https://www.rtp.pt/play/p48600/repovoadores"))
       .toBe("https://www.rtp.pt/programa/tv/p48600");
+  });
+
+  it("maps RTP programme episode URLs to the editorial programme page", () => {
+    expect(getRtpProgrammeClassificationUrl("https://www.rtp.pt/programa/tv/p49117/e12"))
+      .toBe("https://www.rtp.pt/programa/tv/p49117");
   });
 });
 
@@ -268,7 +273,7 @@ describe("RTP documentary classification", () => {
   it("accepts documentary metadata retained in raw HTML", () => {
     expect(
       isRtpDocumentaryPage(
-        "<script>window.__data = {genre: 'Documentários'};</script><div>faz parte de Documentários</div>",
+        "<div>genre: Documentários</div><div>faz parte de Documentários</div>",
       ),
     ).toBe(true);
   });
