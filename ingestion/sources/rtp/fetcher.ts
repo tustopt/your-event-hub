@@ -96,7 +96,7 @@ export function isRtpDocumentaryPage(html: string): boolean {
 export function getRtpProgrammeClassificationUrl(sourceUrl: string): string | undefined {
   const match = sourceUrl.match(/^https?:\/\/www\.rtp\.pt\/play\/(p\d+)(?:\/(e\d+))?(?:\/[^/?#]+)?(?:[?#].*)?$/i);
   if (!match) return undefined;
-  return "https://www.rtp.pt/programa/tv/" + match[1] + (match[2] ? "/" + match[2] : "");
+  return "https://www.rtp.pt/programa/tv/" + match[1];
 }
 
 export function extractRtpEpgFeedUrl(html: string): string | undefined {
