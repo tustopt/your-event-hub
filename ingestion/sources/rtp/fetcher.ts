@@ -130,7 +130,7 @@ export function parseRtpEpg(payload: RtpEpgPayload, fallbackChannel: string): Rt
   return items;
 }
 
-export async function fetchRtpProgramme(options: FetchRtpOptions = {}): Promise<readonly RtpProgrammeItem[]> {
+async function fetchRtpEpgProgrammeItemsInternal(options: FetchRtpOptions = {}): Promise<RtpProgrammeItem[]> {
   const fetchImpl = options.fetchImpl || fetch;
   // Production ingestion passes the source canonical URL (https://www.rtp.pt/).
   // RTP EPG discovery is channel-specific, so the canonical root must not
@@ -158,16 +158,30 @@ export async function fetchRtpProgramme(options: FetchRtpOptions = {}): Promise<
     const payload = (await epgResponse.json()) as RtpEpgPayload;
     for (const item of parseRtpEpg(payload, channel.channel)) {
       if (seen.has(item.sourceExternalId)) continue;
-      const programmeResponse = await fetchImpl(item.sourceUrl);
-      if (!programmeResponse.ok) continue;
-      const programmeHtml = await programmeResponse.text();
-      if (!isRtpDocumentaryPage(programmeHtml)) continue;
-
-      const imageUrl = extractRtpProgrammeImageUrl(programmeHtml, item.sourceUrl);
       seen.add(item.sourceExternalId);
-      all.push(imageUrl ? { ...item, imageUrl } : item);
-      if (options.limit && all.length >= options.limit) return all.slice(0, options.limit);
+      all.push(item);
     }
+  }
+
+  return all;
+}
+
+export async function fetchRtpEpgProgrammeItems(options: FetchRtpOptions = {}): Promise<readonly RtpProgrammeItem[]> {
+  return fetchRtpEpgProgrammeItemsInternal(options);
+}
+
+export async function fetchRtpProgramme(options: FetchRtpOptions = {}): Promise<readonly RtpProgrammeItem[]> {
+  const all: RtpProgrammeItem[] = [];
+  for (const item of await fetchRtpEpgProgrammeItemsInternal(options)) {
+    const fetchImpl = options.fetchImpl || fetch;
+    const programmeResponse = await fetchImpl(item.sourceUrl);
+    if (!programmeResponse.ok) continue;
+    const programmeHtml = await programmeResponse.text();
+    if (!isRtpDocumentaryPage(programmeHtml)) continue;
+
+    const imageUrl = extractRtpProgrammeImageUrl(programmeHtml, item.sourceUrl);
+    all.push(imageUrl ? { ...item, imageUrl } : item);
+    if (options.limit && all.length >= options.limit) return all.slice(0, options.limit);
   }
 
   return options.limit ? all.slice(0, options.limit) : all;
