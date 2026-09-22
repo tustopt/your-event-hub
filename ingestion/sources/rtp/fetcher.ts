@@ -121,9 +121,10 @@ const RTP_MONTHS: Record<string, number> = {
 
 export function parseRtpEditorialBroadcasts(html: string): RtpEditorialBroadcast[] {
   const text = stripTags(html).replace(/\s+/g, " ").trim();
-  const sectionStart = text.toLowerCase().indexOf("proximas emissoes deste programa");
+  const normalizedText = text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  const sectionStart = normalizedText.indexOf("proximas emissoes deste programa");
   if (sectionStart < 0) return [];
-  const sectionEnd = text.toLowerCase().indexOf("rever ultimos episodios", sectionStart);
+  const sectionEnd = normalizedText.indexOf("rever ultimos episodios", sectionStart);
   const section = text.slice(sectionStart, sectionEnd >= 0 ? sectionEnd : sectionStart + 3000);
 
   const pattern = /(\d{1,2})\s+(Jan|Fev|Mar|Abr|Mai|Jun|Jul|Ago|Set|Out|Nov|Dez)\s+(\d{4})\s+(\d{1,2}:\d{2})\s+(RTP(?:\s+(?:1|2|3|Notícias|Mundo(?:\s+(?:América|Ásia))?|Memória|África|Açores|Madeira))?)/gi;
