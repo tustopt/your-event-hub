@@ -196,6 +196,14 @@ describe("RTP documentary classification", () => {
     ).toBe(true);
   });
 
+  it("accepts documentary metadata retained in raw HTML", () => {
+    expect(
+      isRtpDocumentaryPage(
+        "<script>window.__data = {genre: 'Documentários'};</script><div>faz parte de Documentários</div>",
+      ),
+    ).toBe(true);
+  });
+
   it("rejects a normal RTP Play programme page", () => {
     expect(
       isRtpDocumentaryPage(
