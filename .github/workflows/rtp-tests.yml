@@ -22,3 +22,11 @@ jobs:
         run: npm install
       - name: Run television ingestion tests
         run: npx vitest run ingestion/sources/rtp/fetcher.test.ts ingestion/sources/television/types.test.ts ingestion/sources/television/normalizer.test.ts ingestion/sources/television/channels.test.ts ingestion/sources/television/parser.test.ts
+
+      - name: Run controlled RTP live ingestion
+        env:
+          DOCUEVENTS_APP_URL: ${{ secrets.DOCUEVENTS_APP_URL }}
+          DOCUEVENTS_INGEST_AUTOMATION_TOKEN: ${{ secrets.DOCUEVENTS_INGEST_AUTOMATION_TOKEN }}
+          INGEST_SOURCE: rtp
+          INGEST_LIMIT: "5"
+        run: npx tsx ingestion/runners/production-ingestion-cli.ts
