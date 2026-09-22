@@ -98,8 +98,8 @@ export function isRtpDocumentaryPage(html: string): boolean {
   }
 
   const raw = normalize(html);
-  return /(?:generos|faz parte de)[^<]{0,200}documentarios/i.test(raw)
-    || /documentarios[^<]{0,200}(?:generos|faz parte de)/i.test(raw);
+  return /(?:generos|faz parte de|todos)[^<]{0,200}documentarios/i.test(raw)
+    || /documentarios[^<]{0,200}(?:generos|faz parte de|todos)/i.test(raw);
 }
 
 export function getRtpProgrammeClassificationUrl(sourceUrl: string): string | undefined {
