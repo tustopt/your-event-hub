@@ -1,30 +1,27 @@
 import { describe, expect, it } from "vitest";
 import { fetchDoclisboaProgramme, parseDoclisboaProgrammeText } from "./fetcher";
 
-describe("Doclisboa fetcher", () => {
-  it("parses sessions that precede a film heading", async () => {
-    const indexHtml = `<a href="/seccoes/da-terra-a-lua/">Da Terra à Lua</a>`;
-    const sectionHtml = `
-      <h1>Da Terra à Lua</h1>
-      <div>16 Out / 11:30 / 104’</div>
-      <div>Culturgest - Pequeno Auditório</div>
-      <div>18 Out / 15:00 / 104’</div>
-      <div>Cinema São Jorge - Sala 3</div>
-
-      <h3><a href="/filmes/the-vanishing-point/">The Vanishing Point</a></h3>
-      <div>Noghteh-e-Goriz</div>
-      <div>Bani Khoshnoudi</div>
-      <div>2025 Irão, EUA, França 104’</div>
-
-      <div>16 Out / 15:00 / 72’</div>
-      <div>Cinema São Jorge - Sala 3</div>
-      <h3><a href="/filmes/a-scary-movie/">A Scary Movie</a></h3>
-      <div>Una película de miedo</div>
-      <div>Sergio Oksman</div>
-      <div>2025 Espanha, Portugal 72’</div>
+describe("Doclisboa PDF text parser", () => {
+  it("parses sessions that precede a film heading", () => {
+    const programmeText = `
+      Da Terra à Lua
+      16 Out / 11:30, Culturgest - Pequeno Auditório
+      18 Out / 15:00, Cinema São Jorge - Sala 3
+      The Vanishing Point
+      Noghteh-e-Goriz
+      Bani Khoshnoudi
+      2025 Irão, EUA, França • 104’ • DCP
+      16 Out / 15:00, Cinema São Jorge - Sala 3
+      A Scary Movie
+      Una película de miedo
+      Sergio Oksman
+      2025 Espanha, Portugal • 72’ • DCP
     `;
 
-    const result = parseDoclisboaProgrammeText(sectionHtml, "https://doclisboa.test/doclisboa2026_programa.pdf");
+    const result = parseDoclisboaProgrammeText(
+      programmeText,
+      "https://doclisboa.test/doclisboa2026_programa.pdf",
+    );
 
     expect(result).toHaveLength(3);
     expect(result[0]).toMatchObject({
@@ -53,27 +50,28 @@ describe("Doclisboa fetcher", () => {
     });
   });
 
-  it("keeps all films belonging to the same festival programme session", async () => {
-    const indexHtml = `<a href="/seccoes/verdes-anos/">Verdes Anos</a>`;
-    const sectionHtml = `
-      <h1>Verdes Anos</h1>
-      <div>20 Out / 16:30 / 105’</div>
-      <div>Cinema São Jorge - Sala M. Oliveira</div>
-      <h3>Two Days and Two Nights</h3>
-      <div>Katarina Lanier</div>
-      <div>2025 Portugal 12’</div>
-      <h3>Panic in Nowhere</h3>
-      <div>Adrian Flury</div>
-      <div>2024 Suíça 27’</div>
-      <h3>The Summit</h3>
-      <div>Ander Reviejo</div>
-      <div>2025 Espanha 10’</div>
-      <h3>One Sun, a Shadow Each</h3>
-      <div>Alexandre Carré</div>
-      <div>2025 França 58’</div>
+  it("keeps all films belonging to the same festival programme session", () => {
+    const programmeText = `
+      Verdes Anos
+      20 Out / 16:30, Cinema São Jorge - Sala M. Oliveira
+      Two Days and Two Nights
+      Katarina Lanier
+      2025 Portugal • 12’ • DCP
+      Panic in Nowhere
+      Adrian Flury
+      2024 Suíça • 27’ • DCP
+      The Summit
+      Ander Reviejo
+      2025 Espanha • 10’ • DCP
+      One Sun, a Shadow Each
+      Alexandre Carré
+      2025 França • 58’ • DCP
     `;
 
-    const result = parseDoclisboaProgrammeText(sectionHtml, "https://doclisboa.test/doclisboa2026_programa.pdf");
+    const result = parseDoclisboaProgrammeText(
+      programmeText,
+      "https://doclisboa.test/doclisboa2026_programa.pdf",
+    );
 
     expect(result).toHaveLength(1);
     expect(result[0].films).toHaveLength(4);
@@ -85,26 +83,29 @@ describe("Doclisboa fetcher", () => {
     ]);
   });
 
-  it("deduplicates repeated section links", async () => {
-    const indexHtml = `
-      <a href="/seccoes/a/">A</a>
-      <a href="/seccoes/a/">A duplicate</a>
-    `;
-    const sectionHtml = `
-      <h1>A</h1>
-      <div>16 Out / 11:30 / 104’</div>
-      <div>Culturgest</div>
-      <h3>Film</h3>
-      <div>Director</div>
-      <div>2025 Portugal 104’</div>
-    `;
-    const result = parseDoclisboaProgrammeText(sectionHtml, "https://doclisboa.test/doclisboa2026_programa.pdf");
-    expect(result).toHaveLength(1);
+  it("preserves film format metadata extracted from the PDF", () => {
+    const result = parseDoclisboaProgrammeText(
+      `
+        16 Out / 11:30, Culturgest
+        Film
+        Director
+        2025 Portugal • 92’ • DCP
+      `,
+      "https://doclisboa.test/doclisboa2026_programa.pdf",
+    );
+
+    expect(result[0].films[0]).toMatchObject({
+      title: "Film",
+      director: "Director",
+      format: "DCP",
+    });
   });
 
-  it("rejects failed source responses", async () => {
+  it("rejects failed PDF source responses", async () => {
     await expect(
-      fetchDoclisboaProgramme({ fetchImpl: async () => new Response("", { status: 503 }) }),
+      fetchDoclisboaProgramme({
+        fetchImpl: async () => new Response("", { status: 503 }),
+      }),
     ).rejects.toThrow("Doclisboa PDF fetch failed: 503");
   });
 });
