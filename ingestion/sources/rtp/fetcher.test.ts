@@ -74,6 +74,35 @@ describe("RTP EPG parser", () => {
   });
 });
 
+describe("RTP production channel selection", () => {
+  it("uses RTP channel pages when the canonical root URL is passed", async () => {
+    const requestedUrls: string[] = [];
+    const responses = [
+      new Response('<script>var epgFeedUrl = "/EPG/json/rtp-channels-page/list-grid/tv/1/{0}";</script>', { status: 200 }),
+      new Response(JSON.stringify({ result: {} }), { status: 200 }),
+      new Response('<script>var epgFeedUrl = "/EPG/json/rtp-channels-page/list-grid/tv/2/{0}";</script>', { status: 200 }),
+      new Response(JSON.stringify({ result: {} }), { status: 200 }),
+      new Response('<script>var epgFeedUrl = "/EPG/json/rtp-channels-page/list-grid/tv/3/{0}";</script>', { status: 200 }),
+      new Response(JSON.stringify({ result: {} }), { status: 200 }),
+    ];
+
+    await fetchRtpProgramme({
+      url: "https://www.rtp.pt/",
+      now: () => new Date("2026-09-22T12:00:00Z"),
+      fetchImpl: async (input) => {
+        requestedUrls.push(String(input));
+        return responses.shift() ?? new Response("", { status: 500 });
+      },
+    });
+
+    expect(requestedUrls.filter((url) => /www\.rtp\.pt\/rtp[123]\/$/.test(url))).toEqual([
+      "https://www.rtp.pt/rtp1/",
+      "https://www.rtp.pt/rtp2/",
+      "https://www.rtp.pt/rtp3/",
+    ]);
+  });
+});
+
 describe("RTP historical ingestion", () => {
   it("ingests a known historical documentary from the EPG", async () => {
     const responses = [
