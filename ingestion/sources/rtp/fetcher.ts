@@ -66,6 +66,23 @@ function parseEpisodeNumber(value?: string): number | undefined {
   return Number.isFinite(number) && number > 0 ? number : undefined;
 }
 
+export function extractRtpProgrammeImageUrl(html: string, baseUrl?: string): string | undefined {
+  const patterns = [
+    /<meta[^>]+(?:property|name)=["'](?:og:image|og:image:secure_url|twitter:image|twitter:image:src)["'][^>]+content=["']([^"']+)["'][^>]*>/i,
+    /<meta[^>]+content=["']([^"']+)["'][^>]+(?:property|name)=["'](?:og:image|og:image:secure_url|twitter:image|twitter:image:src)["'][^>]*>/i,
+  ];
+  for (const pattern of patterns) {
+    const match = html.match(pattern);
+    if (!match?.[1]) continue;
+    try {
+      return baseUrl ? new URL(match[1].trim(), baseUrl).toString() : match[1].trim();
+    } catch {
+      return match[1].trim();
+    }
+  }
+  return undefined;
+}
+
 export function isRtpDocumentaryPage(html: string): boolean {
   const text = stripTags(html).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
   return /este conteudo faz parte de documentarios(?:\s|$)/i.test(text) || /generos\s+documentarios(?:\s|$)/i.test(text);
@@ -143,10 +160,12 @@ export async function fetchRtpProgramme(options: FetchRtpOptions = {}): Promise<
       if (seen.has(item.sourceExternalId)) continue;
       const programmeResponse = await fetchImpl(item.sourceUrl);
       if (!programmeResponse.ok) continue;
-      if (!isRtpDocumentaryPage(await programmeResponse.text())) continue;
+      const programmeHtml = await programmeResponse.text();
+      if (!isRtpDocumentaryPage(programmeHtml)) continue;
 
+      const imageUrl = extractRtpProgrammeImageUrl(programmeHtml, item.sourceUrl);
       seen.add(item.sourceExternalId);
-      all.push(item);
+      all.push(imageUrl ? { ...item, imageUrl } : item);
       if (options.limit && all.length >= options.limit) return all.slice(0, options.limit);
     }
   }
