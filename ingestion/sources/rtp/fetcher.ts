@@ -16,6 +16,8 @@ export interface FetchRtpOptions {
   fetchImpl?: typeof fetch;
   now?: () => Date;
   limit?: number;
+  daysBack?: number;
+  daysAhead?: number;
   channelPages?: readonly { key: string; channel: string; url: string }[];
 }
 
@@ -172,16 +174,24 @@ async function fetchRtpEpgProgrammeItemsInternal(options: FetchRtpOptions = {}):
     const template = extractRtpEpgFeedUrl(await pageResponse.text());
     if (!template) throw new Error("RTP EPG feed URL not found (" + channel.url + ")");
 
-    const date = (options.now ? options.now() : new Date()).toISOString().slice(0, 10);
-    const epgUrl = new URL(template.replace("{date}", date), channel.url).toString();
-    const epgResponse = await fetchImpl(epgUrl);
-    if (!epgResponse.ok) throw new Error("RTP EPG fetch failed: " + epgResponse.status + " (" + epgUrl + ")");
+    const baseDate = options.now ? options.now() : new Date();
+    const daysBack = Math.max(0, options.daysBack ?? 0);
+    const daysAhead = Math.max(0, options.daysAhead ?? 0);
 
-    const payload = (await epgResponse.json()) as RtpEpgPayload;
-    for (const item of parseRtpEpg(payload, channel.channel)) {
-      if (seen.has(item.sourceExternalId)) continue;
-      seen.add(item.sourceExternalId);
-      all.push(item);
+    for (let dayOffset = -daysBack; dayOffset <= daysAhead; dayOffset++) {
+      const date = new Date(baseDate);
+      date.setUTCDate(date.getUTCDate() + dayOffset);
+      const dateValue = date.toISOString().slice(0, 10);
+      const epgUrl = new URL(template.replace("{date}", dateValue), channel.url).toString();
+      const epgResponse = await fetchImpl(epgUrl);
+      if (!epgResponse.ok) throw new Error("RTP EPG fetch failed: " + epgResponse.status + " (" + epgUrl + ")");
+
+      const payload = (await epgResponse.json()) as RtpEpgPayload;
+      for (const item of parseRtpEpg(payload, channel.channel)) {
+        if (seen.has(item.sourceExternalId)) continue;
+        seen.add(item.sourceExternalId);
+        all.push(item);
+      }
     }
   }
 
@@ -194,8 +204,10 @@ export async function fetchRtpEpgProgrammeItems(options: FetchRtpOptions = {}): 
 
 export async function fetchRtpProgramme(options: FetchRtpOptions = {}): Promise<readonly RtpProgrammeItem[]> {
   const all: RtpProgrammeItem[] = [];
+  const fetchImpl = options.fetchImpl || fetch;
+  const classificationCache = new Map<string, boolean>();
+
   for (const item of await fetchRtpEpgProgrammeItemsInternal(options)) {
-    const fetchImpl = options.fetchImpl || fetch;
     const programmeResponse = await fetchImpl(item.sourceUrl, {
       headers: {
         "User-Agent": "Mozilla/5.0 (compatible; DocuEvents/1.0; +https://www.rtp.pt/)",
@@ -204,18 +216,32 @@ export async function fetchRtpProgramme(options: FetchRtpOptions = {}): Promise<
     if (!programmeResponse.ok) continue;
     const programmeHtml = await programmeResponse.text();
 
-    let classificationHtml = programmeHtml;
-    if (!isRtpDocumentaryPage(classificationHtml)) {
-      const classificationUrl = getRtpProgrammeClassificationUrl(item.sourceUrl);
-      if (!classificationUrl) continue;
-      const classificationResponse = await fetchImpl(classificationUrl);
-      if (!classificationResponse.ok) continue;
-      classificationHtml = await classificationResponse.text();
-    }
-    if (!isRtpDocumentaryPage(classificationHtml)) continue;
+    const classificationUrl = getRtpProgrammeClassificationUrl(item.sourceUrl);
+    let isDocumentary = isRtpDocumentaryPage(programmeHtml);
 
-    const imageUrl = extractRtpProgrammeImageUrl(programmeHtml, item.sourceUrl)
-      || extractRtpProgrammeImageUrl(classificationHtml, classificationHtml);
+    if (!isDocumentary && classificationUrl) {
+      const cached = classificationCache.get(classificationUrl);
+      if (cached !== undefined) {
+        isDocumentary = cached;
+      } else {
+        const classificationResponse = await fetchImpl(classificationUrl, {
+          headers: {
+            "User-Agent": "Mozilla/5.0 (compatible; DocuEvents/1.0; +https://www.rtp.pt/)",
+          },
+        });
+        if (!classificationResponse.ok) {
+          classificationCache.set(classificationUrl, false);
+          continue;
+        }
+        const classificationHtml = await classificationResponse.text();
+        isDocumentary = isRtpDocumentaryPage(classificationHtml);
+        classificationCache.set(classificationUrl, isDocumentary);
+      }
+    }
+
+    if (!isDocumentary) continue;
+
+    const imageUrl = extractRtpProgrammeImageUrl(programmeHtml, item.sourceUrl);
     all.push(imageUrl ? { ...item, imageUrl } : item);
     if (options.limit && all.length >= options.limit) return all.slice(0, options.limit);
   }
