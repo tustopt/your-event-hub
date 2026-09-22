@@ -15,7 +15,7 @@ async function main(): Promise<void> {
     channelCounts.set(item.channel, (channelCounts.get(item.channel) ?? 0) + 1);
   }
 
-  const sample = items.slice(0, 30);
+  const sample = items;
   let documentaryCount = 0;
   let checked = 0;
   let classified = 0;
