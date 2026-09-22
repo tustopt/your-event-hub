@@ -9,6 +9,11 @@ export const RTP_CHANNEL_PAGES = [
   { key: "rtp1", channel: "RTP1", url: "https://www.rtp.pt/rtp1/" },
   { key: "rtp2", channel: "RTP2", url: "https://www.rtp.pt/rtp2/" },
   { key: "rtp3", channel: "RTP3", url: "https://www.rtp.pt/rtp3/" },
+  { key: "rtp_memoria", channel: "RTP Memória", url: "https://www.rtp.pt/", epgFeedUrl: "/EPG/json/rtp-channels-page/list-grid/tv/4/{date}" },
+  { key: "rtp_africa", channel: "RTP África", url: "https://www.rtp.pt/", epgFeedUrl: "/EPG/json/rtp-channels-page/list-grid/tv/5/{date}" },
+  { key: "rtp_mundo", channel: "RTP Mundo", url: "https://www.rtp.pt/", epgFeedUrl: "/EPG/json/rtp-channels-page/list-grid/tv/6/{date}" },
+  { key: "rtp_acores", channel: "RTP Açores", url: "https://www.rtp.pt/", epgFeedUrl: "/EPG/json/rtp-channels-page/list-grid/tv/7/{date}" },
+  { key: "rtp_madeira", channel: "RTP Madeira", url: "https://www.rtp.pt/", epgFeedUrl: "/EPG/json/rtp-channels-page/list-grid/tv/8/{date}" },
 ] as const;
 
 export interface FetchRtpOptions {
@@ -18,7 +23,7 @@ export interface FetchRtpOptions {
   limit?: number;
   daysBack?: number;
   daysAhead?: number;
-  channelPages?: readonly { key: string; channel: string; url: string }[];
+  channelPages?: readonly { key: string; channel: string; url: string; epgFeedUrl?: string }[];
 }
 
 interface RtpEpgEntry {
@@ -224,7 +229,9 @@ async function fetchRtpEpgProgrammeItemsInternal(options: FetchRtpOptions = {}):
     const pageResponse = await fetchImpl(channel.url);
     if (!pageResponse.ok) throw new Error("RTP channel page fetch failed: " + pageResponse.status + " (" + channel.url + ")");
 
-    const template = extractRtpEpgFeedUrl(await pageResponse.text());
+    const template = channel.epgFeedUrl
+      ? channel.epgFeedUrl.replace(/\{0\}/g, "{date}").replace(/%7B0%7D/gi, "{date}")
+      : extractRtpEpgFeedUrl(await pageResponse.text());
     if (!template) throw new Error("RTP EPG feed URL not found (" + channel.url + ")");
 
     const baseDate = options.now ? options.now() : new Date();
