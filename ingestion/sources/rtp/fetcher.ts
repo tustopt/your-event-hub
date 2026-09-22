@@ -104,6 +104,14 @@ export function extractRtpProgrammeImageUrl(html: string, baseUrl?: string): str
   return undefined;
 }
 
+export function isRtpDocumentaryDescription(description?: string): boolean {
+  if (!description) return false;
+  const text = description.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  return /\bdocumentari(?:o|a|os|as)\b/.test(text)
+    || /\bserie\s+documental\b/.test(text)
+    || /\bseries\s+documentais\b/.test(text);
+}
+
 export function isRtpDocumentaryPage(html: string): boolean {
   const normalize = (value: string) =>
     value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
@@ -323,7 +331,8 @@ export async function fetchRtpProgramme(options: FetchRtpOptions = {}): Promise<
     const classificationUrl =
       extractRtpProgrammeClassificationUrlFromHtml(programmeHtml, item.sourceUrl)
       || getRtpProgrammeClassificationUrl(item.sourceUrl);
-    let isDocumentary = isRtpDocumentaryPage(programmeHtml);
+    let isDocumentary = isRtpDocumentaryPage(programmeHtml)
+      || isRtpDocumentaryDescription(item.description);
 
     if (!isDocumentary && classificationUrl) {
       const cached = classificationCache.get(classificationUrl);
