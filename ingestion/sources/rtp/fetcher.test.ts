@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { extractRtpProgrammeImageUrl, describe, expect, it } from "vitest";
 import {
   extractRtpEpgFeedUrl,
   isRtpDocumentaryPage,
@@ -162,5 +162,20 @@ describe("RTP documentary classification", () => {
         "<main>Género: Cultura</main><footer>Este conteúdo faz parte de Programas de Informação</footer>",
       ),
     ).toBe(false);
+  });
+});
+
+
+describe("RTP programme image extraction", () => {
+  it("extracts and resolves Open Graph images", async () => {
+    const html = '<meta property="og:image" content="/images/doc.jpg">';
+    expect(extractRtpProgrammeImageUrl(html, "https://www.rtp.pt/play/programa/doc")).toBe(
+      "https://www.rtp.pt/images/doc.jpg",
+    );
+  });
+
+  it("supports content before property", async () => {
+    const html = '<meta content="https://cdn.example/doc.jpg" property="og:image">';
+    expect(extractRtpProgrammeImageUrl(html)).toBe("https://cdn.example/doc.jpg");
   });
 });
