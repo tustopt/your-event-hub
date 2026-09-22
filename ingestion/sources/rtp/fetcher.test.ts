@@ -206,6 +206,10 @@ describe("RTP documentary classification", () => {
     ).toBe(true);
   });
 
+  it("accepts RTP Play pages using the Todos Documentários classification", () => {
+    expect(isRtpDocumentaryPage("<div>Todos Documentários</div><p>Repovoadores</p>")).toBe(true);
+  });
+
   it("accepts RTP programme pages classified as Documentários", () => {
     expect(
       isRtpDocumentaryPage(
