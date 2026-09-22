@@ -244,6 +244,14 @@ describe("RTP documentary classification", () => {
     ).toBe(true);
   });
 
+  it("accepts real-world markup with unrelated elements between genre marker and value", () => {
+    expect(
+      isRtpDocumentaryPage(
+        "<section><h3>Géneros</h3><div class=\"icons\"><span>•</span></div><p>Documentários</p></section>",
+      ),
+    ).toBe(true);
+  });
+
   it("accepts RTP Play documentary sections", () => {
     expect(
       isRtpDocumentaryPage(
