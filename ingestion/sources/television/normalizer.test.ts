@@ -18,6 +18,8 @@ describe("television normalizer", () => {
 
     expect(result).toMatchObject({
       eventType: "television",
+      sourceExternalId: "abc",
+      sourceUrl: "https://example.test/programme",
       title: "A Documentary",
       broadcasterKey: "example",
       channel: "Example TV",
