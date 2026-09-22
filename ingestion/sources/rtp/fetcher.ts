@@ -89,8 +89,17 @@ export function extractRtpProgrammeImageUrl(html: string, baseUrl?: string): str
 }
 
 export function isRtpDocumentaryPage(html: string): boolean {
-  const text = stripTags(html).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-  return /este conteudo faz parte de documentarios(?:\s|$)/i.test(text) || /generos\s+documentarios(?:\s|$)/i.test(text);
+  const normalize = (value: string) =>
+    value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+
+  const text = normalize(stripTags(html));
+  if (/este conteudo faz parte de documentarios(?:\s|$)/i.test(text) || /generos\s+documentarios(?:\s|$)/i.test(text)) {
+    return true;
+  }
+
+  const raw = normalize(html);
+  return /(?:generos|faz parte de)[^<]{0,200}documentarios/i.test(raw)
+    || /documentarios[^<]{0,200}(?:generos|faz parte de)/i.test(raw);
 }
 
 export function getRtpProgrammeClassificationUrl(sourceUrl: string): string | undefined {
