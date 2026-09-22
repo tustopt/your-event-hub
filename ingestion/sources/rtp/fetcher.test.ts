@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   extractRtpEpgFeedUrl,
   isRtpDocumentaryPage,
+  isRtpDocumentaryDescription,
   fetchRtpProgramme,
   fetchRtpEpgProgrammeItems,
   parseRtpEpg,
@@ -89,7 +90,6 @@ describe("RTP EPG parser", () => {
       title: "Os Primeiros Alentejanos",
       channel: "RTP1",
       broadcasterKey: "rtp",
-      genre: "Documentários",
       startAt: "2026-09-19T10:30:00+01:00",
     });
   });
@@ -271,6 +271,11 @@ describe("RTP historical ingestion", () => {
 });
 
 describe("RTP documentary classification", () => {
+  it("classifies documentary descriptions from the RTP EPG", () => {
+    expect(isRtpDocumentaryDescription("Série documental que oferece um olhar sem filtros sobre os bastidores da linha 112")).toBe(true);
+    expect(isRtpDocumentaryDescription("Programa de informação diária")).toBe(false);
+  });
+
   it("accepts current RTP Play documentary markup with HTML entities", () => { expect(isRtpDocumentaryPage('<h2 class="section-title">Este conte&uacute;do faz parte de Document&aacute;rios de Patrim&oacute;nio, Tradi&ccedil;&otilde;es e Gastronomia</h2>')).toBe(true); });
 
   it("accepts numeric HTML entities used by RTP pages", () => {
