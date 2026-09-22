@@ -94,6 +94,21 @@ describe("RTP EPG parser", () => {
   });
 });
 
+describe("RTP editorial broadcast parser", () => {
+  it("parses upcoming broadcasts from the editorial programme page", async () => {
+    const html = `
+      <h2>Próximas emissões deste programa</h2>
+      <li>24 Set 2026</li><li>15:55</li><h3>RTP 2</h3>
+      <li>01 Out 2026</li><li>23:30</li><h3>RTP Mundo</h3>
+      <h2>Rever últimos episódios no RTP Play</h2>
+    `;
+    expect((await import("./fetcher")).parseRtpEditorialBroadcasts(html)).toEqual([
+      { date: "2026-09-24", startAt: "2026-09-24T15:55:00", channel: "RTP 2" },
+      { date: "2026-10-01", startAt: "2026-10-01T23:30:00", channel: "RTP Mundo" },
+    ]);
+  });
+});
+
 describe("RTP programme classification links", () => {
   it("extracts the editorial programme URL from an RTP Play page", async () => {
     expect(
