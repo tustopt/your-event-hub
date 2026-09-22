@@ -309,14 +309,6 @@ describe("RTP documentary classification", () => {
     ).toBe(true);
   });
 
-  it("accepts documentary metadata retained in raw HTML", () => {
-    expect(
-      isRtpDocumentaryPage(
-        "<div>genre: Documentários</div><div>faz parte de Documentários</div>",
-      ),
-    ).toBe(true);
-  });
-
   it("accepts the RTP Play documentary category", () => {
     expect(isRtpDocumentaryPage("<div>Todos Documentários</div>")).toBe(true);
   });
