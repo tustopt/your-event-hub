@@ -34,6 +34,7 @@ interface RtpEpgEntry {
   description?: string;
   url?: string;
   episode?: { number?: string; title?: string; sinopse?: string };
+  image?: { width?: string; height?: string; src?: string }[];
 }
 
 interface RtpEpgPayload {
@@ -70,6 +71,14 @@ function lisbonOffset(date: string, time: string): string {
   const sign = offset >= 0 ? "+" : "-";
   const absolute = Math.abs(offset);
   return sign + String(Math.floor(absolute / 60)).padStart(2, "0") + ":" + String(absolute % 60).padStart(2, "0");
+}
+
+
+function documentarySignalFromText(value?: string): boolean | undefined {
+  if (!value) return undefined;
+  const normalized = value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  if (/\bdocumentari(?:o|os|a|as)\b/.test(normalized)) return true;
+  return false;
 }
 
 function parseEpisodeNumber(value?: string): number | undefined {
@@ -210,6 +219,7 @@ export function parseRtpEpg(payload: RtpEpgPayload, fallbackChannel: string): Rt
     const episode = parseEpisodeNumber(entry.episode?.number);
     const episodeTitle = entry.episode?.title?.trim() || undefined;
     const description = entry.description?.trim() || entry.episode?.sinopse?.trim() || undefined;
+    const imageUrl = entry.image?.slice().sort((a, b) => Number(b.width || 0) - Number(a.width || 0))[0]?.src?.trim() || undefined;
     const sourceExternalId = entry.id
       ? entry.id + "-" + date + "-" + slug(channel)
       : slug(entry.name) + "-" + date + "-" + time.replace(":", "") + "-" + slug(channel);
@@ -227,6 +237,7 @@ export function parseRtpEpg(payload: RtpEpgPayload, fallbackChannel: string): Rt
       ...(episodeTitle ? { episodeTitle } : {}),
       ...(entry.series?.trim() ? { seriesTitle: entry.series.trim() } : {}),
       ...(episode !== undefined ? { episode } : {}),
+      ...(imageUrl ? { imageUrl } : {}),
       genre: "Documentários",
       startAt: date + "T" + time + ":00" + lisbonOffset(date, time),
     });
@@ -292,6 +303,15 @@ export async function fetchRtpProgramme(options: FetchRtpOptions = {}): Promise<
   const classificationCache = new Map<string, boolean>();
 
   for (const item of await fetchRtpEpgProgrammeItemsInternal(options)) {
+    const epgSignal = documentarySignalFromText(item.description);
+    if (epgSignal === false) continue;
+
+    if (epgSignal === true) {
+      all.push(item);
+      if (options.limit && all.length >= options.limit) return all.slice(0, options.limit);
+      continue;
+    }
+
     const programmeResponse = await fetchImpl(item.sourceUrl, {
       headers: {
         "User-Agent": "Mozilla/5.0 (compatible; DocuEvents/1.0; +https://www.rtp.pt/)",
