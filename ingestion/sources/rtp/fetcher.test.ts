@@ -168,6 +168,11 @@ describe("RTP production channel selection", () => {
       new Response(JSON.stringify({ result: {} }), { status: 200 }),
       new Response('<script>var epgFeedUrl = "/EPG/json/rtp-channels-page/list-grid/tv/3/{0}";</script>', { status: 200 }),
       new Response(JSON.stringify({ result: {} }), { status: 200 }),
+      new Response(JSON.stringify({ result: {} }), { status: 200 }),
+      new Response(JSON.stringify({ result: {} }), { status: 200 }),
+      new Response(JSON.stringify({ result: {} }), { status: 200 }),
+      new Response(JSON.stringify({ result: {} }), { status: 200 }),
+      new Response(JSON.stringify({ result: {} }), { status: 200 }),
     ];
 
     await fetchRtpProgramme({
