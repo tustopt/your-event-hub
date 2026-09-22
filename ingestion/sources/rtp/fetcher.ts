@@ -196,7 +196,11 @@ export async function fetchRtpProgramme(options: FetchRtpOptions = {}): Promise<
   const all: RtpProgrammeItem[] = [];
   for (const item of await fetchRtpEpgProgrammeItemsInternal(options)) {
     const fetchImpl = options.fetchImpl || fetch;
-    const programmeResponse = await fetchImpl(item.sourceUrl);
+    const programmeResponse = await fetchImpl(item.sourceUrl, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (compatible; DocuEvents/1.0; +https://www.rtp.pt/)",
+      },
+    });
     if (!programmeResponse.ok) continue;
     const programmeHtml = await programmeResponse.text();
 
