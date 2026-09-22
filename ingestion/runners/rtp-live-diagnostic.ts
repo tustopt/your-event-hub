@@ -8,8 +8,8 @@ async function main(): Promise<void> {
   const now = new Date();
   const items = await fetchRtpEpgProgrammeItems({
     now: () => now,
-    daysBack: 1,
-    daysAhead: 3,
+    daysBack: 0,
+    daysAhead: 1,
   });
 
   const directFeedChecks = [];
