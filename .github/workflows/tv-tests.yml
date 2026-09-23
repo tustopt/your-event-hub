@@ -17,4 +17,4 @@ jobs:
         with:
           node-version: 22
       - name: Install dependencies diagnostic
-        run: npm install --ignore-scripts --legacy-peer-deps
+        run: npm install --ignore-scripts --legacy-peer-deps --omit=optional
