@@ -40,3 +40,19 @@ jobs:
         run: npm install
       - name: Run live SIC and TVI diagnostics
         run: npx tsx ingestion/runners/tv-live-diagnostic.ts
+
+      - name: Run live SIC ingestion
+        env:
+          DOCUEVENTS_APP_URL: ${{ secrets.DOCUEVENTS_APP_URL }}
+          DOCUEVENTS_INGEST_AUTOMATION_TOKEN: ${{ secrets.DOCUEVENTS_INGEST_AUTOMATION_TOKEN }}
+          INGEST_SOURCE: sic
+          INGEST_LIMIT: "10"
+        run: npx tsx ingestion/runners/production-ingestion-cli.ts
+
+      - name: Run live TVI ingestion
+        env:
+          DOCUEVENTS_APP_URL: ${{ secrets.DOCUEVENTS_APP_URL }}
+          DOCUEVENTS_INGEST_AUTOMATION_TOKEN: ${{ secrets.DOCUEVENTS_INGEST_AUTOMATION_TOKEN }}
+          INGEST_SOURCE: tvi
+          INGEST_LIMIT: "10"
+        run: npx tsx ingestion/runners/production-ingestion-cli.ts
