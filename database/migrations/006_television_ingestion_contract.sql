@@ -1,13 +1,13 @@
 -- Television ingestion persistence contract
 -- Applied to the connected production database separately.
 
--- RTP is an enabled production source.
+-- RTP, SIC and TVI are enabled production television sources.
 UPDATE public.sources
 SET active = true,
     last_error_at = NULL,
     last_error = NULL,
     updated_at = now()
-WHERE parser_key = 'rtp';
+WHERE parser_key IN ('rtp', 'sic', 'tvi');
 
 -- The ingest function uses ON CONFLICT(source_id, source_external_id),
 -- so the unique index must be a normal unique index rather than a partial one.
