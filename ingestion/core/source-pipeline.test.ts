@@ -44,6 +44,53 @@ describe("source pipeline", () => {
     expect(result.result.warnings).toHaveLength(2);
   });
 
+  it("merges television results while preserving source identity", async () => {
+    const tvAdapter: SourceAdapter = {
+      key: "rtp",
+      sourceType: "website",
+      parse: (input) => ({
+        events: [],
+        screenings: [],
+        tvPrograms: [{
+          eventType: "television",
+          sourceExternalId: input.externalId ?? "missing",
+          sourceUrl: input.sourceUrl ?? "https://example.test",
+          title: "Documentário RTP",
+          channel: "RTP1",
+          broadcasterKey: "rtp",
+          startAt: "2026-09-23T20:00:00+01:00",
+          genre: "documentary",
+          provenance: {
+            sourceKey: "rtp",
+            sourceExternalId: input.externalId,
+            sourceUrl: input.sourceUrl,
+          },
+        }],
+        warnings: [],
+      }),
+    };
+    const tvFetcher: SourceFetcher<{ id: string }> = {
+      sourceKey: "rtp",
+      sourceType: "website",
+      fetch: async () => [{ id: "one" }, { id: "two" }],
+      toParsedItem: (item) => ({
+        sourceKey: "rtp",
+        sourceType: "website",
+        externalId: `rtp:${item.id}`,
+        sourceUrl: `https://example.test/${item.id}`,
+        raw: JSON.stringify(item),
+        parsedAt: "2026-09-23T10:00:00Z",
+      }),
+    };
+
+    const result = await runSourcePipeline(tvFetcher, createAdapterRegistry([tvAdapter]));
+
+    expect(result.result.tvPrograms?.map((item) => item.sourceExternalId)).toEqual([
+      "rtp:one",
+      "rtp:two",
+    ]);
+  });
+
   it("rejects a fetcher whose source type differs from its adapter", async () => {
     const mismatched = { ...fetcher, sourceType: "rss" as const };
     await expect(
