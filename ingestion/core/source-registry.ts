@@ -61,13 +61,13 @@ export const sourceRegistry: readonly SourceDefinition[] = [
   {
     key: "sic", name: "SIC", category: "television",
     sourceType: "website", countryCode: "PT", languageCode: "pt", status: "candidate",
-    canonicalUrl: "https://sic.pt/", fetchIntervalMinutes: 360,
+    adapterKey: "sic", canonicalUrl: "https://sic.pt/", fetchIntervalMinutes: 360,
     description: "Television source restricted to documentaries and documentary series.",
   },
   {
     key: "tvi", name: "TVI", category: "television",
     sourceType: "website", countryCode: "PT", languageCode: "pt", status: "candidate",
-    canonicalUrl: "https://tvi.iol.pt/", fetchIntervalMinutes: 360,
+    adapterKey: "tvi", canonicalUrl: "https://tvi.iol.pt/", fetchIntervalMinutes: 360,
     description: "Television source restricted to documentaries and documentary series.",
   },
   {
