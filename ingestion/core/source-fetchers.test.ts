@@ -31,7 +31,7 @@ describe("source fetcher registry", () => {
     const parsed = fetcher.toParsedItem({
       sourceExternalId: "rtp:RTP1:2026-09-23T20:00:00Z:doc-1",
       sourceUrl: "https://www.rtp.pt/play/direto/rtp1",
-      title: "Documentário",
+      title: "Documentário RTP",
     });
 
     expect(parsed).toMatchObject({
