@@ -6,6 +6,7 @@ import { fetchCinemaFernandoLopesProgramme } from "../sources/cinema_fernando_lo
 import { fetchDoclisboaProgramme } from "../sources/doclisboa/fetcher.js";
 import { fetchRtpProgramme } from "../sources/rtp/fetcher.js";
 import { fetchTviProgramme } from "../sources/tvi/fetcher.js";
+import { fetchSicProgramme } from "../sources/sic/fetcher.js";
 
 interface ProgrammeItemLike {
   sourceExternalId?: string;
@@ -56,6 +57,8 @@ export const sourceFetcherFactories: Readonly<Record<string, FetcherFactory>> = 
     websiteFetcher("rtp", (o) => fetchRtpProgramme(o), options),
   tvi: (options) =>
     websiteFetcher("tvi", (o) => fetchTviProgramme(o), options),
+  sic: (options) =>
+    websiteFetcher("sic", (o) => fetchSicProgramme(o), options),
 };
 
 export function hasSourceFetcher(sourceKey: string): boolean {
