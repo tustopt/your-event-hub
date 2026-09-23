@@ -1,4 +1,5 @@
 import type { RtpProgrammeItem } from "./types";
+import { getLisbonDate, getLisbonOffset } from "../television/time";
 
 export const RTP_SOURCE_KEY = "rtp";
 
@@ -58,21 +59,6 @@ function stripTags(value: string): string {
       return Number.isFinite(codePoint) ? String.fromCodePoint(codePoint) : "&" + value + ";";
     }).replace(/&([a-z]+);/gi, (_, name: string) => ({ aacute: "á", acirc: "â", agrave: "à", atilde: "ã", auml: "ä", ccedil: "ç", eacute: "é", ecirc: "ê", egrave: "è", iacute: "í", oacute: "ó", ocirc: "ô", otilde: "õ", uacute: "ú", ucirc: "û", ntilde: "ñ" }[name.toLowerCase()] || "&" + name + ";")).replace(/\s+/g, " ").trim();
 }
-
-function lisbonOffset(date: string, time: string): string {
-  const candidate = new Date(date + "T" + time + ":00Z");
-  const parts = new Intl.DateTimeFormat("en-GB", {
-    timeZone: "Europe/Lisbon", year: "numeric", month: "2-digit", day: "2-digit",
-    hour: "2-digit", minute: "2-digit", hourCycle: "h23",
-  }).formatToParts(candidate);
-  const values = Object.fromEntries(parts.filter((p) => p.type !== "literal").map((p) => [p.type, p.value]));
-  const local = Date.UTC(Number(values.year), Number(values.month) - 1, Number(values.day), Number(values.hour), Number(values.minute));
-  const offset = Math.round((local - candidate.getTime()) / 60000);
-  const sign = offset >= 0 ? "+" : "-";
-  const absolute = Math.abs(offset);
-  return sign + String(Math.floor(absolute / 60)).padStart(2, "0") + ":" + String(absolute % 60).padStart(2, "0");
-}
-
 
 function documentarySignalFromText(value?: string): boolean | undefined {
   if (!value) return undefined;
@@ -282,9 +268,7 @@ async function fetchRtpEpgProgrammeItemsInternal(options: FetchRtpOptions = {}):
     const daysAhead = Math.max(0, options.daysAhead ?? 0);
 
     for (let dayOffset = -daysBack; dayOffset <= daysAhead; dayOffset++) {
-      const date = new Date(baseDate);
-      date.setUTCDate(date.getUTCDate() + dayOffset);
-      const dateValue = date.toISOString().slice(0, 10);
+      const dateValue = getLisbonDate(baseDate, dayOffset);
       const epgUrl = new URL(template.replace("{date}", dateValue), channel.url).toString();
       const epgResponse = await fetchImpl(epgUrl);
       if (!epgResponse.ok) throw new Error("RTP EPG fetch failed: " + epgResponse.status + " (" + epgUrl + ")");
