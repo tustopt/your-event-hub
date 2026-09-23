@@ -12,6 +12,13 @@ describe("Lisbon television time helpers", () => {
     expect(getLisbonOffset("2026-01-15", "20:00")).toBe("+00:00");
   });
 
+  it("handles daylight-saving transitions", () => {
+    expect(getLisbonOffset("2026-03-29", "00:30")).toBe("+00:00");
+    expect(getLisbonOffset("2026-03-29", "02:30")).toBe("+01:00");
+    expect(getLisbonOffset("2026-10-25", "00:30")).toBe("+01:00");
+    expect(getLisbonOffset("2026-10-25", "02:30")).toBe("+00:00");
+  });
+
   it("handles calendar-day rollover in both directions", () => {
     const now = new Date("2026-09-22T23:30:00.000Z");
     expect(getLisbonDate(now, -1)).toBe("2026-09-22");
