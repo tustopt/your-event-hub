@@ -8,8 +8,8 @@ describe("SIC Opto EPG parser", () => {
         id: "abc",
         title: "Grande Reportagem",
         description: "Documentário sobre Portugal.",
-        start_time: 1790110800,
-        end_time: 1790114400,
+        start_time: 1790110800000,
+        end_time: 1790114400000,
         episode_number: 2,
         season_number: 4,
       },
@@ -17,8 +17,8 @@ describe("SIC Opto EPG parser", () => {
         id: "news",
         title: "Jornal da Noite",
         description: "Informação.",
-        start_time: 1790114400,
-        end_time: 1790118000,
+        start_time: 1790114400000,
+        end_time: 1790118000000,
       },
     ], "SIC");
 
