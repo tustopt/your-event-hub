@@ -26,7 +26,7 @@ export function parseTviScheduleHtml(
   channel = "TVI",
   baseUrl = TVI_PROGRAMMES_URL,
 ): TviProgrammeItem[] {
-  const blocks = html.match(/<div[^>]+class=["'][^"']*guiatv-linha[^"']*["'][\s\S]*?<\/div>\s*(?=<div[^>]+class=["'][^"']*guiatv-linha|$)/gi) || [];
+  const blocks = html.match(/<div[^>]+class=["\'][^"\']*guiatv-linha[^"\']*["\'][^>]*>[\\s\\S]*?(?=<div[^>]+class=["\'][^"\']*guiatv-linha|<\\/body>|$)/gi) || [];
   const items: TviProgrammeItem[] = [];
 
   for (const block of blocks) {
