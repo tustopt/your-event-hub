@@ -1,5 +1,6 @@
 import type { SourceFetcherOptions } from "../../core/source-fetchers";
 import type { SicProgrammeItem } from "./types";
+import { getLisbonDate, getLisbonOffset } from "../television/time";
 
 export const SIC_SOURCE_KEY = "sic";
 export const SIC_CHANNELS_URL = "https://opto.sic.pt/api/v1/content/channel";
@@ -112,12 +113,10 @@ export async function fetchSicProgramme(options: SourceFetcherOptions = {}): Pro
   const all: SicProgrammeItem[] = [];
 
   for (let offset = 0; offset <= 1; offset += 1) {
-    const start = new Date(now);
-    start.setDate(start.getDate() + offset);
-    const end = new Date(start);
-    end.setDate(end.getDate() + 1);
-    const startDate = Math.floor(start.getTime() / 1000);
-    const endDate = Math.floor(end.getTime() / 1000);
+    const dateValue = getLisbonDate(now, offset);
+    const nextDateValue = getLisbonDate(now, offset + 1);
+    const startDate = Math.floor(new Date(dateValue + "T00:00:00" + getLisbonOffset(dateValue, "00:00")).getTime() / 1000);
+    const endDate = Math.floor(new Date(nextDateValue + "T00:00:00" + getLisbonOffset(nextDateValue, "00:00")).getTime() / 1000);
 
     for (const channel of channels) {
       const url = SIC_EPG_URL + "?startDate=" + startDate + "&endDate=" + endDate + "&channels=" + encodeURIComponent(String(channel.id));
