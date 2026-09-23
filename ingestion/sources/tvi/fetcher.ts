@@ -20,13 +20,37 @@ function absoluteUrl(value: string, baseUrl: string): string {
   try { return new URL(value, baseUrl).toString(); } catch { return value; }
 }
 
+function getLisbonOffset(date: string, time: string): string {
+  const match = date.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  const timeMatch = time.match(/^(\d{1,2}):(\d{2})$/);
+  if (!match || !timeMatch) return "+00:00";
+
+  const utcCandidate = new Date(Date.UTC(
+    Number(match[1]),
+    Number(match[2]) - 1,
+    Number(match[3]),
+    Number(timeMatch[1]),
+    Number(timeMatch[2]),
+  ));
+
+  const zoneName = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Europe/Lisbon",
+    timeZoneName: "longOffset",
+  }).formatToParts(utcCandidate).find((part) => part.type === "timeZoneName")?.value;
+
+  if (!zoneName || zoneName === "GMT") return "+00:00";
+  const offset = zoneName.match(/^GMT([+-])(\d{2}):(\d{2})$/);
+  if (!offset) return "+00:00";
+  return offset[1] + offset[2] + ":" + offset[3];
+}
+
 export function parseTviScheduleHtml(
   html: string,
   date: string,
   channel = "TVI",
   baseUrl = TVI_PROGRAMMES_URL,
 ): TviProgrammeItem[] {
-  const blocks = html.match(/<div[^>]+class=["\'][^"\']*guiatv-linha[^"\']*["\'][^>]*>[\\s\\S]*?(?=<div[^>]+class=["\'][^"\']*guiatv-linha|<\\/body>|$)/gi) || [];
+  const blocks = html.match(/<div[^>]+class=["'][^"']*guiatv-linha[^"']*["'][^>]*>[\s\S]*?(?=<div[^>]+class=["'][^"']*guiatv-linha|<\/body>|$)/gi) || [];
   const items: TviProgrammeItem[] = [];
 
   for (const block of blocks) {
@@ -48,9 +72,10 @@ export function parseTviScheduleHtml(
     const signal = isTviDocumentaryText([title, description || ""].join(" "));
     if (signal !== true) continue;
 
-    const startAt = date + "T" + String(Number(hhmm[1])).padStart(2, "0") + ":" + hhmm[2] + ":00+01:00";
+    const hh = String(Number(hhmm[1])).padStart(2, "0");
+    const startAt = date + "T" + hh + ":" + hhmm[2] + ":00" + getLisbonOffset(date, hh + ":" + hhmm[2]);
     items.push({
-      sourceExternalId: "tvi-" + date + "-" + hhmm[1] + hhmm[2] + "-" + slug(title) + "-" + slug(channel),
+      sourceExternalId: "tvi-" + date + "-" + hh + hhmm[2] + "-" + slug(title) + "-" + slug(channel),
       sourceUrl,
       broadcasterKey: "tvi",
       channel,
