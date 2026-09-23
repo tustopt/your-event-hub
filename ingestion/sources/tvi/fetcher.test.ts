@@ -64,4 +64,25 @@ describe("TVI schedule parser", () => {
       "https://tvi.iol.pt/emissao/dia/tvi?data=2026-09-24",
     ]);
   });
+  it("requests the Lisbon current date around UTC midnight", async () => {
+    const urls: string[] = [];
+    const responses = [
+      new Response("", { status: 200 }),
+      new Response("", { status: 200 }),
+    ];
+
+    await fetchTviProgramme({
+      now: () => new Date("2026-09-22T23:30:00Z"),
+      fetchImpl: async (input) => {
+        urls.push(String(input));
+        return responses.shift()!;
+      },
+    });
+
+    expect(urls).toEqual([
+      "https://tvi.iol.pt/emissao/dia/tvi?data=2026-09-23",
+      "https://tvi.iol.pt/emissao/dia/tvi?data=2026-09-24",
+    ]);
+  });
+
 });
