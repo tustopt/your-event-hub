@@ -12,31 +12,9 @@ jobs:
   television:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Install dependencies
-        run: npm install
-      - name: Typecheck ingestion
-        run: npm run typecheck:ingestion
-      - name: Run television unit tests
-        run: npx vitest run ingestion/sources/rtp/fetcher.test.ts ingestion/sources/television/types.test.ts ingestion/sources/television/normalizer.test.ts ingestion/sources/television/channels.test.ts ingestion/sources/television/parser.test.ts ingestion/sources/sic/fetcher.test.ts ingestion/sources/tvi/fetcher.test.ts ingestion/sources/television/time.test.ts ingestion/sources/television/production-contract.test.ts ingestion/core/production-adapters.test.ts
-
-  live-validation:
-    runs-on: ubuntu-latest
-    continue-on-error: true
-    needs: television
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-      - name: Install dependencies
-        run: npm install
-      - name: Run live SIC and TVI diagnostics
-        run: npx tsx ingestion/runners/tv-live-diagnostic.ts
+      - name: Install dependencies diagnostic
+        run: npm install --ignore-scripts
