@@ -26,6 +26,7 @@ export interface TelevisionProgrammeItem {
   episode?: number;
   seriesTitle?: string;
   year?: number;
+  imageUrl?: string;
   provenance?: SourceProvenance;
 }
 

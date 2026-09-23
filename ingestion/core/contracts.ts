@@ -105,6 +105,7 @@ export interface NormalizedTVProgram {
   seriesTitle?: string;
   year?: number;
   genre: "documentary";
+  imageUrl?: string;
   provenance: SourceProvenance;
 }
 

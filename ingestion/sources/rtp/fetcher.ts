@@ -66,6 +66,33 @@ function parseEpisodeNumber(value?: string): number | undefined {
   return Number.isFinite(number) && number > 0 ? number : undefined;
 }
 
+/**
+ * Extracts the standard Open Graph/Twitter promotional image used by television
+ * programme pages. The normalized field is broadcaster-neutral and can be
+ * reused by SIC, TVI, RTP, CNN Portugal, etc.
+ */
+export function extractRtpProgrammeImageUrl(html: string, baseUrl?: string): string | undefined {
+  const patterns = [
+    /<meta[^>]+property=["']og:image(?::secure_url)?["'][^>]+content=["']([^"']+)["'][^>]*>/i,
+    /<meta[^>]+name=["']twitter:image(?::src)?["'][^>]+content=["']([^"']+)["'][^>]*>/i,
+    /<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image(?::secure_url)?["'][^>]*>/i,
+    /<meta[^>]+content=["']([^"']+)["'][^>]+name=["']twitter:image(?::src)?["'][^>]*>/i,
+  ];
+
+  for (const pattern of patterns) {
+    const match = html.match(pattern);
+    const value = match?.[1]?.trim();
+    if (!value) continue;
+    try {
+      return new URL(value, baseUrl).toString();
+    } catch {
+      return undefined;
+    }
+  }
+
+  return undefined;
+}
+
 export function isRtpDocumentaryPage(html: string): boolean {
   const text = stripTags(html).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
   return /este conteudo faz parte de documentarios(?:\s|$)/i.test(text) || /generos\s+documentarios(?:\s|$)/i.test(text);
@@ -139,10 +166,14 @@ export async function fetchRtpProgramme(options: FetchRtpOptions = {}): Promise<
       if (seen.has(item.sourceExternalId)) continue;
       const programmeResponse = await fetchImpl(item.sourceUrl);
       if (!programmeResponse.ok) continue;
-      if (!isRtpDocumentaryPage(await programmeResponse.text())) continue;
+      const programmeHtml = await programmeResponse.text();
+      if (!isRtpDocumentaryPage(programmeHtml)) continue;
+
+      const imageUrl = extractRtpProgrammeImageUrl(programmeHtml, item.sourceUrl);
+      const itemWithImage = imageUrl ? { ...item, imageUrl } : item;
 
       seen.add(item.sourceExternalId);
-      all.push(item);
+      all.push(itemWithImage);
       if (options.limit && all.length >= options.limit) return all.slice(0, options.limit);
     }
   }

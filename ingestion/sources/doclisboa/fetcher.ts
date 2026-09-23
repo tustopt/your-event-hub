@@ -24,7 +24,7 @@ const SESSION_CONTINUATION_RE =
   /^\d{1,2}\s+(Jan|Fev|Mar|Abr|Mai|Jun|Jul|Ago|Set|Out|Nov|Dez)\s*\/\s*\d{1,2}[.:]\d{2}\s*,\s*$/i;
 
 const METADATA_RE =
-  /^(\d{4})\s+(.+?)\s+•\s+(\d{1,4})[’']\s+•\s+(.+)$/;
+  /^(\d{4}(?:[\u2010-\u2015-]\d{4})?)\s+(.+?)\s+•\s+(\d{1,4})[’']\s+•\s+(.+)$/;
 
 const SECTION_NAMES = [
   "Competição Internacional",
@@ -96,7 +96,7 @@ function sectionFromLine(line: string): string | undefined {
 }
 
 function isNoise(line: string): boolean {
-  return /^(CP \/ PC|CI \/ IC|R \/ NV|A PROPÓSITO|PASSA COM|REALIZADOR|REALIZADORA|HOMENAGEM|OUTROS RISCOS|SOPHIE ROGER|JOHN TORRES|CINEMA ETERNO|EM TERRENO DESCONHECIDO|FANTASMAS E APARIÇÕES|POR DENTRO, POR FORA|A LÍNGUA DO LUGAR)/i.test(line);
+  return /^(CP \/ PC|CI \/ IC|R \/ NV|A PROPÓSITO|PASSA COM|REALIZADOR|REALIZADORA|HOMENAGEM|OUTROS RISCOS|SOPHIE ROGER|JOHN TORRES|CINEMA ETERNO|EM TERRENO DESCONHECIDO|FANTASMAS E APARIÇÕES|POR DENTRO, POR FORA|A LÍNGUA DO LUGAR|CONCEPÇÃO \/ CONCEIVED BY)/i.test(line);
 }
 
 function parseFilmFromMetadata(
@@ -106,6 +106,12 @@ function parseFilmFromMetadata(
 ): DoclisboaFilmItem | undefined {
   let cursor = metadataIndex - 1;
   const directorParts: string[] = [];
+
+  if (cursor < 0) return undefined;
+
+  if (/^CONCEPÇÃO \/ CONCEIVED BY$/i.test(lines[cursor])) {
+    cursor -= 1;
+  }
 
   if (cursor < 0) return undefined;
   directorParts.unshift(lines[cursor--]);
@@ -130,8 +136,15 @@ function parseFilmFromMetadata(
   if (candidates.length === 1) {
     title = candidates[0];
   } else if (candidates.length === 2) {
-    title = candidates[0];
-    originalTitle = candidates[1];
+    const firstHasUnclosedBracket =
+      (candidates[0].match(/\[/g)?.length ?? 0) > (candidates[0].match(/\]/g)?.length ?? 0);
+
+    if (/[:\[\u2013\u2014-]$/.test(candidates[0]) || firstHasUnclosedBracket || /^\[/.test(candidates[1])) {
+      title = candidates.join(" ");
+    } else {
+      title = candidates[0];
+      originalTitle = candidates[1];
+    }
   } else if (candidates.length === 4) {
     title = candidates.slice(0, 2).join(" ");
     originalTitle = candidates.slice(2).join(" ");
@@ -146,10 +159,9 @@ function parseFilmFromMetadata(
     title,
     originalTitle,
     director: directorParts.join(" "),
-    year: Number(metadata[1]),
+    year: Number(metadata[1].slice(0, 4)),
     country,
     durationMinutes: Number(metadata[3]),
-    format: metadata[4].trim(),
   };
 }
 
