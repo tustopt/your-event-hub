@@ -6,6 +6,7 @@ import { cinemaFernandoLopesAdapter } from "../sources/cinema_fernando_lopes/par
 import { doclisboaAdapter } from "../sources/doclisboa/parser.js";
 import { rtpAdapter } from "../sources/rtp/parser.js";
 import { tviAdapter } from "../sources/tvi/parser.js";
+import { sicAdapter } from "../sources/sic/parser.js";
 
 /**
  * Single application registry for implemented adapters.
@@ -23,6 +24,7 @@ export const productionAdapters: readonly SourceAdapter<any>[] = [
   doclisboaAdapter,
   rtpAdapter,
   tviAdapter,
+  sicAdapter,
 ];
 
 export function createProductionAdapterRegistry(): AdapterRegistry {
