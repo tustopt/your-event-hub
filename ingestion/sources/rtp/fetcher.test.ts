@@ -63,6 +63,26 @@ describe("RTP EPG parser", () => {
     expect(result[0].sourceUrl).toBe("https://www.rtp.pt/play/p16302/repovoadores");
   });
 
+  it("uses Lisbon winter time when parsing a January EPG entry", () => {
+    const result = parseRtpEpg(
+      {
+        _info: { name: "RTP1" },
+        result: {
+          morning: [{
+            id: "winter-1",
+            date: "2026-01-15 10:30:00",
+            name: "Documentário de Inverno",
+            description: "Documentário sobre Portugal",
+            url: "https://www.rtp.pt/programa/tv/p1/e1",
+          }],
+        },
+      },
+      "RTP1",
+    );
+
+    expect(result[0].startAt).toBe("2026-01-15T10:30:00+00:00");
+  });
+
   it("parses EPG entries using the channel reported by RTP", () => {
     const result = parseRtpEpg(
       {
