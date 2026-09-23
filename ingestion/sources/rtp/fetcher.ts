@@ -233,7 +233,7 @@ export function parseRtpEpg(payload: RtpEpgPayload, fallbackChannel: string): Rt
       ...(episode !== undefined ? { episode } : {}),
       ...(imageUrl ? { imageUrl } : {}),
       genre: "Documentários",
-      startAt: date + "T" + time + ":00" + lisbonOffset(date, time),
+      startAt: date + "T" + time + ":00" + getLisbonOffset(date, time),
     });
   }
   return items;
