@@ -23,4 +23,4 @@ jobs:
       - name: Typecheck ingestion
         run: npm run typecheck:ingestion
       - name: Run television ingestion tests
-        run: npx vitest run ingestion/sources/rtp/fetcher.test.ts ingestion/sources/television/types.test.ts ingestion/sources/television/normalizer.test.ts ingestion/sources/television/channels.test.ts ingestion/sources/television/parser.test.ts ingestion/sources/television/time.test.ts ingestion/sources/television/production-contract.test.ts ingestion/core/production-adapters.test.ts ingestion/core/source-fetchers.test.ts ingestion/core/source-pipeline.test.ts ingestion/core/source-registry.test.ts
+        run: npx vitest run ingestion/sources/rtp/fetcher.test.ts ingestion/sources/television/types.test.ts ingestion/sources/television/normalizer.test.ts ingestion/sources/television/channels.test.ts ingestion/sources/television/parser.test.ts ingestion/sources/television/time.test.ts ingestion/sources/television/production-contract.test.ts ingestion/core/production-adapters.test.ts ingestion/core/source-fetchers.test.ts ingestion/core/source-pipeline.test.ts ingestion/core/source-registry.test.ts ingestion/core/image-resolver.test.ts
