@@ -75,9 +75,7 @@ export async function fetchTviProgramme(options: SourceFetcherOptions = {}): Pro
   const all: TviProgrammeItem[] = [];
 
   for (let offset = 0; offset <= 1; offset += 1) {
-    const date = new Date(now);
-    date.setDate(date.getDate() + offset);
-    const dateValue = date.toISOString().slice(0, 10);
+    const dateValue = getLisbonDate(now, offset);
     const url = baseUrl.includes("?") ? baseUrl + "&data=" + dateValue : baseUrl + "?data=" + dateValue;
     const response = await fetchImpl(url);
     if (!response.ok) throw new Error("TVI schedule fetch failed: " + response.status + " (" + url + ")");
