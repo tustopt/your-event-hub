@@ -27,7 +27,7 @@ export interface NormalizedFilm {
   originalTitle?: string;
   year?: number;
   durationMinutes?: number;
-  synopsis?: string;
+  synopsis?: string;\n  imageUrl?: string;
   imdbId?: string;
   tmdbId?: string;
   people?: NormalizedPerson[];
