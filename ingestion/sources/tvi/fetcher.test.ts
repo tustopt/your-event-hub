@@ -5,9 +5,9 @@ describe("TVI schedule parser", () => {
   it("parses documentary entries from the TVI daily grid", () => {
     const html = `
       <div class="guiatv-linha">
-        <div class="hora">23:10</div>
+        <div class="hora"><span>23:10</span></div>
+        <div class="texto texto2"><strong>Série documental</strong> sobre natureza e território.</div>
         <h2>Os Últimos Paraísos na Terra</h2>
-        <div class="texto texto2">Série documental sobre natureza e território.</div>
         <a href="/programas/os-ultimos-paraisos-na-terra">Ver programa</a>
       </div>
       <div class="guiatv-linha">
@@ -28,6 +28,15 @@ describe("TVI schedule parser", () => {
       startAt: "2026-09-23T23:10:00+01:00",
       sourceUrl: "https://tvi.iol.pt/programas/os-ultimos-paraisos-na-terra",
     });
+  });
+
+  it("uses Lisbon winter time when parsing a January schedule", () => {
+    const result = parseTviScheduleHtml(
+      '<div class="guiatv-linha"><div class="hora">22:00</div><h2>Documentário de Inverno</h2></div>',
+      "2026-01-15",
+    );
+
+    expect(result[0].startAt).toBe("2026-01-15T22:00:00+00:00");
   });
 
   it("recognizes documentary text independently", () => {
