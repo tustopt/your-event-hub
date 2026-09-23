@@ -19,7 +19,9 @@ jobs:
         with:
           node-version: 22
       - name: Install dependencies
-        run: npm install
+        id: install
+        continue-on-error: true
+        run: npm install 2>&1 | tee install.log
       - name: Typecheck ingestion
         id: typecheck
         continue-on-error: true
@@ -34,11 +36,12 @@ jobs:
         with:
           name: tv-test-diagnostics
           path: |
+            install.log
             typecheck.log
             vitest.log
           if-no-files-found: ignore
       - name: Fail if deterministic TV checks failed
-        if: steps.typecheck.outcome == 'failure' || steps.tests.outcome == 'failure'
+        if: steps.install.outcome == 'failure' || steps.typecheck.outcome == 'failure' || steps.tests.outcome == 'failure'
         run: exit 1
 
   live-validation:
