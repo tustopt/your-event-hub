@@ -4,12 +4,13 @@ import { createProductionAdapterRegistry, productionAdapters } from "./productio
 describe("production adapter registry", () => {
   it("contains all implemented sources", () => {
     const registry = createProductionAdapterRegistry();
-    expect(productionAdapters).toHaveLength(5);
+    expect(productionAdapters).toHaveLength(6);
     expect(registry.get("cinemateca_pt")?.sourceType).toBe("website");
     expect(registry.get("cinema_sao_jorge")?.sourceType).toBe("website");
     expect(registry.get("cinema_fernando_lopes")?.sourceType).toBe("website");
     expect(registry.get("doclisboa")?.sourceType).toBe("website");
     expect(registry.get("rtp")?.sourceType).toBe("website");
+    expect(registry.get("tvi")?.sourceType).toBe("website");
   });
 
   it("resolves each adapter through the shared registry", () => {
@@ -19,5 +20,6 @@ describe("production adapter registry", () => {
     expect(registry.has("cinema_fernando_lopes")).toBe(true);
     expect(registry.has("doclisboa")).toBe(true);
     expect(registry.has("rtp")).toBe(true);
+    expect(registry.has("tvi")).toBe(true);
   });
 });
