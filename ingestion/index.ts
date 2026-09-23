@@ -69,3 +69,11 @@ export { createTelevisionAdapter } from "./sources/television/parser";
 export * from "./sources/rtp/types";
 export { rtpAdapter } from "./sources/rtp/parser";
 export { fetchRtpProgramme, RTP_SOURCE_KEY, RTP_PROGRAMMES_URL, type FetchRtpOptions } from "./sources/rtp/fetcher";
+
+export * from "./sources/sic/types";
+export { sicAdapter } from "./sources/sic/parser";
+export { fetchSicProgramme, SIC_SOURCE_KEY, SIC_CHANNELS_URL, SIC_EPG_URL, type FetchSicOptions } from "./sources/sic/fetcher";
+
+export * from "./sources/tvi/types";
+export { parseTviScheduleHtml, tviAdapter } from "./sources/tvi/parser";
+export { fetchTviProgramme, TVI_SOURCE_KEY, TVI_PROGRAMMES_URL, type FetchTviOptions } from "./sources/tvi/fetcher";
