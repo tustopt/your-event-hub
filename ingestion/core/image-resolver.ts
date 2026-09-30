@@ -70,7 +70,7 @@ export async function enrichAdapterResultImages<T extends {
     }
   }
   for (const screening of result.screenings) {
-    for (const item of screening.films) {
+    for (const item of screening.films ?? []) {
       if (!item.film.imageUrl) {
         item.film.imageUrl = await resolveSourceImageUrl(item.film.provenance.sourceUrl, options);
       }
