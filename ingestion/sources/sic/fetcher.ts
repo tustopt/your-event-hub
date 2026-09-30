@@ -111,7 +111,7 @@ export async function fetchSicProgramme(
   if (!Array.isArray(channelsPayload)) return [];
 
   const channels = (channelsPayload as SicApiChannel[]).filter((channel) =>
-    /^SIC(?:\s+Notícias)?$/i.test(channel.name.trim()),
+    /^SIC(?:\s+(?:Notícias|Alta Definição|Replay))?$/i.test(channel.name.trim()),
   );
   const now = options.now ? options.now() : new Date();
   const all: SicProgrammeItem[] = [];
