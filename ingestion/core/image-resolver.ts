@@ -13,7 +13,11 @@ function decodeHtml(value: string): string {
 }
 
 function absoluteUrl(value: string, baseUrl: string): string | undefined {
-  try { return new URL(decodeHtml(value), baseUrl).toString(); } catch { return undefined; }
+  try {
+    return new URL(decodeHtml(value), baseUrl).toString();
+  } catch {
+    return undefined;
+  }
 }
 
 /** Extracts the most useful public image URL from a source page. */
@@ -60,13 +64,24 @@ export async function resolveSourceImageUrl(
 }
 
 /** Fills missing images without replacing images explicitly supplied by a source. */
-export async function enrichAdapterResultImages<T extends {
-  screenings: Array<{ films: Array<{ film: { imageUrl?: string; provenance: { sourceUrl?: string } } }> }>;
-  tvPrograms?: Array<{ imageUrl?: string; sourceUrl?: string; provenance: { sourceUrl?: string } }>;
-}>(result: T, options: ImageResolverOptions = {}): Promise<T> {
+export async function enrichAdapterResultImages<
+  T extends {
+    screenings: Array<{
+      films: Array<{ film: { imageUrl?: string; provenance: { sourceUrl?: string } } }>;
+    }>;
+    tvPrograms?: Array<{
+      imageUrl?: string;
+      sourceUrl?: string;
+      provenance: { sourceUrl?: string };
+    }>;
+  },
+>(result: T, options: ImageResolverOptions = {}): Promise<T> {
   for (const program of result.tvPrograms || []) {
     if (!program.imageUrl) {
-      program.imageUrl = await resolveSourceImageUrl(program.sourceUrl || program.provenance.sourceUrl, options);
+      program.imageUrl = await resolveSourceImageUrl(
+        program.sourceUrl || program.provenance.sourceUrl,
+        options,
+      );
     }
   }
   for (const screening of result.screenings) {

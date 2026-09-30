@@ -13,8 +13,18 @@ export interface FetchDoclisboaOptions {
 type Session = { date: string; time: string; venue: string; duration: number };
 
 const MONTHS: Record<string, number> = {
-  jan: 1, fev: 2, mar: 3, abr: 4, mai: 5, jun: 6,
-  jul: 7, ago: 8, set: 9, out: 10, nov: 11, dez: 12,
+  jan: 1,
+  fev: 2,
+  mar: 3,
+  abr: 4,
+  mai: 5,
+  jun: 6,
+  jul: 7,
+  ago: 8,
+  set: 9,
+  out: 10,
+  nov: 11,
+  dez: 12,
 };
 
 const SESSION_RE =
@@ -23,8 +33,7 @@ const SESSION_RE =
 const SESSION_CONTINUATION_RE =
   /^\d{1,2}\s+(Jan|Fev|Mar|Abr|Mai|Jun|Jul|Ago|Set|Out|Nov|Dez)\s*\/\s*\d{1,2}[.:]\d{2}\s*,\s*$/i;
 
-const METADATA_RE =
-  /^(\d{4})\s+(.+?)\s+•\s+(\d{1,4})[’']\s+•\s+(.+)$/;
+const METADATA_RE = /^(\d{4})\s+(.+?)\s+•\s+(\d{1,4})[’']\s+•\s+(.+)$/;
 
 const SECTION_NAMES = [
   "Competição Internacional",
@@ -46,11 +55,7 @@ function normalizeText(value: string): string {
 }
 
 function normalizeLines(text: string): string[] {
-  const raw = text
-    .replace(/\r/g, "")
-    .split("\n")
-    .map(normalizeText)
-    .filter(Boolean);
+  const raw = text.replace(/\r/g, "").split("\n").map(normalizeText).filter(Boolean);
 
   const lines: string[] = [];
   for (let i = 0; i < raw.length; i += 1) {
@@ -96,7 +101,9 @@ function sectionFromLine(line: string): string | undefined {
 }
 
 function isNoise(line: string): boolean {
-  return /^(CP \/ PC|CI \/ IC|R \/ NV|A PROPÓSITO|PASSA COM|REALIZADOR|REALIZADORA|HOMENAGEM|OUTROS RISCOS|SOPHIE ROGER|JOHN TORRES|CINEMA ETERNO|EM TERRENO DESCONHECIDO|FANTASMAS E APARIÇÕES|POR DENTRO, POR FORA|A LÍNGUA DO LUGAR)/i.test(line);
+  return /^(CP \/ PC|CI \/ IC|R \/ NV|A PROPÓSITO|PASSA COM|REALIZADOR|REALIZADORA|HOMENAGEM|OUTROS RISCOS|SOPHIE ROGER|JOHN TORRES|CINEMA ETERNO|EM TERRENO DESCONHECIDO|FANTASMAS E APARIÇÕES|POR DENTRO, POR FORA|A LÍNGUA DO LUGAR)/i.test(
+    line,
+  );
 }
 
 function parseFilmFromMetadata(
@@ -117,7 +124,8 @@ function parseFilmFromMetadata(
   const candidates: string[] = [];
   while (cursor >= 0 && candidates.length < 4) {
     const line = lines[cursor];
-    if (SESSION_RE.test(line) || METADATA_RE.test(line) || isSectionLine(line) || isNoise(line)) break;
+    if (SESSION_RE.test(line) || METADATA_RE.test(line) || isSectionLine(line) || isNoise(line))
+      break;
     candidates.unshift(line);
     cursor -= 1;
   }
@@ -153,7 +161,10 @@ function parseFilmFromMetadata(
   };
 }
 
-export function parseDoclisboaProgrammeText(text: string, sourceUrl: string): DoclisboaProgrammeItem[] {
+export function parseDoclisboaProgrammeText(
+  text: string,
+  sourceUrl: string,
+): DoclisboaProgrammeItem[] {
   const lines = normalizeLines(text);
   const items: DoclisboaProgrammeItem[] = [];
   const pendingSessions: Session[] = [];
@@ -167,8 +178,12 @@ export function parseDoclisboaProgrammeText(text: string, sourceUrl: string): Do
     for (const session of activeSessions) {
       for (const film of activeFilms) {
         const slug = (value: string) =>
-          value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-            .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+          value
+            .toLowerCase()
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .replace(/[^a-z0-9]+/g, "-")
+            .replace(/^-|-$/g, "");
 
         items.push({
           sourceExternalId: `${session.date}-${session.time.replace(":", "")}-${slug(session.venue)}-${slug(film.title)}`,

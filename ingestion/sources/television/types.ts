@@ -32,12 +32,18 @@ export interface TelevisionProgrammeItem {
 
 export function isDocumentaryProgramme(item: Pick<TelevisionProgrammeItem, "genre">): boolean {
   if (!item.genre) return false;
-  const normalized = item.genre.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
-  return normalized === "documentario" ||
+  const normalized = item.genre
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+  return (
+    normalized === "documentario" ||
     normalized === "documentarios" ||
     normalized === "documentary" ||
     normalized === "documentaries" ||
     normalized === "serie documental" ||
     normalized === "series documentais" ||
-    normalized === "documental";
+    normalized === "documental"
+  );
 }

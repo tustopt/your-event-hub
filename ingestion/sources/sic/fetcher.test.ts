@@ -3,24 +3,27 @@ import { fetchSicProgramme, parseSicEpg, SIC_CHANNELS_URL, SIC_EPG_URL } from ".
 
 describe("SIC Opto EPG parser", () => {
   it("keeps only documentary programme entries and normalizes timestamps", () => {
-    const result = parseSicEpg([
-      {
-        id: "abc",
-        title: "Grande Reportagem",
-        description: "Documentário sobre Portugal.",
-        start_time: 1790110800000,
-        end_time: 1790114400000,
-        episode_number: 2,
-        season_number: 4,
-      },
-      {
-        id: "news",
-        title: "Jornal da Noite",
-        description: "Informação.",
-        start_time: 1790114400000,
-        end_time: 1790118000000,
-      },
-    ], "SIC");
+    const result = parseSicEpg(
+      [
+        {
+          id: "abc",
+          title: "Grande Reportagem",
+          description: "Documentário sobre Portugal.",
+          start_time: 1790110800000,
+          end_time: 1790114400000,
+          episode_number: 2,
+          season_number: 4,
+        },
+        {
+          id: "news",
+          title: "Jornal da Noite",
+          description: "Informação.",
+          start_time: 1790114400000,
+          end_time: 1790118000000,
+        },
+      ],
+      "SIC",
+    );
 
     expect(result).toHaveLength(1);
     expect(result[0]).toMatchObject({
@@ -38,7 +41,13 @@ describe("SIC Opto EPG parser", () => {
   it("uses the Opto channel and EPG APIs", async () => {
     const urls: string[] = [];
     const responses = [
-      new Response(JSON.stringify([{ id: "1", name: "SIC" }, { id: "2", name: "SIC Notícias" }]), { status: 200 }),
+      new Response(
+        JSON.stringify([
+          { id: "1", name: "SIC" },
+          { id: "2", name: "SIC Notícias" },
+        ]),
+        { status: 200 },
+      ),
       new Response(JSON.stringify([]), { status: 200 }),
       new Response(JSON.stringify([]), { status: 200 }),
       new Response(JSON.stringify([]), { status: 200 }),

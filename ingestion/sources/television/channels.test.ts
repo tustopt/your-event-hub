@@ -1,8 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  getTelevisionChannel,
-  PORTUGUESE_TELEVISION_CHANNELS,
-} from "./channels";
+import { getTelevisionChannel, PORTUGUESE_TELEVISION_CHANNELS } from "./channels";
 
 describe("Portuguese television channel catalog", () => {
   it("contains the RTP, SIC and TVI channel families", () => {
@@ -33,7 +30,9 @@ describe("Portuguese television channel catalog", () => {
   });
 
   it("has unique broadcaster and channel keys", () => {
-    const keys = PORTUGUESE_TELEVISION_CHANNELS.map((channel) => `${channel.broadcasterKey}:${channel.channelKey}`);
+    const keys = PORTUGUESE_TELEVISION_CHANNELS.map(
+      (channel) => `${channel.broadcasterKey}:${channel.channelKey}`,
+    );
     expect(new Set(keys).size).toBe(keys.length);
   });
 

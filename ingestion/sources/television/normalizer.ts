@@ -1,7 +1,9 @@
 import type { NormalizedTVProgram } from "../../core/contracts";
 import { isDocumentaryProgramme, type TelevisionProgrammeItem } from "./types";
 
-export function normalizeTelevisionProgramme(item: TelevisionProgrammeItem): NormalizedTVProgram | undefined {
+export function normalizeTelevisionProgramme(
+  item: TelevisionProgrammeItem,
+): NormalizedTVProgram | undefined {
   if (!isDocumentaryProgramme(item)) return undefined;
   return {
     eventType: "television",

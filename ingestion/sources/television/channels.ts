@@ -143,8 +143,6 @@ export function getTelevisionChannel(
   channelKey: string,
 ): TelevisionChannelDefinition | undefined {
   return PORTUGUESE_TELEVISION_CHANNELS.find(
-    (channel) =>
-      channel.broadcasterKey === broadcasterKey &&
-      channel.channelKey === channelKey,
+    (channel) => channel.broadcasterKey === broadcasterKey && channel.channelKey === channelKey,
   );
 }

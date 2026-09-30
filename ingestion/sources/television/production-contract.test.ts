@@ -47,14 +47,17 @@ const fixtures = [
 describe("television production adapter contract", () => {
   it("normalizes RTP, SIC and TVI through the same adapter contract", () => {
     for (const { adapter, item } of fixtures) {
-      const result = adapter.parse({
-        sourceKey: adapter.key,
-        sourceType: "website",
-        externalId: item.sourceExternalId,
-        sourceUrl: item.sourceUrl,
-        raw: JSON.stringify(item),
-        parsedAt: "2026-09-23T10:00:00.000Z",
-      }, item);
+      const result = adapter.parse(
+        {
+          sourceKey: adapter.key,
+          sourceType: "website",
+          externalId: item.sourceExternalId,
+          sourceUrl: item.sourceUrl,
+          raw: JSON.stringify(item),
+          parsedAt: "2026-09-23T10:00:00.000Z",
+        },
+        item,
+      );
 
       expect(result.events).toEqual([]);
       expect(result.screenings).toEqual([]);
@@ -74,7 +77,9 @@ describe("television production adapter contract", () => {
   });
 
   it("keeps source identities distinct across broadcasters and channels", () => {
-    const identities = fixtures.map(({ item }) => `${item.broadcasterKey}:${item.channel}:${item.sourceExternalId}`);
+    const identities = fixtures.map(
+      ({ item }) => `${item.broadcasterKey}:${item.channel}:${item.sourceExternalId}`,
+    );
     expect(new Set(identities).size).toBe(3);
   });
 });

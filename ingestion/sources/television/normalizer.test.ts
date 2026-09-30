@@ -31,14 +31,16 @@ describe("television normalizer", () => {
   });
 
   it("rejects non-documentary programmes", () => {
-    expect(normalizeTelevisionProgramme({
-      sourceExternalId: "abc",
-      sourceUrl: "https://example.test/programme",
-      broadcasterKey: "example",
-      channel: "Example TV",
-      title: "Entertainment",
-      genre: "Entretenimento",
-      startAt: "2026-09-22T20:00:00+01:00",
-    })).toBeUndefined();
+    expect(
+      normalizeTelevisionProgramme({
+        sourceExternalId: "abc",
+        sourceUrl: "https://example.test/programme",
+        broadcasterKey: "example",
+        channel: "Example TV",
+        title: "Entertainment",
+        genre: "Entretenimento",
+        startAt: "2026-09-22T20:00:00+01:00",
+      }),
+    ).toBeUndefined();
   });
 });

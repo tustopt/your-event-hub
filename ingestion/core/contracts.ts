@@ -1,13 +1,7 @@
 export type SourceType = "website" | "rss" | "api" | "ical" | "csv" | "manual";
 
 export type NormalizedEventType =
-  | "screening"
-  | "festival"
-  | "debate"
-  | "masterclass"
-  | "exhibition"
-  | "workshop"
-  | "other";
+  "screening" | "festival" | "debate" | "masterclass" | "exhibition" | "workshop" | "other";
 
 export interface SourceProvenance {
   sourceKey: string;

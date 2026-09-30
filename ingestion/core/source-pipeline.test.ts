@@ -35,11 +35,9 @@ describe("source pipeline", () => {
   });
 
   it("supports dry-run without invoking persistence", async () => {
-    const result = await runSourcePipeline(
-      fetcher,
-      createAdapterRegistry([adapter]),
-      { dryRun: true },
-    );
+    const result = await runSourcePipeline(fetcher, createAdapterRegistry([adapter]), {
+      dryRun: true,
+    });
     expect(result.fetched).toBe(2);
     expect(result.result.warnings).toHaveLength(2);
   });
@@ -51,21 +49,23 @@ describe("source pipeline", () => {
       parse: (input) => ({
         events: [],
         screenings: [],
-        tvPrograms: [{
-          eventType: "television",
-          sourceExternalId: input.externalId ?? "missing",
-          sourceUrl: input.sourceUrl ?? "https://example.test",
-          title: "Documentário RTP",
-          channel: "RTP1",
-          broadcasterKey: "rtp",
-          startAt: "2026-09-23T20:00:00+01:00",
-          genre: "documentary",
-          provenance: {
-            sourceKey: "rtp",
-            sourceExternalId: input.externalId,
-            sourceUrl: input.sourceUrl,
+        tvPrograms: [
+          {
+            eventType: "television",
+            sourceExternalId: input.externalId ?? "missing",
+            sourceUrl: input.sourceUrl ?? "https://example.test",
+            title: "Documentário RTP",
+            channel: "RTP1",
+            broadcasterKey: "rtp",
+            startAt: "2026-09-23T20:00:00+01:00",
+            genre: "documentary",
+            provenance: {
+              sourceKey: "rtp",
+              sourceExternalId: input.externalId,
+              sourceUrl: input.sourceUrl,
+            },
           },
-        }],
+        ],
         warnings: [],
       }),
     };
@@ -104,8 +104,8 @@ describe("source pipeline", () => {
 
   it("rejects a fetcher whose source type differs from its adapter", async () => {
     const mismatched = { ...fetcher, sourceType: "rss" as const };
-    await expect(
-      runSourcePipeline(mismatched, createAdapterRegistry([adapter])),
-    ).rejects.toThrow("Fetcher type mismatch for test_source");
+    await expect(runSourcePipeline(mismatched, createAdapterRegistry([adapter]))).rejects.toThrow(
+      "Fetcher type mismatch for test_source",
+    );
   });
 });

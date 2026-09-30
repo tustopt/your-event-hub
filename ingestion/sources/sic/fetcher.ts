@@ -27,13 +27,12 @@ interface SicApiProgramme {
 }
 
 function documentarySignal(item: SicApiProgramme): boolean {
-  const text = [
-    item.title,
-    item.description,
-    item.genre,
-    item.category,
-    item.type,
-  ].filter(Boolean).join(" ").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  const text = [item.title, item.description, item.genre, item.category, item.type]
+    .filter(Boolean)
+    .join(" ")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
   return /documentario|documental|serie documental|series documentais/.test(text);
 }
 
@@ -45,8 +44,12 @@ function toIso(value: number | string | undefined): string | undefined {
 }
 
 function slug(value: string): string {
-  return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
 }
 
 function episodeNumber(value: number | string | null | undefined): number | undefined {
@@ -55,10 +58,7 @@ function episodeNumber(value: number | string | null | undefined): number | unde
   return Number.isInteger(n) ? n : undefined;
 }
 
-export function parseSicEpg(
-  payload: unknown,
-  channel: string,
-): SicProgrammeItem[] {
+export function parseSicEpg(payload: unknown, channel: string): SicProgrammeItem[] {
   if (!Array.isArray(payload)) return [];
   const result: SicProgrammeItem[] = [];
 
@@ -72,9 +72,7 @@ export function parseSicEpg(
     if (!startAt) continue;
 
     const endAt = toIso(item.end_time);
-    const id = item.id !== undefined
-      ? String(item.id)
-      : slug(item.title) + "-" + startAt;
+    const id = item.id !== undefined ? String(item.id) : slug(item.title) + "-" + startAt;
 
     result.push({
       sourceExternalId: "sic-" + channel.toLowerCase().replace(/\s+/g, "-") + "-" + id,
@@ -87,8 +85,12 @@ export function parseSicEpg(
       startAt,
       ...(endAt ? { endAt } : {}),
       ...(item.image ? { imageUrl: item.image } : {}),
-      ...(episodeNumber(item.episode_number) !== undefined ? { episode: episodeNumber(item.episode_number) } : {}),
-      ...(episodeNumber(item.season_number) !== undefined ? { season: episodeNumber(item.season_number) } : {}),
+      ...(episodeNumber(item.episode_number) !== undefined
+        ? { episode: episodeNumber(item.episode_number) }
+        : {}),
+      ...(episodeNumber(item.season_number) !== undefined
+        ? { season: episodeNumber(item.season_number) }
+        : {}),
     });
   }
 
@@ -101,7 +103,9 @@ async function fetchJson(fetchImpl: typeof fetch, url: string): Promise<unknown>
   return response.json();
 }
 
-export async function fetchSicProgramme(options: SourceFetcherOptions = {}): Promise<readonly SicProgrammeItem[]> {
+export async function fetchSicProgramme(
+  options: SourceFetcherOptions = {},
+): Promise<readonly SicProgrammeItem[]> {
   const fetchImpl = options.fetchImpl || fetch;
   const channelsPayload = await fetchJson(fetchImpl, SIC_CHANNELS_URL);
   if (!Array.isArray(channelsPayload)) return [];
@@ -115,11 +119,23 @@ export async function fetchSicProgramme(options: SourceFetcherOptions = {}): Pro
   for (let offset = 0; offset <= 1; offset += 1) {
     const dateValue = getLisbonDate(now, offset);
     const nextDateValue = getLisbonDate(now, offset + 1);
-    const startDate = Math.floor(new Date(dateValue + "T00:00:00" + getLisbonOffset(dateValue, "00:00")).getTime() / 1000);
-    const endDate = Math.floor(new Date(nextDateValue + "T00:00:00" + getLisbonOffset(nextDateValue, "00:00")).getTime() / 1000);
+    const startDate = Math.floor(
+      new Date(dateValue + "T00:00:00" + getLisbonOffset(dateValue, "00:00")).getTime() / 1000,
+    );
+    const endDate = Math.floor(
+      new Date(nextDateValue + "T00:00:00" + getLisbonOffset(nextDateValue, "00:00")).getTime() /
+        1000,
+    );
 
     for (const channel of channels) {
-      const url = SIC_EPG_URL + "?startDate=" + startDate + "&endDate=" + endDate + "&channels=" + encodeURIComponent(String(channel.id));
+      const url =
+        SIC_EPG_URL +
+        "?startDate=" +
+        startDate +
+        "&endDate=" +
+        endDate +
+        "&channels=" +
+        encodeURIComponent(String(channel.id));
       const payload = await fetchJson(fetchImpl, url);
       all.push(...parseSicEpg(payload, channel.name));
     }

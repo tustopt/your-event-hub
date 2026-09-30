@@ -132,12 +132,10 @@ function Explore() {
         pastScreeningsResult.error
       ) {
         setError(
-          (
-            eventsResult.error ||
+          (eventsResult.error ||
             filmsResult.error ||
             upcomingScreeningsResult.error ||
-            pastScreeningsResult.error
-          )!.message,
+            pastScreeningsResult.error)!.message,
         );
       } else {
         setEvents((eventsResult.data ?? []) as ExploreEvent[]);
@@ -161,11 +159,7 @@ function Explore() {
     if (nextQuery) params.set("q", nextQuery);
     if (nextFilter) params.set("filter", nextFilter);
     const suffix = params.toString();
-    window.history.replaceState(
-      null,
-      "",
-      suffix ? `/explorar?${suffix}` : "/explorar",
-    );
+    window.history.replaceState(null, "", suffix ? `/explorar?${suffix}` : "/explorar");
   }
 
   function updateSearch(nextQuery: string) {
@@ -181,9 +175,7 @@ function Explore() {
   const filtered = useMemo(
     () =>
       events.filter(
-        (event) =>
-          matchesExploreQuery(event, query) &&
-          matchesExploreFilter(event, filter),
+        (event) => matchesExploreQuery(event, query) && matchesExploreFilter(event, filter),
       ),
     [events, query, filter],
   );
@@ -293,7 +285,8 @@ function Explore() {
           <section className="max-w-xl rounded-2xl border bg-card p-8">
             <h1 className="text-2xl font-semibold">Explore o DocuEvents</h1>
             <p className="mt-3 text-sm leading-6 text-muted-foreground">
-              O catálogo e a agenda estão protegidos para utilizadores autenticados. Entre para consultar os dados reais do DocuEvents.
+              O catálogo e a agenda estão protegidos para utilizadores autenticados. Entre para
+              consultar os dados reais do DocuEvents.
             </p>
             <Link
               to="/login"
@@ -336,7 +329,8 @@ function Explore() {
                 <CalendarDays className="mx-auto size-8 text-muted-foreground" />
                 <h2 className="mt-4 font-semibold">Não foram encontrados eventos</h2>
                 <p className="mx-auto mt-2 max-w-lg text-sm leading-6 text-muted-foreground">
-                  Tente alterar a pesquisa ou remover os filtros. À medida que as fontes forem ingeridas, os eventos aparecerão aqui automaticamente.
+                  Tente alterar a pesquisa ou remover os filtros. À medida que as fontes forem
+                  ingeridas, os eventos aparecerão aqui automaticamente.
                 </p>
               </div>
             )}
@@ -347,7 +341,9 @@ function Explore() {
                   <p className="text-sm font-medium text-muted-foreground">Cinema</p>
                   <h2 className="mt-1 text-2xl font-semibold">Documentários</h2>
                 </div>
-                <span className="text-sm text-muted-foreground">{filteredFilms.length} títulos</span>
+                <span className="text-sm text-muted-foreground">
+                  {filteredFilms.length} títulos
+                </span>
               </div>
 
               <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -365,7 +361,11 @@ function Explore() {
                       className="block overflow-hidden rounded-2xl border bg-card transition-shadow hover:shadow-md"
                     >
                       {film.poster_url ? (
-                        <img src={film.poster_url} alt="" className="aspect-[2/3] w-full object-cover" />
+                        <img
+                          src={film.poster_url}
+                          alt=""
+                          className="aspect-[2/3] w-full object-cover"
+                        />
                       ) : (
                         <div className="flex aspect-[2/3] w-full items-center justify-center bg-muted">
                           <Clapperboard className="size-10 text-muted-foreground" />
@@ -373,7 +373,9 @@ function Explore() {
                       )}
                       <div className="p-4">
                         <h3 className="font-semibold">{film.title}</h3>
-                        {film.year && <p className="mt-1 text-sm text-muted-foreground">{film.year}</p>}
+                        {film.year && (
+                          <p className="mt-1 text-sm text-muted-foreground">{film.year}</p>
+                        )}
 
                         {screening && (
                           <div className="mt-3 space-y-1.5 rounded-lg bg-muted/50 p-3 text-sm">
@@ -428,23 +430,35 @@ function Explore() {
                     params={{ id: event.id }}
                     className="block rounded-2xl border bg-card p-6 transition-shadow hover:shadow-md"
                   >
-                    <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{event.type}</p>
+                    <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                      {event.type}
+                    </p>
                     <h2 className="mt-2 text-lg font-semibold">{event.title}</h2>
-                    {event.description && <p className="mt-2 line-clamp-3 text-sm leading-6 text-muted-foreground">{event.description}</p>}
+                    {event.description && (
+                      <p className="mt-2 line-clamp-3 text-sm leading-6 text-muted-foreground">
+                        {event.description}
+                      </p>
+                    )}
                     <div className="mt-5 space-y-2 text-sm text-muted-foreground">
                       {event.start_at && (
                         <div className="flex items-center gap-2">
                           <CalendarDays className="size-4" />
-                          {new Date(event.start_at).toLocaleString("pt-PT", { dateStyle: "medium", timeStyle: "short" })}
+                          {new Date(event.start_at).toLocaleString("pt-PT", {
+                            dateStyle: "medium",
+                            timeStyle: "short",
+                          })}
                         </div>
                       )}
                       {event.venues && (
                         <div className="flex items-center gap-2">
                           <MapPin className="size-4" />
-                          {event.venues.name}{event.venues.city ? " · " + event.venues.city : ""}
+                          {event.venues.name}
+                          {event.venues.city ? " · " + event.venues.city : ""}
                         </div>
                       )}
-                      {event.festivals && <div className="text-xs">Festival: {event.festivals.name}</div>}
+                      {event.festivals && (
+                        <div className="text-xs">Festival: {event.festivals.name}</div>
+                      )}
                     </div>
                   </Link>
                 ))}

@@ -6,15 +6,45 @@ export const RTP_SOURCE_KEY = "rtp";
 /** Backwards-compatible primary RTP programme URL for existing ingestion exports. */
 export const RTP_PROGRAMMES_URL = "https://www.rtp.pt/rtp1/";
 
-export const RTP_CHANNEL_PAGES: readonly { key: string; channel: string; url: string; epgFeedUrl?: string }[] = [
+export const RTP_CHANNEL_PAGES: readonly {
+  key: string;
+  channel: string;
+  url: string;
+  epgFeedUrl?: string;
+}[] = [
   { key: "rtp1", channel: "RTP1", url: "https://www.rtp.pt/rtp1/" },
   { key: "rtp2", channel: "RTP2", url: "https://www.rtp.pt/rtp2/" },
   { key: "rtp3", channel: "RTP3", url: "https://www.rtp.pt/rtp3/" },
-  { key: "rtp_memoria", channel: "RTP Memória", url: "https://www.rtp.pt/", epgFeedUrl: "/EPG/json/rtp-channels-page/list-grid/tv/4/{date}" },
-  { key: "rtp_africa", channel: "RTP África", url: "https://www.rtp.pt/", epgFeedUrl: "/EPG/json/rtp-channels-page/list-grid/tv/5/{date}" },
-  { key: "rtp_mundo", channel: "RTP Mundo", url: "https://www.rtp.pt/", epgFeedUrl: "/EPG/json/rtp-channels-page/list-grid/tv/6/{date}" },
-  { key: "rtp_acores", channel: "RTP Açores", url: "https://www.rtp.pt/", epgFeedUrl: "/EPG/json/rtp-channels-page/list-grid/tv/7/{date}" },
-  { key: "rtp_madeira", channel: "RTP Madeira", url: "https://www.rtp.pt/", epgFeedUrl: "/EPG/json/rtp-channels-page/list-grid/tv/8/{date}" },
+  {
+    key: "rtp_memoria",
+    channel: "RTP Memória",
+    url: "https://www.rtp.pt/",
+    epgFeedUrl: "/EPG/json/rtp-channels-page/list-grid/tv/4/{date}",
+  },
+  {
+    key: "rtp_africa",
+    channel: "RTP África",
+    url: "https://www.rtp.pt/",
+    epgFeedUrl: "/EPG/json/rtp-channels-page/list-grid/tv/5/{date}",
+  },
+  {
+    key: "rtp_mundo",
+    channel: "RTP Mundo",
+    url: "https://www.rtp.pt/",
+    epgFeedUrl: "/EPG/json/rtp-channels-page/list-grid/tv/6/{date}",
+  },
+  {
+    key: "rtp_acores",
+    channel: "RTP Açores",
+    url: "https://www.rtp.pt/",
+    epgFeedUrl: "/EPG/json/rtp-channels-page/list-grid/tv/7/{date}",
+  },
+  {
+    key: "rtp_madeira",
+    channel: "RTP Madeira",
+    url: "https://www.rtp.pt/",
+    epgFeedUrl: "/EPG/json/rtp-channels-page/list-grid/tv/8/{date}",
+  },
 ];
 
 export interface FetchRtpOptions {
@@ -44,25 +74,61 @@ interface RtpEpgPayload {
 }
 
 function slug(value: string): string {
-  return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
 }
 
 function stripTags(value: string): string {
-  return value.replace(/<script[\s\S]*?<\/script>/gi, " ")
-    .replace(/<style[\s\S]*?<\/style>/gi, " ").replace(/<[^>]+>/g, " ")
-    .replace(/&nbsp;/gi, " ").replace(/&amp;/gi, "&").replace(/&quot;/gi, '"')
-    .replace(/&#39;/gi, "'").replace(/&#(x[0-9a-f]+|\d+);/gi, (_, value: string) => {
+  return value
+    .replace(/<script[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/gi, "'")
+    .replace(/&#(x[0-9a-f]+|\d+);/gi, (_, value: string) => {
       const codePoint = value.toLowerCase().startsWith("x")
         ? Number.parseInt(value.slice(1), 16)
         : Number.parseInt(value, 10);
       return Number.isFinite(codePoint) ? String.fromCodePoint(codePoint) : "&" + value + ";";
-    }).replace(/&([a-z]+);/gi, (_, name: string) => ({ aacute: "á", acirc: "â", agrave: "à", atilde: "ã", auml: "ä", ccedil: "ç", eacute: "é", ecirc: "ê", egrave: "è", iacute: "í", oacute: "ó", ocirc: "ô", otilde: "õ", uacute: "ú", ucirc: "û", ntilde: "ñ" }[name.toLowerCase()] || "&" + name + ";")).replace(/\s+/g, " ").trim();
+    })
+    .replace(
+      /&([a-z]+);/gi,
+      (_, name: string) =>
+        ({
+          aacute: "á",
+          acirc: "â",
+          agrave: "à",
+          atilde: "ã",
+          auml: "ä",
+          ccedil: "ç",
+          eacute: "é",
+          ecirc: "ê",
+          egrave: "è",
+          iacute: "í",
+          oacute: "ó",
+          ocirc: "ô",
+          otilde: "õ",
+          uacute: "ú",
+          ucirc: "û",
+          ntilde: "ñ",
+        })[name.toLowerCase()] || "&" + name + ";",
+    )
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 function documentarySignalFromText(value?: string): boolean | undefined {
   if (!value) return undefined;
-  const normalized = value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  const normalized = value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
   if (/\bdocumentari(?:o|os|a|as)|documental(?:is)?\b/.test(normalized)) return true;
   return false;
 }
@@ -92,30 +158,34 @@ export function extractRtpProgrammeImageUrl(html: string, baseUrl?: string): str
 
 export function isRtpDocumentaryDescription(description?: string): boolean {
   if (!description) return false;
-  const text = description.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-  return /\bdocumentari(?:o|a|os|as)\b/.test(text)
-    || /\bserie\s+documental\b/.test(text)
-    || /\bseries\s+documentais\b/.test(text);
+  const text = description
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+  return (
+    /\bdocumentari(?:o|a|os|as)\b/.test(text) ||
+    /\bserie\s+documental\b/.test(text) ||
+    /\bseries\s+documentais\b/.test(text)
+  );
 }
 
 export function isRtpDocumentaryPage(html: string): boolean {
   const normalize = (value: string) =>
-    value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+    value
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase();
 
   const text = normalize(stripTags(html));
   if (
-    /este conteudo faz parte de documentarios(?:\s|$)/i.test(text)
-    || /generos\s+documentarios(?:\\s|$)/i.test(text)
-    || /todos\s+documentarios(?:\\s|$)/i.test(text)
+    /este conteudo faz parte de documentarios(?:\s|$)/i.test(text) ||
+    /generos\s+documentarios(?:\\s|$)/i.test(text) ||
+    /todos\s+documentarios(?:\\s|$)/i.test(text)
   ) {
     return true;
   }
 
-  const markers = [
-    "generos",
-    "este conteudo faz parte de",
-    "todos documentarios",
-  ];
+  const markers = ["generos", "este conteudo faz parte de", "todos documentarios"];
 
   for (const marker of markers) {
     const index = text.indexOf(marker);
@@ -126,12 +196,18 @@ export function isRtpDocumentaryPage(html: string): boolean {
 
   const decodeEscapes = (value: string): string =>
     value
-      .replace(/\\u([0-9a-f]{4})/gi, (_, hex: string) => String.fromCharCode(Number.parseInt(hex, 16)))
-      .replace(/\\x([0-9a-f]{2})/gi, (_, hex: string) => String.fromCharCode(Number.parseInt(hex, 16)));
+      .replace(/\\u([0-9a-f]{4})/gi, (_, hex: string) =>
+        String.fromCharCode(Number.parseInt(hex, 16)),
+      )
+      .replace(/\\x([0-9a-f]{2})/gi, (_, hex: string) =>
+        String.fromCharCode(Number.parseInt(hex, 16)),
+      );
 
   const raw = normalize(decodeEscapes(html));
-  return /(?:generos|genre|faz parte de|todos)[\s\S]{0,500}documentarios/i.test(raw)
-    || /documentarios[\s\S]{0,500}(?:generos|genre|faz parte de|todos)/i.test(raw);
+  return (
+    /(?:generos|genre|faz parte de|todos)[\s\S]{0,500}documentarios/i.test(raw) ||
+    /documentarios[\s\S]{0,500}(?:generos|genre|faz parte de|todos)/i.test(raw)
+  );
 }
 
 export interface RtpEditorialBroadcast {
@@ -141,26 +217,41 @@ export interface RtpEditorialBroadcast {
 }
 
 const RTP_MONTHS: Record<string, number> = {
-  jan: 0, fev: 1, mar: 2, abr: 3, mai: 4, jun: 5,
-  jul: 6, ago: 7, set: 8, out: 9, nov: 10, dez: 11,
+  jan: 0,
+  fev: 1,
+  mar: 2,
+  abr: 3,
+  mai: 4,
+  jun: 5,
+  jul: 6,
+  ago: 7,
+  set: 8,
+  out: 9,
+  nov: 10,
+  dez: 11,
 };
 
 export function parseRtpEditorialBroadcasts(html: string): RtpEditorialBroadcast[] {
   const text = stripTags(html).replace(/\s+/g, " ").trim();
-  const normalizedText = text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  const normalizedText = text
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
   const sectionStart = normalizedText.indexOf("proximas emissoes deste programa");
   if (sectionStart < 0) return [];
   const sectionEnd = normalizedText.indexOf("rever ultimos episodios", sectionStart);
   const section = text.slice(sectionStart, sectionEnd >= 0 ? sectionEnd : sectionStart + 3000);
 
-  const pattern = /(\d{1,2})\s+(Jan|Fev|Mar|Abr|Mai|Jun|Jul|Ago|Set|Out|Nov|Dez)\s+(\d{4})\s+(\d{1,2}:\d{2})\s+(RTP(?:\s+(?:1|2|3|Notícias|Mundo(?:\s+(?:América|Ásia))?|Memória|África|Açores|Madeira))?)/gi;
+  const pattern =
+    /(\d{1,2})\s+(Jan|Fev|Mar|Abr|Mai|Jun|Jul|Ago|Set|Out|Nov|Dez)\s+(\d{4})\s+(\d{1,2}:\d{2})\s+(RTP(?:\s+(?:1|2|3|Notícias|Mundo(?:\s+(?:América|Ásia))?|Memória|África|Açores|Madeira))?)/gi;
   const results: RtpEditorialBroadcast[] = [];
 
   for (const match of section.matchAll(pattern)) {
     const [, day, monthName, year, time, channel] = match;
     const month = RTP_MONTHS[monthName.toLowerCase()];
     if (month === undefined) continue;
-    const date = year + "-" + String(month + 1).padStart(2, "0") + "-" + String(Number(day)).padStart(2, "0");
+    const date =
+      year + "-" + String(month + 1).padStart(2, "0") + "-" + String(Number(day)).padStart(2, "0");
     results.push({
       date,
       startAt: date + "T" + time + ":00",
@@ -171,7 +262,10 @@ export function parseRtpEditorialBroadcasts(html: string): RtpEditorialBroadcast
   return results;
 }
 
-export function extractRtpProgrammeClassificationUrlFromHtml(html: string, baseUrl: string): string | undefined {
+export function extractRtpProgrammeClassificationUrlFromHtml(
+  html: string,
+  baseUrl: string,
+): string | undefined {
   const pattern = /<a[^>]+href=["']([^"']*\/programa\/tv\/p\d+[^"']*)["'][^>]*>/gi;
   for (const match of html.matchAll(pattern)) {
     try {
@@ -184,10 +278,14 @@ export function extractRtpProgrammeClassificationUrlFromHtml(html: string, baseU
 }
 
 export function getRtpProgrammeClassificationUrl(sourceUrl: string): string | undefined {
-  const playMatch = sourceUrl.match(/^https?:\/\/www\.rtp\.pt\/play\/(p\d+)(?:\/(e\d+))?(?:\/[^/?#]+)?(?:[?#].*)?$/i);
+  const playMatch = sourceUrl.match(
+    /^https?:\/\/www\.rtp\.pt\/play\/(p\d+)(?:\/(e\d+))?(?:\/[^/?#]+)?(?:[?#].*)?$/i,
+  );
   if (playMatch) return "https://www.rtp.pt/programa/tv/" + playMatch[1];
 
-  const programmeMatch = sourceUrl.match(/^https?:\/\/www\.rtp\.pt\/programa\/tv\/(p\d+)(?:\/e\d+)?(?:[?#].*)?$/i);
+  const programmeMatch = sourceUrl.match(
+    /^https?:\/\/www\.rtp\.pt\/programa\/tv\/(p\d+)(?:\/e\d+)?(?:[?#].*)?$/i,
+  );
   if (programmeMatch) return "https://www.rtp.pt/programa/tv/" + programmeMatch[1];
 
   return undefined;
@@ -213,21 +311,27 @@ export function parseRtpEpg(payload: RtpEpgPayload, fallbackChannel: string): Rt
     const episode = parseEpisodeNumber(entry.episode?.number);
     const episodeTitle = entry.episode?.title?.trim() || undefined;
     const description = entry.description?.trim() || entry.episode?.sinopse?.trim() || undefined;
-    const imageUrl = entry.image?.slice().sort((a, b) => Number(b.width || 0) - Number(a.width || 0))[0]?.src?.trim() || undefined;
+    const imageUrl =
+      entry.image
+        ?.slice()
+        .sort((a, b) => Number(b.width || 0) - Number(a.width || 0))[0]
+        ?.src?.trim() || undefined;
     const sourceExternalId = entry.id
       ? entry.id + "-" + date + "-" + slug(channel)
       : slug(entry.name) + "-" + date + "-" + time.replace(":", "") + "-" + slug(channel);
 
-    const sourceUrl = entry.url.includes("/play/") || entry.url.includes("/programa/tv/")
-      ? entry.url
-      : entry.url.replace(
-          "/programa/tv/",
-          "/play/",
-        ) + "/" + slug(entry.name.trim());
+    const sourceUrl =
+      entry.url.includes("/play/") || entry.url.includes("/programa/tv/")
+        ? entry.url
+        : entry.url.replace("/programa/tv/", "/play/") + "/" + slug(entry.name.trim());
 
     items.push({
-      sourceExternalId, sourceUrl, broadcasterKey: "rtp", channel,
-      title: entry.name.trim(), ...(description ? { description } : {}),
+      sourceExternalId,
+      sourceUrl,
+      broadcasterKey: "rtp",
+      channel,
+      title: entry.name.trim(),
+      ...(description ? { description } : {}),
       ...(episodeTitle ? { episodeTitle } : {}),
       ...(entry.series?.trim() ? { seriesTitle: entry.series.trim() } : {}),
       ...(episode !== undefined ? { episode } : {}),
@@ -239,13 +343,16 @@ export function parseRtpEpg(payload: RtpEpgPayload, fallbackChannel: string): Rt
   return items;
 }
 
-async function fetchRtpEpgProgrammeItemsInternal(options: FetchRtpOptions = {}): Promise<RtpProgrammeItem[]> {
+async function fetchRtpEpgProgrammeItemsInternal(
+  options: FetchRtpOptions = {},
+): Promise<RtpProgrammeItem[]> {
   const fetchImpl = options.fetchImpl || fetch;
   // Production ingestion passes the source canonical URL (https://www.rtp.pt/).
   // RTP EPG discovery is channel-specific, so the canonical root must not
   // override the RTP1/RTP2/RTP3 channel pages.
-  const channelPages = options.channelPages
-    || (options.url && options.url !== "https://www.rtp.pt/"
+  const channelPages =
+    options.channelPages ||
+    (options.url && options.url !== "https://www.rtp.pt/"
       ? [{ key: RTP_SOURCE_KEY, channel: "RTP", url: options.url }]
       : RTP_CHANNEL_PAGES);
 
@@ -255,10 +362,13 @@ async function fetchRtpEpgProgrammeItemsInternal(options: FetchRtpOptions = {}):
   for (const channel of channelPages) {
     let template: string | undefined;
     if (channel.epgFeedUrl) {
-      template = channel.epgFeedUrl.replace(/\{0\}/g, "{date}").replace(/%7B0\%}/gi, "{date}");
+      template = channel.epgFeedUrl.replace(/\{0\}/g, "{date}").replace(/%7B0%7D/gi, "{date}");
     } else {
       const pageResponse = await fetchImpl(channel.url);
-      if (!pageResponse.ok) throw new Error("RTP channel page fetch failed: " + pageResponse.status + " (" + channel.url + ")");
+      if (!pageResponse.ok)
+        throw new Error(
+          "RTP channel page fetch failed: " + pageResponse.status + " (" + channel.url + ")",
+        );
       template = extractRtpEpgFeedUrl(await pageResponse.text());
     }
     if (!template) throw new Error("RTP EPG feed URL not found (" + channel.url + ")");
@@ -271,7 +381,8 @@ async function fetchRtpEpgProgrammeItemsInternal(options: FetchRtpOptions = {}):
       const dateValue = getLisbonDate(baseDate, dayOffset);
       const epgUrl = new URL(template.replace("{date}", dateValue), channel.url).toString();
       const epgResponse = await fetchImpl(epgUrl);
-      if (!epgResponse.ok) throw new Error("RTP EPG fetch failed: " + epgResponse.status + " (" + epgUrl + ")");
+      if (!epgResponse.ok)
+        throw new Error("RTP EPG fetch failed: " + epgResponse.status + " (" + epgUrl + ")");
 
       const payload = (await epgResponse.json()) as RtpEpgPayload;
       for (const item of parseRtpEpg(payload, channel.channel)) {
@@ -285,11 +396,15 @@ async function fetchRtpEpgProgrammeItemsInternal(options: FetchRtpOptions = {}):
   return all;
 }
 
-export async function fetchRtpEpgProgrammeItems(options: FetchRtpOptions = {}): Promise<readonly RtpProgrammeItem[]> {
+export async function fetchRtpEpgProgrammeItems(
+  options: FetchRtpOptions = {},
+): Promise<readonly RtpProgrammeItem[]> {
   return fetchRtpEpgProgrammeItemsInternal(options);
 }
 
-export async function fetchRtpProgramme(options: FetchRtpOptions = {}): Promise<readonly RtpProgrammeItem[]> {
+export async function fetchRtpProgramme(
+  options: FetchRtpOptions = {},
+): Promise<readonly RtpProgrammeItem[]> {
   const all: RtpProgrammeItem[] = [];
   const fetchImpl = options.fetchImpl || fetch;
   const classificationCache = new Map<string, boolean>();
@@ -313,10 +428,10 @@ export async function fetchRtpProgramme(options: FetchRtpOptions = {}): Promise<
     const programmeHtml = await programmeResponse.text();
 
     const classificationUrl =
-      extractRtpProgrammeClassificationUrlFromHtml(programmeHtml, item.sourceUrl)
-      || getRtpProgrammeClassificationUrl(item.sourceUrl);
-    let isDocumentary = isRtpDocumentaryPage(programmeHtml)
-      || isRtpDocumentaryDescription(item.description);
+      extractRtpProgrammeClassificationUrlFromHtml(programmeHtml, item.sourceUrl) ||
+      getRtpProgrammeClassificationUrl(item.sourceUrl);
+    let isDocumentary =
+      isRtpDocumentaryPage(programmeHtml) || isRtpDocumentaryDescription(item.description);
 
     if (!isDocumentary && classificationUrl) {
       const cached = classificationCache.get(classificationUrl);

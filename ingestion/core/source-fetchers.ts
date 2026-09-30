@@ -41,7 +41,7 @@ function websiteFetcher<T extends ProgrammeItemLike>(
   };
 }
 
-type FetcherFactory = (options: SourceFetcherOptions) => SourceFetcher<any>;
+type FetcherFactory = (options: SourceFetcherOptions) => SourceFetcher<unknown>;
 
 /** Registry of implemented fetchers, keyed exactly like the source registry. */
 export const sourceFetcherFactories: Readonly<Record<string, FetcherFactory>> = {
@@ -51,14 +51,10 @@ export const sourceFetcherFactories: Readonly<Record<string, FetcherFactory>> = 
     websiteFetcher("cinema_sao_jorge", (o) => fetchCinemaSaoJorgeProgramme(o), options),
   cinema_fernando_lopes: (options) =>
     websiteFetcher("cinema_fernando_lopes", (o) => fetchCinemaFernandoLopesProgramme(o), options),
-  doclisboa: (options) =>
-    websiteFetcher("doclisboa", (o) => fetchDoclisboaProgramme(o), options),
-  rtp: (options) =>
-    websiteFetcher("rtp", (o) => fetchRtpProgramme(o), options),
-  tvi: (options) =>
-    websiteFetcher("tvi", (o) => fetchTviProgramme(o), options),
-  sic: (options) =>
-    websiteFetcher("sic", (o) => fetchSicProgramme(o), options),
+  doclisboa: (options) => websiteFetcher("doclisboa", (o) => fetchDoclisboaProgramme(o), options),
+  rtp: (options) => websiteFetcher("rtp", (o) => fetchRtpProgramme(o), options),
+  tvi: (options) => websiteFetcher("tvi", (o) => fetchTviProgramme(o), options),
+  sic: (options) => websiteFetcher("sic", (o) => fetchSicProgramme(o), options),
 };
 
 export function hasSourceFetcher(sourceKey: string): boolean {
@@ -68,7 +64,7 @@ export function hasSourceFetcher(sourceKey: string): boolean {
 export function getSourceFetcher(
   sourceKey: string,
   options: SourceFetcherOptions = {},
-): SourceFetcher<any> {
+): SourceFetcher<unknown> {
   const factory = sourceFetcherFactories[sourceKey];
   if (!factory) throw new Error(`No fetcher implemented for source: ${sourceKey}`);
   return factory(options);

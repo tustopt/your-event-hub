@@ -47,8 +47,14 @@ describe("TVI schedule parser", () => {
   it("fetches today and tomorrow using the TVI date endpoint", async () => {
     const urls: string[] = [];
     const responses = [
-      new Response('<div class="guiatv-linha"><div class="hora">20:00</div><h2>Documentário</h2></div>', { status: 200 }),
-      new Response('<div class="guiatv-linha"><div class="hora">21:00</div><h2>Outro Documentário</h2></div>', { status: 200 }),
+      new Response(
+        '<div class="guiatv-linha"><div class="hora">20:00</div><h2>Documentário</h2></div>',
+        { status: 200 },
+      ),
+      new Response(
+        '<div class="guiatv-linha"><div class="hora">21:00</div><h2>Outro Documentário</h2></div>',
+        { status: 200 },
+      ),
     ];
 
     await fetchTviProgramme({
@@ -66,10 +72,7 @@ describe("TVI schedule parser", () => {
   });
   it("requests the Lisbon current date around UTC midnight", async () => {
     const urls: string[] = [];
-    const responses = [
-      new Response("", { status: 200 }),
-      new Response("", { status: 200 }),
-    ];
+    const responses = [new Response("", { status: 200 }), new Response("", { status: 200 })];
 
     await fetchTviProgramme({
       now: () => new Date("2026-09-22T23:30:00Z"),
@@ -84,5 +87,4 @@ describe("TVI schedule parser", () => {
       "https://tvi.iol.pt/emissao/dia/tvi?data=2026-09-24",
     ]);
   });
-
 });
