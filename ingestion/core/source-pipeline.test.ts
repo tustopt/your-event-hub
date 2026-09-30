@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import type { ParsedSourceItem, SourceAdapter } from "./contracts";
 import { createAdapterRegistry } from "./adapter-registry";
 import { runSourcePipeline, type SourceFetcher } from "./source-pipeline";
@@ -83,11 +83,22 @@ describe("source pipeline", () => {
       }),
     };
 
-    const result = await runSourcePipeline(tvFetcher, createAdapterRegistry([tvAdapter]));
+    const fetchImpl = vi.fn<typeof fetch>().mockResolvedValue(
+      new Response('<meta property="og:image" content="/rtp.jpg">', { status: 200 }),
+    );
+    const result = await runSourcePipeline(
+      tvFetcher,
+      createAdapterRegistry([tvAdapter]),
+      { imageResolver: { fetchImpl } },
+    );
 
     expect(result.result.tvPrograms?.map((item) => item.sourceExternalId)).toEqual([
       "rtp:one",
       "rtp:two",
+    ]);
+    expect(result.result.tvPrograms?.map((item) => item.imageUrl)).toEqual([
+      "https://example.test/rtp.jpg",
+      "https://example.test/rtp.jpg",
     ]);
   });
 
