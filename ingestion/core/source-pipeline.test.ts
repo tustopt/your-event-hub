@@ -83,7 +83,7 @@ describe("source pipeline", () => {
       }),
     };
 
-    const fetchImpl = vi.fn<typeof fetch>().mockResolvedValue(
+    const fetchImpl = vi.fn<typeof fetch>().mockImplementation(async () =>
       new Response('<meta property="og:image" content="/rtp.jpg">', { status: 200 }),
     );
     const result = await runSourcePipeline(
