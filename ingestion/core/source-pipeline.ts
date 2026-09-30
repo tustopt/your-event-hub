@@ -1,5 +1,6 @@
 import type { AdapterResult, ParsedSourceItem, SourceAdapter } from "./contracts.js";
 import { resolveSourceAdapter, type AdapterRegistry } from "./adapter-registry.js";
+import { enrichAdapterResultImages, type ImageResolverOptions } from "./image-resolver.js";
 
 export interface SourceFetcher<T = unknown> {
   readonly sourceKey: string;
