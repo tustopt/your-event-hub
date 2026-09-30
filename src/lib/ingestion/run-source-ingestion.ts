@@ -6,6 +6,7 @@ import {
   type SourceFetcherLike,
   type TVProgramLike,
 } from "./source-contract";
+import { enrichAdapterResultImages } from "../../../ingestion/core/image-resolver";
 
 export type SourceIngestOptions = {
   dryRun?: boolean | undefined;
@@ -120,7 +121,7 @@ export async function runSourceIngestion(
     let lastItem: ScreeningLike | TVProgramLike | undefined;
     try {
       const parsedItem = resolved.fetcher.toParsedItem(item);
-      const result = resolved.adapter.parse(parsedItem, item);
+      const result = await enrichAdapterResultImages(resolved.adapter.parse(parsedItem, item));
       warnings.push(...result.warnings);
 
       for (const parsedScreening of result.screenings) {
