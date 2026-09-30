@@ -9,10 +9,8 @@ async function inspect(url: string): Promise<{
   jsonShape?: string;
   arrayLength?: number;
   objectKeys?: string[];
-  htmlGuiatvLines?: number;
-  htmlH2?: number;
-  documentaryMentions?: number;
   preview: string;
+  text?: string;
 }> {
   const response = await fetch(url);
   const text = await response.text();
@@ -39,14 +37,15 @@ async function inspect(url: string): Promise<{
       result.jsonShape = typeof value;
     }
   } catch {
-    result.htmlGuiatvLines = (text.match(/guiatv-linha/gi) || []).length;
-    result.htmlH2 = (text.match(/<h2\b/gi) || []).length;
-    result.documentaryMentions = (
-      text.match(/document[aá]rio|documental|s[eé]rie documental|s[eé]ries documentais/gi) || []
-    ).length;
+    // HTML details are extracted below in main.
   }
-
   return result;
+}
+
+async function fetchText(url: string): Promise<string> {
+  const response = await fetch(url);
+  if (!response.ok) throw new Error("HTTP " + response.status + ": " + url);
+  return response.text();
 }
 
 async function main(): Promise<void> {
@@ -54,44 +53,68 @@ async function main(): Promise<void> {
   const today = getLisbonDate(now, 0);
   const tomorrow = getLisbonDate(now, 1);
 
-  const [sicChannels, tviToday, sic, tvi] = await Promise.all([
-    inspect(SIC_CHANNELS_URL),
-    inspect(TVI_PROGRAMMES_URL + "?data=" + today),
+  const sicChannelsResponse = await fetch(SIC_CHANNELS_URL);
+  const sicChannelsPayload: unknown = await sicChannelsResponse.json();
+  const sicChannels = Array.isArray(sicChannelsPayload)
+    ? sicChannelsPayload.map((item) =>
+        item && typeof item === "object"
+          ? {
+              id: String((item as Record<string, unknown>).id ?? ""),
+              name: String((item as Record<string, unknown>).name ?? ""),
+            }
+          : null,
+      )
+    : [];
+
+  const tviHtml = await fetchText(TVI_PROGRAMMES_URL + "?data=" + today);
+  const tviBlocks = tviHtml.match(
+    /<div[^>]+class=["'][^"']*guiatv-linha[^"']*["'][^>]*>[\s\S]*?(?=<div[^>]+class=["'][^"']*guiatv-linha|$)/gi,
+  ) || [];
+  const tviCandidates = tviBlocks.slice(0, 8).map((block) => ({
+    time: block.match(/<div[^>]+class=["'][^"']*hora[^"']*["'][^>]*>([\s\S]*?)<\/div>/i)?.[1]
+      ?.replace(/<[^>]+>/g, " ")
+      .replace(/&nbsp;/gi, " ")
+      .replace(/\s+/g, " ")
+      .trim(),
+    h2: block.match(/<h2[^>]*>([\s\S]*?)<\/h2>/i)?.[1]
+      ?.replace(/<[^>]+>/g, " ")
+      .replace(/&amp;/gi, "&")
+      .replace(/\s+/g, " ")
+      .trim(),
+  }));
+
+  const [sic, tvi] = await Promise.all([
     fetchSicProgramme({ now: () => now }),
     fetchTviProgramme({ now: () => now }),
   ]);
 
-  console.log(
-    JSON.stringify(
-      {
-        checkedAt: now.toISOString(),
-        lisbonDates: { today, tomorrow },
-        sic: {
-          channelsEndpoint: sicChannels,
-          fetchedDocumentaries: sic.length,
-          channels: [...new Set(sic.map((item) => item.channel))],
-          sample: sic.slice(0, 5).map((item) => ({
-            title: item.title,
-            channel: item.channel,
-            startAt: item.startAt,
-          })),
-        },
-        tvi: {
-          todayEndpoint: tviToday,
-          fetchedDocumentaries: tvi.length,
-          channels: [...new Set(tvi.map((item) => item.channel))],
-          sample: tvi.slice(0, 5).map((item) => ({
-            title: item.title,
-            channel: item.channel,
-            startAt: item.startAt,
-          })),
-        },
-        epgEndpoint: SIC_EPG_URL,
+  console.log(JSON.stringify({
+    checkedAt: now.toISOString(),
+    lisbonDates: { today, tomorrow },
+    sic: {
+      channelsEndpoint: {
+        status: sicChannelsResponse.status,
+        count: sicChannels.length,
+        channels: sicChannels,
       },
-      null,
-      2,
-    ),
-  );
+      fetchedDocumentaries: sic.length,
+      channels: [...new Set(sic.map((item) => item.channel))],
+      sample: sic.slice(0, 5),
+    },
+    tvi: {
+      endpoint: {
+        status: 200,
+        bytes: tviHtml.length,
+        guiAtvLines: (tviHtml.match(/guiatv-linha/gi) || []).length,
+        h2Count: (tviHtml.match(/<h2\\b/gi) || []).length,
+        documentaryMentions: (tviHtml.match(/document[aá]rio|documental|s[eé]rie documental|s[eé]ries documentais/gi) || []).length,
+      },
+      candidates: tviCandidates,
+      fetchedDocumentaries: tvi.length,
+      sample: tvi.slice(0, 5),
+    },
+    epgEndpoint: SIC_EPG_URL,
+  }, null, 2));
 }
 
 main().catch((error) => {
