@@ -1,6 +1,7 @@
 import { createProductionAdapterRegistry } from "../core/production-adapters";
 import { getProductionSources, getSourceDefinition } from "../core/source-registry";
-import { getSourceFetcher } from "../core/source-fetchers";\nimport { enrichAdapterResultImages } from "../core/image-resolver";
+import { getSourceFetcher } from "../core/source-fetchers";
+import { enrichAdapterResultImages } from "../core/image-resolver";
 
 function requiredEnv(...names: string[]): string {
   for (const name of names) {
