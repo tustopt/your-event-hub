@@ -17,7 +17,7 @@ import { sicAdapter } from "../sources/sic/parser.js";
  * A source can still remain "candidate" in the source registry while its
  * adapter is installed and tested independently.
  */
-export const productionAdapters: readonly SourceAdapter<any>[] = [
+export const productionAdapters = [
   cinematecaAdapter,
   cinemaSaoJorgeAdapter,
   cinemaFernandoLopesAdapter,
@@ -25,7 +25,7 @@ export const productionAdapters: readonly SourceAdapter<any>[] = [
   rtpAdapter,
   tviAdapter,
   sicAdapter,
-];
+] as const;
 
 export function createProductionAdapterRegistry(): AdapterRegistry {
   return createAdapterRegistry(productionAdapters);
