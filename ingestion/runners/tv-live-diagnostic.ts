@@ -2,7 +2,7 @@ import { fetchSicProgramme, SIC_CHANNELS_URL, SIC_EPG_URL } from "../sources/sic
 import { fetchTviProgramme, TVI_PROGRAMMES_URL } from "../sources/tvi/fetcher";
 import { getLisbonDate, getLisbonOffset } from "../sources/television/time";
 
-async function inspectJson(url: string): Promise<Record<string, unknown>> {
+async function inspectJson(url: string): Promise<Record<string, unknown> & { parsed?: unknown }> {
   const response = await fetch(url);
   const text = await response.text();
   let value: unknown;
@@ -16,6 +16,7 @@ async function inspectJson(url: string): Promise<Record<string, unknown>> {
     contentType: response.headers.get("content-type"),
     bytes: text.length,
   };
+  summary.parsed = value;
   if (Array.isArray(value)) {
     summary.shape = "array";
     summary.length = value.length;
@@ -39,8 +40,8 @@ async function main(): Promise<void> {
   const today = getLisbonDate(now, 0);
   const tomorrow = getLisbonDate(now, 1);
   const channelsPayload = await inspectJson(SIC_CHANNELS_URL);
-  const channels = Array.isArray((channelsPayload as any).value)
-    ? (channelsPayload as any).value
+  const channels = Array.isArray((channelsPayload as any).parsed)
+    ? (channelsPayload as any).parsed
     : [];
   const sicEpg: Record<string, unknown>[] = [];
   for (const channel of channels.slice(0, 3)) {
