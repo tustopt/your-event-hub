@@ -21,3 +21,8 @@ export { parseTviScheduleHtml } from "./sources/tvi/fetcher";
 export { tviAdapter } from "./sources/tvi/parser";
 export { fetchTviProgramme, TVI_SOURCE_KEY, TVI_PROGRAMMES_URL } from "./sources/tvi/fetcher";
 export type { SourceFetcherOptions as FetchTviOptions } from "./core/source-fetchers";
+export { getSourceDefinition, getProductionSources, sourceRegistry } from "./core/source-registry";
+export { createProductionAdapterRegistry, productionAdapters } from "./core/production-adapters";
+export { getSourceFetcher, hasSourceFetcher, sourceFetcherFactories } from "./core/source-fetchers";
+export { runSourcePipeline } from "./core/source-pipeline";
+export type { SourcePipelineOptions, SourcePipelineResult, SourceFetcher } from "./core/source-pipeline";
