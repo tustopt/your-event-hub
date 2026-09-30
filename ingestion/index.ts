@@ -17,6 +17,7 @@ export { fetchSicProgramme, SIC_SOURCE_KEY, SIC_CHANNELS_URL, SIC_EPG_URL } from
 export type { SourceFetcherOptions as FetchSicOptions } from "./core/source-fetchers";
 
 export * from "./sources/tvi/types";
-export { parseTviScheduleHtml, tviAdapter } from "./sources/tvi/fetcher";
+export { parseTviScheduleHtml } from "./sources/tvi/fetcher";
+export { tviAdapter } from "./sources/tvi/parser";
 export { fetchTviProgramme, TVI_SOURCE_KEY, TVI_PROGRAMMES_URL } from "./sources/tvi/fetcher";
 export type { SourceFetcherOptions as FetchTviOptions } from "./core/source-fetchers";
