@@ -1,86 +1,64 @@
 import { fetchSicProgramme, SIC_CHANNELS_URL, SIC_EPG_URL } from "../sources/sic/fetcher";
 import { fetchTviProgramme, TVI_PROGRAMMES_URL } from "../sources/tvi/fetcher";
-import { getLisbonDate } from "../sources/television/time";
+import { getLisbonDate, getLisbonOffset } from "../sources/television/time";
 
-async function inspect(url: string): Promise<{
-  status: number;
-  contentType: string | null;
-  bytes: number;
-  jsonShape?: string;
-  arrayLength?: number;
-  objectKeys?: string[];
-  preview: string;
-  text?: string;
-}> {
+async function inspectJson(url: string): Promise<Record<string, unknown>> {
   const response = await fetch(url);
   const text = await response.text();
-  const result: Awaited<ReturnType<typeof inspect>> = {
+  let value: unknown;
+  try {
+    value = JSON.parse(text);
+  } catch {
+    return { status: response.status, contentType: response.headers.get("content-type"), bytes: text.length, preview: text.slice(0, 500) };
+  }
+  const summary: Record<string, unknown> = {
     status: response.status,
     contentType: response.headers.get("content-type"),
     bytes: text.length,
-    preview: text.slice(0, 500).replace(/\s+/g, " "),
   };
-
-  try {
-    const value: unknown = JSON.parse(text);
-    if (Array.isArray(value)) {
-      result.jsonShape = "array";
-      result.arrayLength = value.length;
-      const first = value[0];
-      if (first && typeof first === "object") {
-        result.objectKeys = Object.keys(first as Record<string, unknown>).slice(0, 30);
-      }
-    } else if (value && typeof value === "object") {
-      result.jsonShape = "object";
-      result.objectKeys = Object.keys(value as Record<string, unknown>).slice(0, 30);
-    } else {
-      result.jsonShape = typeof value;
+  if (Array.isArray(value)) {
+    summary.shape = "array";
+    summary.length = value.length;
+    const first = value[0];
+    if (first && typeof first === "object") {
+      summary.firstKeys = Object.keys(first as Record<string, unknown>);
+      summary.first = first;
     }
-  } catch {
-    // HTML details are extracted below in main.
+  } else if (value && typeof value === "object") {
+    summary.shape = "object";
+    summary.keys = Object.keys(value as Record<string, unknown>);
+    summary.value = value;
+  } else {
+    summary.shape = typeof value;
   }
-  return result;
-}
-
-async function fetchText(url: string): Promise<string> {
-  const response = await fetch(url);
-  if (!response.ok) throw new Error("HTTP " + response.status + ": " + url);
-  return response.text();
+  return summary;
 }
 
 async function main(): Promise<void> {
   const now = new Date();
   const today = getLisbonDate(now, 0);
   const tomorrow = getLisbonDate(now, 1);
-
-  const sicChannelsResponse = await fetch(SIC_CHANNELS_URL);
-  const sicChannelsPayload: unknown = await sicChannelsResponse.json();
-  const sicChannels = Array.isArray(sicChannelsPayload)
-    ? sicChannelsPayload.map((item) =>
-        item && typeof item === "object"
-          ? {
-              id: String((item as Record<string, unknown>).id ?? ""),
-              name: String((item as Record<string, unknown>).name ?? ""),
-            }
-          : null,
-      )
+  const channelsPayload = await inspectJson(SIC_CHANNELS_URL);
+  const channels = Array.isArray((channelsPayload as any).value)
+    ? (channelsPayload as any).value
     : [];
+  const sicEpg: Record<string, unknown>[] = [];
+  for (const channel of channels.slice(0, 3)) {
+    const id = String(channel?.id ?? "");
+    const start = Math.floor(new Date(today + "T00:00:00" + getLisbonOffset(today, "00:00")).getTime() / 1000);
+    const end = Math.floor(new Date(tomorrow + "T00:00:00" + getLisbonOffset(tomorrow, "00:00")).getTime() / 1000);
+    sicEpg.push({
+      channel: { id, name: channel?.name },
+      response: await inspectJson(SIC_EPG_URL + "?startDate=" + start + "&endDate=" + end + "&channels=" + encodeURIComponent(id)),
+    });
+  }
 
-  const tviHtml = await fetchText(TVI_PROGRAMMES_URL + "?data=" + today);
-  const tviBlocks = tviHtml.match(
-    /<div[^>]+class=["'][^"']*guiatv-linha[^"']*["'][^>]*>[\s\S]*?(?=<div[^>]+class=["'][^"']*guiatv-linha|$)/gi,
-  ) || [];
-  const tviCandidates = tviBlocks.slice(0, 8).map((block) => ({
-    time: block.match(/<div[^>]+class=["'][^"']*hora[^"']*["'][^>]*>([\s\S]*?)<\/div>/i)?.[1]
-      ?.replace(/<[^>]+>/g, " ")
-      .replace(/&nbsp;/gi, " ")
-      .replace(/\s+/g, " ")
-      .trim(),
-    h2: block.match(/<h2[^>]*>([\s\S]*?)<\/h2>/i)?.[1]
-      ?.replace(/<[^>]+>/g, " ")
-      .replace(/&amp;/gi, "&")
-      .replace(/\s+/g, " ")
-      .trim(),
+  const tviHtmlResponse = await fetch(TVI_PROGRAMMES_URL + "?data=" + today);
+  const tviHtml = await tviHtmlResponse.text();
+  const tviBlocks = tviHtml.match(/<div[^>]+class=["'][^"']*guiatv-linha[^"']*["'][^>]*>[\s\S]*?(?=<div[^>]+class=["'][^"']*guiatv-linha|$)/gi) || [];
+  const candidates = tviBlocks.map((block) => ({
+    time: block.match(/<div[^>]+class=["'][^"']*hora[^"']*["'][^>]*>([\s\S]*?)<\/div>/i)?.[1]?.replace(/<[^>]+>/g, " ").replace(/&nbsp;/gi, " ").replace(/\s+/g, " ").trim(),
+    title: block.match(/<h2[^>]*>([\s\S]*?)<\/h2>/i)?.[1]?.replace(/<[^>]+>/g, " ").replace(/&amp;/gi, "&").replace(/\s+/g, " ").trim(),
   }));
 
   const [sic, tvi] = await Promise.all([
@@ -91,33 +69,12 @@ async function main(): Promise<void> {
   console.log(JSON.stringify({
     checkedAt: now.toISOString(),
     lisbonDates: { today, tomorrow },
-    sic: {
-      channelsEndpoint: {
-        status: sicChannelsResponse.status,
-        count: sicChannels.length,
-        channels: sicChannels,
-      },
-      fetchedDocumentaries: sic.length,
-      channels: [...new Set(sic.map((item) => item.channel))],
-      sample: sic.slice(0, 5),
-    },
+    sic: { channels: channelsPayload, epg: sicEpg, parsedDocumentaries: sic },
     tvi: {
-      endpoint: {
-        status: 200,
-        bytes: tviHtml.length,
-        guiAtvLines: (tviHtml.match(/guiatv-linha/gi) || []).length,
-        h2Count: (tviHtml.match(/<h2\\b/gi) || []).length,
-        documentaryMentions: (tviHtml.match(/document[aá]rio|documental|s[eé]rie documental|s[eé]ries documentais/gi) || []).length,
-      },
-      candidates: tviCandidates,
-      fetchedDocumentaries: tvi.length,
-      sample: tvi.slice(0, 5),
+      html: { status: tviHtmlResponse.status, bytes: tviHtml.length },
+      candidates,
+      parsedDocumentaries: tvi,
     },
-    epgEndpoint: SIC_EPG_URL,
   }, null, 2));
 }
-
-main().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
-});
+main().catch((error) => { console.error(error); process.exitCode = 1; });
