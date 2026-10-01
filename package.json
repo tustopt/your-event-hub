@@ -15,7 +15,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck:ingestion": "tsc --noEmit -p tsconfig.ingestion.json",
-    "ingest:cinema:diagnostic": "tsx ingestion/runners/cinema-live-diagnostic.ts"
+    "ingest:cinema:diagnostic": "tsx ingestion/runners/cinema-live-diagnostic.ts",
+    "ingest:cinema:ideal:source-diagnostic": "tsx ingestion/runners/cinema-ideal-source-diagnostic.ts"
   },
   "overrides": {
     "rolldown": "1.2.1"
