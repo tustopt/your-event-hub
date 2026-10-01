@@ -148,7 +148,7 @@ function extractCinemaBlocks(lines: string[]): string[][] {
 
   for (const line of lines.slice(start + 1)) {
     if (/^(?:em casa|videoclube)$/i.test(line)) break;
-    if (/^próximas estreias$/i.test(line)) {
+    if (/^próximas\s+estreias$/i.test(line)) {
       inProgramme = true;
       continue;
     }
@@ -159,7 +159,7 @@ function extractCinemaBlocks(lines: string[]): string[][] {
     if (isInfoLine(line)) {
       continue;
     }
-    if (/^comprar$/i.test(line)) {
+    if (/^comprar$/i.test(line) || /\+\s*info\s+comprar/i.test(line)) {
       if (block.length) blocks.push(block);
       block = [];
       continue;
