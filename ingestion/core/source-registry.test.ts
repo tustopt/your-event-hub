@@ -19,10 +19,23 @@ describe("production television sources", () => {
   });
 });
 
-
 describe("cinema and film festival source registry", () => {
+  it("registers researched Portuguese cinema candidates without enabling them in production", () => {
+    const cinemaCandidates = ["cinema_ideal", "cinema_medeia_nimas"];
+
+    for (const key of cinemaCandidates) {
+      const source = getSourceDefinition(key);
+      expect(source?.category).toBe("cinema");
+      expect(source?.status).toBe("candidate");
+      expect(source?.adapterKey).toBeUndefined();
+      expect(source?.countryCode).toBe("PT");
+    }
+  });
+
   it("registers researched Portuguese festival candidates without enabling them in production", () => {
-    for (const key of ["cinema_ideal", "cinema_medeia_nimas", "curtas_vila_do_conde", "indielisboa", "leffest"]) {
+    const festivalCandidates = ["curtas_vila_do_conde", "indielisboa", "leffest"];
+
+    for (const key of festivalCandidates) {
       const source = getSourceDefinition(key);
       expect(source?.category).toBe("festival");
       expect(source?.status).toBe("candidate");
