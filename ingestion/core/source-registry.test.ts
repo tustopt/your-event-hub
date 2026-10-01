@@ -20,9 +20,9 @@ describe("production television sources", () => {
 });
 
 
-describe("film festival source registry", () => {
+describe("cinema and film festival source registry", () => {
   it("registers researched Portuguese festival candidates without enabling them in production", () => {
-    for (const key of ["curtas_vila_do_conde", "indielisboa", "leffest"]) {
+    for (const key of ["cinema_ideal", "cinema_medeia_nimas", "curtas_vila_do_conde", "indielisboa", "leffest"]) {
       const source = getSourceDefinition(key);
       expect(source?.category).toBe("festival");
       expect(source?.status).toBe("candidate");
