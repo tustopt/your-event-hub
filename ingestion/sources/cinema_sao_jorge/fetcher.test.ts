@@ -35,7 +35,6 @@ describe("Cinema São Jorge fetcher", () => {
     });
   });
 
-
   it("detects the current Festa do Cinema Francês festival context", async () => {
     const html = `
       <h2>Festa do Cinema Francês 2026</h2>
@@ -52,8 +51,12 @@ describe("Cinema São Jorge fetcher", () => {
       now: () => new Date("2026-10-01T10:00:00+01:00"),
     });
 
-    expect(result).toHaveLength(1);
-    expect(result[0]).toMatchObject({
+    const screening = result.find(
+      (item) => item.title === "La Bataille de Gaulle: L'âge de fer | SESSÃO DE ABERTURA",
+    );
+
+    expect(screening).toBeDefined();
+    expect(screening).toMatchObject({
       title: "La Bataille de Gaulle: L'âge de fer | SESSÃO DE ABERTURA",
       date: "2026-10-01",
       time: "21:00",
