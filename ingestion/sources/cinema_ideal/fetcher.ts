@@ -212,3 +212,7 @@ export async function fetchCinemaIdealProgramme(
 
   return items;
 }
+
+export function debugCinemaIdealLines(html: string): string[] {
+  return htmlToLines(html);
+}
