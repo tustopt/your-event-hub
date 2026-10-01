@@ -16,7 +16,7 @@ async function main(): Promise<void> {
     const items = await fetchCinemaIdealProgramme();
     const summary = {
       checkedAt: checkedAt.toISOString(),
-      ok: true,
+      ok: items.length > 0,
       source: "cinema_ideal",
       screenings: items.length,
       uniqueTitles: unique(items.map((item) => item.title)).length,
@@ -29,6 +29,7 @@ async function main(): Promise<void> {
     };
 
     console.log(JSON.stringify(summary, null, 2));
+    if (items.length === 0) process.exitCode = 1;
   } catch (error) {
     console.error(
       JSON.stringify(
