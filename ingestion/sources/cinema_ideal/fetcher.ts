@@ -9,11 +9,22 @@ export interface FetchCinemaIdealOptions {
   now?: () => Date;
 }
 
-const MONTHS: Record<string, number> = {
-  jan: 1, janeiro: 1, fev: 2, fevereiro: 2, mar: 3, marco: 3, março: 3,
-  abr: 4, abril: 4, mai: 5, maio: 5, jun: 6, junho: 6, jul: 7, julho: 7,
-  ago: 8, agosto: 8, set: 9, setembro: 9, out: 10, outubro: 10,
-  nov: 11, novembro: 11, dez: 12, dezembro: 12,
+const WEEKDAYS: Record<string, number> = {
+  segunda: 1,
+  "segunda-feira": 1,
+  terça: 2,
+  "terça-feira": 2,
+  quarta: 3,
+  "quarta-feira": 3,
+  quinta: 4,
+  "quinta-feira": 4,
+  sexta: 5,
+  "sexta-feira": 5,
+  sábado: 6,
+  sabado: 6,
+  "sábado-feira": 6,
+  "sabado-feira": 6,
+  domingo: 0,
 };
 
 function decodeHtml(value: string): string {
@@ -48,31 +59,8 @@ function slug(value: string): string {
     .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 }
 
-function parseDateLine(text: string, fallbackYear: number): string | undefined {
-  const numeric = text.match(/^(?:[a-zçáéíóúãõ-]+[.,]?\s+)?(\d{1,2})[\s\/-](\d{1,2})(?:[\s\/-](\d{4}))?$/i);
-  if (numeric) {
-    const day = Number(numeric[1]);
-    const month = Number(numeric[2]);
-    const year = Number(numeric[3] ?? fallbackYear);
-    if (day >= 1 && day <= 31 && month >= 1 && month <= 12) {
-      return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-    }
-  }
-
-  const named = text.match(
-    /^(?:(?:seg(?:unda)?|ter(?:ça)?|qua(?:rta)?|qui(?:nta)?|sex(?:ta)?|sáb(?:ado)?|sab(?:ado)?|dom(?:ingo)?)(?:-feira)?[.,]?\s+)?(\d{1,2})\s+(?:de\s+)?([a-zçãõáéíóú]+)(?:\s+(\d{4}))?$/i,
-  );
-  if (!named) return undefined;
-
-  const day = Number(named[1]);
-  const month = MONTHS[slug(named[2])];
-  const year = Number(named[3] ?? fallbackYear);
-  if (!month || !day || !year) return undefined;
-  return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-}
-
-function parseTime(text: string): string | undefined {
-  const match = text.match(/(?:^|\b)(\d{1,2})[:h](\d{2})(?:\s*h)?\b/i);
+function parseTimeToken(value: string): string | undefined {
+  const match = value.match(/^(\d{1,2})[:h.]?(\d{2})$/i);
   if (!match) return undefined;
   const hour = Number(match[1]);
   const minute = Number(match[2]);
@@ -80,24 +68,103 @@ function parseTime(text: string): string | undefined {
   return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
 }
 
-function cleanTitle(value: string): string {
-  return value
-    .replace(/^[-–—|:]+\s*/, "")
-    .replace(/\s+\|\s+(?:sala\s+\d+|cinema\s+ideal)\s*$/i, "")
-    .replace(/\s+/g, " ")
-    .trim();
+function nextDateForWeekday(now: Date, weekday: number): string {
+  const date = new Date(now);
+  date.setHours(12, 0, 0, 0);
+  const current = date.getDay();
+  let delta = (weekday - current + 7) % 7;
+  if (delta === 0) delta = 0;
+  date.setDate(date.getDate() + delta);
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 }
 
-function parseProgrammeLine(text: string): { time: string; title?: string } | undefined {
-  const time = parseTime(text);
-  if (!time) return undefined;
-  const match = text.match(/(?:^|\s)(\d{1,2})[:h](\d{2})(?:\s*h)?\s*(?:[-–—|:]\s*)?(.+)?$/i);
-  const title = cleanTitle(match?.[3] ?? "");
-  return { time, title: title || undefined };
+function weekdayDates(now: Date, weekdays: number[]): string[] {
+  return [...new Set(weekdays.map((weekday) => nextDateForWeekday(now, weekday)))].sort();
 }
 
-function isNoise(text: string): boolean {
-  return /^(programa|programação|cartaz|bilheteira|comprar bilhete|ver mais|sessões|sessaoes|hoje|amanhã|amanha)$/i.test(text);
+function parseWeekday(value: string): number | undefined {
+  const normalized = value.toLocaleLowerCase("pt-PT").replace(/[.,]/g, "").trim();
+  return WEEKDAYS[normalized];
+}
+
+function extractScheduleDates(
+  schedule: string,
+  now: Date,
+): Array<{ date: string; time: string }> {
+  const items: Array<{ date: string; time: string }> = [];
+
+  for (const segment of schedule.split("|").map((value) => value.trim()).filter(Boolean)) {
+    const normalized = segment.replace(/\s+/g, " ");
+    const allDays = /todos\s+os\s+dias/i.test(normalized);
+
+    if (allDays) {
+      const firstTime = normalized.match(/\d{1,2}[:h.]\d{2}/i);
+      if (firstTime) {
+        const time = parseTimeToken(firstTime[0]);
+        if (time) {
+          for (const date of weekdayDates(now, [1, 2, 3, 4, 5, 6, 0])) {
+            items.push({ date, time });
+          }
+        }
+      }
+      continue;
+    }
+
+    const tokens = normalized.split(/\s+/);
+    const times = tokens
+      .map(parseTimeToken)
+      .filter((value): value is string => Boolean(value));
+    const weekdays = tokens
+      .map((token) => parseWeekday(token))
+      .filter((value): value is number => value !== undefined);
+
+    if (!times.length || !weekdays.length) continue;
+
+    const dates = weekdayDates(now, weekdays);
+    for (const time of times) {
+      for (const date of dates) items.push({ date, time });
+    }
+  }
+
+  return items;
+}
+
+function isScheduleLine(value: string): boolean {
+  return /\d{1,2}[:h.]\d{2}/i.test(value) &&
+    /(segunda|terça|terca|quarta|quinta|sexta|sábado|sabado|domingo|todos\s+os\s+dias)/i.test(value);
+}
+
+function isInfoLine(value: string): boolean {
+  return /^(?:\+\s*info|comprar)$/i.test(value) || /^\+\s*info\s+comprar$/i.test(value);
+}
+
+function extractCinemaBlocks(lines: string[]): string[][] {
+  const start = lines.findIndex((line) => /^no cinema$/i.test(line));
+  if (start < 0) return [];
+
+  const blocks: string[][] = [];
+  let block: string[] = [];
+  let inProgramme = false;
+
+  for (const line of lines.slice(start + 1)) {
+    if (/^(?:em casa|videoclube)$/i.test(line)) break;
+    if (/^próximas estreias$/i.test(line)) {
+      inProgramme = true;
+      continue;
+    }
+    if (!inProgramme) continue;
+
+    if (isInfoLine(line)) {
+      if (block.length) blocks.push(block);
+      block = [];
+      continue;
+    }
+
+    block.push(line);
+  }
+
+  if (block.length) blocks.push(block);
+  return blocks;
 }
 
 export async function fetchCinemaIdealProgramme(
@@ -111,42 +178,30 @@ export async function fetchCinemaIdealProgramme(
   if (!response.ok) throw new Error(`Cinema Ideal fetch failed: ${response.status}`);
 
   const html = await response.text();
-  const fallbackYear = options.now?.().getFullYear() ?? new Date().getFullYear();
+  const now = options.now?.() ?? new Date();
   const lines = htmlToLines(html);
   const items: CinemaIdealProgrammeItem[] = [];
   const seen = new Set<string>();
-  let currentDate: string | undefined;
-  let pendingTitle: string | undefined;
 
-  for (const line of lines) {
-    const date = parseDateLine(line, fallbackYear);
-    if (date) {
-      currentDate = date;
-      pendingTitle = undefined;
-      continue;
-    }
-    if (!currentDate || isNoise(line)) continue;
+  for (const block of extractCinemaBlocks(lines)) {
+    const scheduleIndex = block.findIndex(isScheduleLine);
+    if (scheduleIndex < 0) continue;
 
-    const programme = parseProgrammeLine(line);
-    if (programme) {
-      const title = programme.title ?? pendingTitle;
-      if (!title) continue;
-      const externalId = `${currentDate}-${programme.time.replace(":", "")}-${slug(title)}`;
+    const title = block.slice(0, scheduleIndex)[0]?.trim();
+    if (!title) continue;
+
+    const schedule = block.slice(scheduleIndex).join(" ");
+    for (const { date, time } of extractScheduleDates(schedule, now)) {
+      const externalId = `${date}-${time.replace(":", "")}-${slug(title)}`;
       if (seen.has(externalId)) continue;
       seen.add(externalId);
       items.push({
         sourceExternalId: externalId,
         sourceUrl,
-        date: currentDate,
-        time: programme.time,
+        date,
+        time,
         title,
       });
-      pendingTitle = undefined;
-      continue;
-    }
-
-    if (!/^(?:sala|sessão|sessao|bilhete|€|\d+ lugares)/i.test(line)) {
-      pendingTitle = cleanTitle(line);
     }
   }
 
