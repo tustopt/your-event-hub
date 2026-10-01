@@ -154,7 +154,12 @@ function extractCinemaBlocks(lines: string[]): string[][] {
     }
     if (!inProgramme) continue;
 
+    // The live page has + INFO and COMPRAR as separate elements.
+    // Treat COMPRAR as the block boundary so a film is emitted once.
     if (isInfoLine(line)) {
+      continue;
+    }
+    if (/^comprar$/i.test(line)) {
       if (block.length) blocks.push(block);
       block = [];
       continue;
