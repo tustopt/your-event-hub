@@ -24,7 +24,7 @@ function decodeHtml(value: string): string {
     .replace(/&#39;/gi, "'")
     .replace(/&#8211;|&#x2013;/gi, "–")
     .replace(/&#8212;|&#x2014;/gi, "—")
-    .replace(/&#(d+);/g, (_, code) => String.fromCharCode(Number(code)))
+    .replace(/&#(\d+);/g, (_, code) => String.fromCharCode(Number(code)))
     .replace(/<[^>]+>/g, " ")
     .replace(/\s+/g, " ")
     .trim();
