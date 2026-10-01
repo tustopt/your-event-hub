@@ -35,6 +35,33 @@ describe("Cinema São Jorge fetcher", () => {
     });
   });
 
+
+  it("detects the current Festa do Cinema Francês festival context", async () => {
+    const html = `
+      <h2>Festa do Cinema Francês 2026</h2>
+      <p>Quinta-feira, 1 de Outubro às 21:00</p>
+      <h2>La Bataille de Gaulle: L'âge de fer | SESSÃO DE ABERTURA</h2>
+      <p>Festa do Cinema Francês 2026</p>
+      <p>Quinta-feira, 1 de Outubro às 21:00</p>
+      <p>160' minutos</p>
+    `;
+
+    const result = await fetchCinemaSaoJorgeProgramme({
+      fetchImpl: async () => new Response(html, { status: 200 }),
+      url: "https://example.test/programacao/0/",
+      now: () => new Date("2026-10-01T10:00:00+01:00"),
+    });
+
+    expect(result).toHaveLength(1);
+    expect(result[0]).toMatchObject({
+      title: "La Bataille de Gaulle: L'âge de fer | SESSÃO DE ABERTURA",
+      date: "2026-10-01",
+      time: "21:00",
+      durationMinutes: 160,
+      festival: "Festa do Cinema Francês 2026",
+    });
+  });
+
   it("rejects failed source responses", async () => {
     await expect(
       fetchCinemaSaoJorgeProgramme({
