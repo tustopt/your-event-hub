@@ -32,7 +32,7 @@ describe("Cinema Ideal fetcher", () => {
       now: () => new Date("2026-10-01T12:00:00+01:00"),
     });
 
-    expect(result).toHaveLength(23);
+    expect(result).toHaveLength(25);
     expect(result.filter((item) => item.title === "NAZA")).toHaveLength(7);
     expect(result.filter((item) => item.title === "FUCK THE POLIS")).toHaveLength(7);
     expect(result.filter((item) => item.title === "NATAL AMARGO")).toHaveLength(9);
