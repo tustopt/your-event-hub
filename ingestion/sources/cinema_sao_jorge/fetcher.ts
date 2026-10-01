@@ -95,7 +95,7 @@ export async function fetchCinemaSaoJorgeProgramme(
       date: dateTime.date,
       time: dateTime.time,
       title,
-      festival: context.match(/QUEER LISBOA 2026|MOTELX 2026/i)?.[0],
+      festival: context.match(/(?:FESTA DO CINEMA FRANCÊS|QUEER LISBOA|MOTELX)\s+\d{4}/i)?.[0],
       durationMinutes,
     });
   }
