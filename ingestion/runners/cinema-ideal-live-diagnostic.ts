@@ -1,4 +1,4 @@
-import { fetchCinemaIdealProgramme } from "../sources/cinema_ideal/fetcher";
+import { debugCinemaIdealLines, fetchCinemaIdealProgramme } from "../sources/cinema_ideal/fetcher";
 
 function unique<T>(values: T[]): T[] {
   return [...new Set(values)];
@@ -14,6 +14,13 @@ async function main(): Promise<void> {
 
   try {
     const items = await fetchCinemaIdealProgramme();
+    if (items.length === 0) {
+      const response = await fetch("https://www.cinemaidealemcasa.pt/", { headers: { "User-Agent": "Mozilla/5.0 (compatible; your-event-hub/1.0)" } });
+      const html = await response.text();
+      const lines = debugCinemaIdealLines(html);
+      const marker = lines.findIndex((line) => /^(?:no cinema)$/i.test(line));
+      console.log(JSON.stringify({ debug: true, lineCount: lines.length, marker, afterMarker: marker >= 0 ? lines.slice(marker, marker + 40) : lines.slice(0, 40) }, null, 2));
+    }
     const summary = {
       checkedAt: checkedAt.toISOString(),
       ok: items.length > 0,
