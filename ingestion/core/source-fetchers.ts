@@ -4,7 +4,6 @@ import { fetchCinematecaProgramme } from "../sources/cinemateca_pt/fetcher.js";
 import { fetchCinemaSaoJorgeProgramme } from "../sources/cinema_sao_jorge/fetcher.js";
 import { fetchCinemaFernandoLopesProgramme } from "../sources/cinema_fernando_lopes/fetcher.js";
 import { fetchDoclisboaProgramme } from "../sources/doclisboa/fetcher.js";
-import { fetchCinemaIdealProgramme } from "../sources/cinema_ideal/fetcher.js";
 import { fetchRtpProgramme } from "../sources/rtp/fetcher.js";
 import { fetchTviProgramme } from "../sources/tvi/fetcher.js";
 import { fetchSicProgramme } from "../sources/sic/fetcher.js";
@@ -53,7 +52,6 @@ export const sourceFetcherFactories: Readonly<Record<string, FetcherFactory>> = 
   cinema_fernando_lopes: (options) =>
     websiteFetcher("cinema_fernando_lopes", (o) => fetchCinemaFernandoLopesProgramme(o), options),
   doclisboa: (options) => websiteFetcher("doclisboa", (o) => fetchDoclisboaProgramme(o), options),
-  cinema_ideal: (options) => websiteFetcher("cinema_ideal", (o) => fetchCinemaIdealProgramme(o), options),
   rtp: (options) => websiteFetcher("rtp", (o) => fetchRtpProgramme(o), options),
   tvi: (options) => websiteFetcher("tvi", (o) => fetchTviProgramme(o), options),
   sic: (options) => websiteFetcher("sic", (o) => fetchSicProgramme(o), options),
