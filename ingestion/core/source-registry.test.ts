@@ -18,3 +18,16 @@ describe("production television sources", () => {
     expect(source?.countryCode).toBe("PT");
   });
 });
+
+
+describe("film festival source registry", () => {
+  it("registers researched Portuguese festival candidates without enabling them in production", () => {
+    for (const key of ["curtas_vila_do_conde", "indielisboa", "leffest"]) {
+      const source = getSourceDefinition(key);
+      expect(source?.category).toBe("festival");
+      expect(source?.status).toBe("candidate");
+      expect(source?.adapterKey).toBeUndefined();
+      expect(source?.countryCode).toBe("PT");
+    }
+  });
+});
