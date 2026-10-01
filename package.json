@@ -9,6 +9,7 @@
     "dev": "vite dev",
     "format": "prettier --write .",
     "ingest:cinemateca:fixture": "tsx ingestion/runners/cinemateca-fixture-cli.ts",
+    "ingest:cinema:ideal:diagnostic": "tsx ingestion/runners/cinema-ideal-live-diagnostic.ts",
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
