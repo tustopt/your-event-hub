@@ -60,7 +60,8 @@ function slug(value: string): string {
 }
 
 function parseTimeToken(value: string): string | undefined {
-  const match = value.match(/^(\d{1,2})[:h.]?(\d{2})$/i);
+  const normalized = value.replace(/[^0-9:h.]/g, "");
+  const match = normalized.match(/^(\d{1,2})[:h.]?(\d{2})$/i);
   if (!match) return undefined;
   const hour = Number(match[1]);
   const minute = Number(match[2]);
@@ -139,7 +140,11 @@ function isInfoLine(value: string): boolean {
 }
 
 function extractCinemaBlocks(lines: string[]): string[][] {
-  const start = lines.findIndex((line) => /^no cinema$/i.test(line));
+  const start = lines.findIndex(
+    (line, index) =>
+      /^no cinema$/i.test(line) &&
+      /^próximas\s+estreias$/i.test(lines[index + 1] ?? ""),
+  );
   if (start < 0) return [];
 
   const blocks: string[][] = [];
@@ -156,10 +161,14 @@ function extractCinemaBlocks(lines: string[]): string[][] {
 
     // The live page has + INFO and COMPRAR as separate elements.
     // Treat COMPRAR as the block boundary so a film is emitted once.
+    if (/^comprar$/i.test(line) || /\+\s*info\s+comprar/i.test(line)) {
+      if (block.length) blocks.push(block);
+      block = [];
+      continue;
+    }
     if (isInfoLine(line)) {
       continue;
     }
-    if (/^comprar$/i.test(line) || /\+\s*info\s+comprar/i.test(line)) {
       if (block.length) blocks.push(block);
       block = [];
       continue;
