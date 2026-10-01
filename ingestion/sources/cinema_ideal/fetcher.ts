@@ -169,10 +169,6 @@ function extractCinemaBlocks(lines: string[]): string[][] {
     if (isInfoLine(line)) {
       continue;
     }
-      if (block.length) blocks.push(block);
-      block = [];
-      continue;
-    }
 
     block.push(line);
   }
