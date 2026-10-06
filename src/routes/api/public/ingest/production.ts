@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import { authenticateCronRequest } from "@/integrations/supabase/cron-auth";
-import { handleSourceIngest } from "@/lib/ingestion/handle-source-ingest";
+import { handleSourceIngest } from "@/routes/api/public/ingest/source.$sourceKey";
 
 type SourceResult = {
   source: string;

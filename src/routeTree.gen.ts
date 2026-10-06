@@ -16,6 +16,7 @@ import { Route as AdminIngestionRouteImport } from './routes/admin/ingestion'
 import { Route as EventosIdRouteImport } from './routes/eventos/$id'
 import { Route as FilmesIdRouteImport } from './routes/filmes/$id'
 import { Route as ApiPublicIngestCinematecaRouteImport } from './routes/api/public/ingest/cinemateca'
+import { Route as ApiPublicIngestProductionRouteImport } from './routes/api/public/ingest/production'
 import { Route as ApiAdminIngestSourceSourceKeyRouteImport } from './routes/api/admin/ingest/source.$sourceKey'
 import { Route as ApiInternalIngestSourceSourceKeyRouteImport } from './routes/api/internal/ingest/source.$sourceKey'
 import { Route as ApiPublicIngestSourceSourceKeyRouteImport } from './routes/api/public/ingest/source.$sourceKey'
@@ -56,6 +57,12 @@ const ApiPublicIngestCinematecaRoute =
     path: '/api/public/ingest/cinemateca',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicIngestProductionRoute =
+  ApiPublicIngestProductionRouteImport.update({
+    id: '/api/public/ingest/production',
+    path: '/api/public/ingest/production',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiAdminIngestSourceSourceKeyRoute =
   ApiAdminIngestSourceSourceKeyRouteImport.update({
     id: '/api/admin/ingest/source/$sourceKey',
@@ -83,6 +90,7 @@ export interface FileRoutesByFullPath {
   '/eventos/$id': typeof EventosIdRoute
   '/filmes/$id': typeof FilmesIdRoute
   '/api/public/ingest/cinemateca': typeof ApiPublicIngestCinematecaRoute
+  '/api/public/ingest/production': typeof ApiPublicIngestProductionRoute
   '/api/admin/ingest/source/$sourceKey': typeof ApiAdminIngestSourceSourceKeyRoute
   '/api/internal/ingest/source/$sourceKey': typeof ApiInternalIngestSourceSourceKeyRoute
   '/api/public/ingest/source/$sourceKey': typeof ApiPublicIngestSourceSourceKeyRoute
@@ -95,6 +103,7 @@ export interface FileRoutesByTo {
   '/eventos/$id': typeof EventosIdRoute
   '/filmes/$id': typeof FilmesIdRoute
   '/api/public/ingest/cinemateca': typeof ApiPublicIngestCinematecaRoute
+  '/api/public/ingest/production': typeof ApiPublicIngestProductionRoute
   '/api/admin/ingest/source/$sourceKey': typeof ApiAdminIngestSourceSourceKeyRoute
   '/api/internal/ingest/source/$sourceKey': typeof ApiInternalIngestSourceSourceKeyRoute
   '/api/public/ingest/source/$sourceKey': typeof ApiPublicIngestSourceSourceKeyRoute
@@ -108,6 +117,7 @@ export interface FileRoutesById {
   '/eventos/$id': typeof EventosIdRoute
   '/filmes/$id': typeof FilmesIdRoute
   '/api/public/ingest/cinemateca': typeof ApiPublicIngestCinematecaRoute
+  '/api/public/ingest/production': typeof ApiPublicIngestProductionRoute
   '/api/admin/ingest/source/$sourceKey': typeof ApiAdminIngestSourceSourceKeyRoute
   '/api/internal/ingest/source/$sourceKey': typeof ApiInternalIngestSourceSourceKeyRoute
   '/api/public/ingest/source/$sourceKey': typeof ApiPublicIngestSourceSourceKeyRoute
@@ -122,6 +132,7 @@ export interface FileRouteTypes {
     | '/eventos/$id'
     | '/filmes/$id'
     | '/api/public/ingest/cinemateca'
+    | '/api/public/ingest/production'
     | '/api/admin/ingest/source/$sourceKey'
     | '/api/internal/ingest/source/$sourceKey'
     | '/api/public/ingest/source/$sourceKey'
@@ -134,6 +145,7 @@ export interface FileRouteTypes {
     | '/eventos/$id'
     | '/filmes/$id'
     | '/api/public/ingest/cinemateca'
+    | '/api/public/ingest/production'
     | '/api/admin/ingest/source/$sourceKey'
     | '/api/internal/ingest/source/$sourceKey'
     | '/api/public/ingest/source/$sourceKey'
@@ -146,6 +158,7 @@ export interface FileRouteTypes {
     | '/eventos/$id'
     | '/filmes/$id'
     | '/api/public/ingest/cinemateca'
+    | '/api/public/ingest/production'
     | '/api/admin/ingest/source/$sourceKey'
     | '/api/internal/ingest/source/$sourceKey'
     | '/api/public/ingest/source/$sourceKey'
@@ -159,6 +172,7 @@ export interface RootRouteChildren {
   EventosIdRoute: typeof EventosIdRoute
   FilmesIdRoute: typeof FilmesIdRoute
   ApiPublicIngestCinematecaRoute: typeof ApiPublicIngestCinematecaRoute
+  ApiPublicIngestProductionRoute: typeof ApiPublicIngestProductionRoute
   ApiAdminIngestSourceSourceKeyRoute: typeof ApiAdminIngestSourceSourceKeyRoute
   ApiInternalIngestSourceSourceKeyRoute: typeof ApiInternalIngestSourceSourceKeyRoute
   ApiPublicIngestSourceSourceKeyRoute: typeof ApiPublicIngestSourceSourceKeyRoute
@@ -215,6 +229,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicIngestCinematecaRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/ingest/production': {
+      id: '/api/public/ingest/production'
+      path: '/api/public/ingest/production'
+      fullPath: '/api/public/ingest/production'
+      preLoaderRoute: typeof ApiPublicIngestProductionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/admin/ingest/source/$sourceKey': {
       id: '/api/admin/ingest/source/$sourceKey'
       path: '/api/admin/ingest/source/$sourceKey'
@@ -247,6 +268,7 @@ const rootRouteChildren: RootRouteChildren = {
   EventosIdRoute: EventosIdRoute,
   FilmesIdRoute: FilmesIdRoute,
   ApiPublicIngestCinematecaRoute: ApiPublicIngestCinematecaRoute,
+  ApiPublicIngestProductionRoute: ApiPublicIngestProductionRoute,
   ApiAdminIngestSourceSourceKeyRoute: ApiAdminIngestSourceSourceKeyRoute,
   ApiInternalIngestSourceSourceKeyRoute: ApiInternalIngestSourceSourceKeyRoute,
   ApiPublicIngestSourceSourceKeyRoute: ApiPublicIngestSourceSourceKeyRoute,
