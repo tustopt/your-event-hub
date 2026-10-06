@@ -114,27 +114,36 @@ function parseFilmPage(html: string, sourceUrl: string): {
 
   const metadataIndex = compact.indexOf(metadataMatch[0]);
   const beforeMetadata = compact.slice(0, metadataIndex).trim();
-  const beforeParts = beforeMetadata.split(/\s+/).filter(Boolean);
 
-  // The film title is immediately before the director/metadata block. Prefer
-  // the last known section as an anchor and otherwise use the text immediately
-  // before the director.
+  // The live page exposes the film title in the HTML <title>. Using it avoids
+  // confusing the final director surname with the film title.
+  const htmlTitleMatch = html.match(/<title[^>]*>([\\s\\S]*?)<\\/title>/i);
+  const htmlTitle = htmlTitleMatch
+    ? decodeHtml(htmlTitleMatch[1].replace(/<[^>]+>/g, " ").trim())
+        .split(/\\s+-\\s+doclisboa\\b/i)[0]
+        .trim()
+    : "";
+
+  const headingMatch = html.match(/<h1[^>]*>([\\s\\S]*?)<\\/h1>/i);
+  const headingTitle = headingMatch
+    ? decodeHtml(headingMatch[1].replace(/<[^>]+>/g, " ").trim())
+    : "";
+
   const section = SECTION_NAMES.find((name) => beforeMetadata.includes(name));
-  const sectionIndex = section ? beforeMetadata.lastIndexOf(section) + section.length : 0;
-  const candidate = beforeMetadata.slice(sectionIndex).trim();
-
-  const candidateParts = candidate.split(/\s+/).filter(Boolean);
-  const title = candidateParts.length
-    ? candidateParts[candidateParts.length - 1]
-    : beforeParts[beforeParts.length - 1];
+  const title = htmlTitle || headingTitle;
   if (!title) return undefined;
 
-  // Use the known live-page pattern: the director is the text between the
-  // title and the year/country/duration metadata.
+  // Locate the title occurrence immediately before the metadata block. This
+  // gives us the director text without accidentally including site navigation.
   const metadataStart = compact.indexOf(metadataMatch[1], metadataIndex);
-  const prefix = compact.slice(Math.max(0, metadataStart - 500), metadataStart).trim();
-  const directorMatch = prefix.match(/([^.!?]{3,150})$/);
-  const director = directorMatch?.[1]?.trim();
+  const titlePosition = compact.lastIndexOf(title, metadataStart);
+  const directorText =
+    titlePosition >= 0
+      ? compact.slice(titlePosition + title.length, metadataStart).trim()
+      : "";
+  const director = (section
+    ? directorText.replace(section, "").trim()
+    : directorText).trim();
 
   const sessions: Array<{ date: string; time: string; venue: string; durationMinutes?: number }> = [];
   const sessionRe =
