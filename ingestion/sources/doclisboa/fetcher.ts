@@ -111,12 +111,14 @@ function parseFilmPage(html: string, sourceUrl: string): {
   );
   if (metadataIndex < 0) return undefined;
 
-  const headingTexts = [...html.matchAll(/<h[1-4]\b[^>]*>([\s\S]*?)<\/h[1-4]>/gi)]
+  const metadataHtmlIndex = html.search(/<p\b[^>]*>\s*\d{4}\s+[^<]+\s+\d{1,4}[’']\s*<\/p>/i);
+  const headingSource = metadataHtmlIndex >= 0 ? html.slice(0, metadataHtmlIndex) : html;
+  const headingTexts = [...headingSource.matchAll(/<h[1-4]\b[^>]*>([\s\S]*?)<\/h[1-4]>/gi)]
     .map((match) => textContent(match[1]).replace(/\n/g, " ").trim())
     .filter(Boolean);
 
   const title = headingTexts.length
-    ? headingTexts[headingTexts.length >= 2 ? headingTexts.length - 1 : 0]
+    ? headingTexts[headingTexts.length - 1]
     : lines[metadataIndex - 2];
   if (!title) return undefined;
 
