@@ -138,13 +138,26 @@ function Index() {
               <p className="text-sm text-muted-foreground">A agenda será alimentada pelas fontes do DocuEvents.</p>
             </div>
 
-            <div className="mt-8 rounded-2xl border bg-card p-8 text-center">
-              <CalendarDays className="mx-auto size-8 text-muted-foreground" />
-              <h3 className="mt-4 font-semibold">A agenda está a ser preparada</h3>
-              <p className="mx-auto mt-2 max-w-lg text-sm leading-6 text-muted-foreground">
-                Os dados dos adaptadores de Cinemateca, Doclisboa, São Jorge, Fernando Lopes e RTP
-                serão apresentados aqui à medida que ligarmos a aplicação ao catálogo.
-              </p>
+            <div className="mt-8 rounded-2xl border bg-card p-8 sm:p-10">
+              <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+                <div className="max-w-2xl">
+                  <div className="flex size-11 items-center justify-center rounded-xl bg-muted">
+                    <CalendarDays className="size-5" />
+                  </div>
+                  <h3 className="mt-5 text-xl font-semibold">A programação real começa aqui</h3>
+                  <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                    A agenda reúne sessões, festivais e televisão documental provenientes das fontes
+                    já validadas. O catálogo vai crescer continuamente à medida que novas fontes forem
+                    integradas.
+                  </p>
+                </div>
+                <a
+                  href="/explorar"
+                  className="inline-flex shrink-0 items-center justify-center rounded-lg bg-primary px-5 py-3 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
+                >
+                  Explorar a agenda
+                </a>
+              </div>
             </div>
           </div>
         </section>
@@ -159,9 +172,15 @@ function Index() {
             </p>
           </div>
 
-          <div className="mt-8 flex flex-wrap gap-3">
+          <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
             {["Cinemateca Portuguesa", "Doclisboa", "Cinema São Jorge", "Cinema Fernando Lopes", "RTP"].map((source) => (
-              <span key={source} className="rounded-full border px-4 py-2 text-sm">{source}</span>
+              <div key={source} className="rounded-xl border bg-card px-4 py-4 text-sm">
+                <div className="flex items-center gap-2">
+                  <span className="size-2 rounded-full bg-primary" aria-hidden="true" />
+                  <span className="font-medium">{source}</span>
+                </div>
+                <p className="mt-2 text-xs text-muted-foreground">Fonte validada</p>
+              </div>
             ))}
           </div>
         </section>

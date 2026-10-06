@@ -29,6 +29,10 @@ export type SourceIngestResult = {
   failed: number;
   warnings: string[];
   errors: IngestItemError[];
+  imageCoverage: {
+    available: number;
+    missing: number;
+  };
   screenings?: ScreeningLike[];
   tvPrograms?: TVProgramLike[];
 };
@@ -116,6 +120,8 @@ export async function runSourceIngestion(
   const errors: IngestItemError[] = [];
   let processed = 0;
   let persisted = 0;
+  let imagesAvailable = 0;
+  let imagesMissing = 0;
 
   for (const [index, item] of items.entries()) {
     let lastItem: ScreeningLike | TVProgramLike | undefined;
@@ -125,6 +131,13 @@ export async function runSourceIngestion(
       warnings.push(...result.warnings);
 
       for (const parsedScreening of result.screenings) {
+        const films = Array.isArray(parsedScreening["films"])
+          ? (parsedScreening["films"] as Array<{ film?: { imageUrl?: unknown } }>)
+          : [];
+        for (const film of films) {
+          if (film.film?.imageUrl) imagesAvailable += 1;
+          else imagesMissing += 1;
+        }
         lastItem = parsedScreening;
         processed += 1;
         screenings.push(parsedScreening);
@@ -135,6 +148,8 @@ export async function runSourceIngestion(
       }
 
       for (const parsedProgram of result.tvPrograms ?? []) {
+        if (parsedProgram.imageUrl) imagesAvailable += 1;
+        else imagesMissing += 1;
         lastItem = parsedProgram;
         processed += 1;
         tvPrograms.push(parsedProgram);
@@ -161,6 +176,7 @@ export async function runSourceIngestion(
     persisted,
     failed: errors.length,
     warnings,
+    imageCoverage: { available: imagesAvailable, missing: imagesMissing },
     errors,
     ...(dryRun ? { screenings, tvPrograms } : {}),
   };

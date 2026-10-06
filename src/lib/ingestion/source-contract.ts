@@ -56,6 +56,7 @@ export type AdapterLike = {
 
 export type IngestionLibrary = {
   getSourceDefinition: (key: string) => SourceDefinitionLike | undefined;
+  getProductionSources: () => SourceDefinitionLike[];
   createProductionAdapterRegistry: () => ReadonlyMap<string, AdapterLike>;
   getSourceFetcher: (key: string, options?: Record<string, unknown>) => SourceFetcherLike;
   runSourcePipeline: unknown;
