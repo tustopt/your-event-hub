@@ -1,3 +1,4 @@
+import { extractSourceImageUrl } from "../../core/image-resolver";
 import type { DoclisboaFilmItem, DoclisboaProgrammeItem } from "./types";
 
 export const DOCLISBOA_SOURCE_KEY = "doclisboa";
@@ -81,7 +82,8 @@ function extractFilmLinks(html: string, baseUrl: string): string[] {
       const url = new URL(href, baseUrl);
       if (
         url.hostname === "doclisboa.org" &&
-        /^\/filmes\/[^/]+\/?$/i.test(url.pathname)
+        /^\/filmes\/[^/]+\/?$/i.test(url.pathname) &&
+        !/^\/filmes\/movie\.link\/?$/i.test(url.pathname)
       ) {
         links.add(url.toString().replace(/\/$/, "/"));
       }
@@ -156,6 +158,7 @@ function parseFilmPage(html: string, sourceUrl: string): {
       year: Number(metadata[1]),
       country: metadata[2].trim(),
       durationMinutes: Number(metadata[3]),
+      imageUrl: extractSourceImageUrl(html, sourceUrl),
     },
     section,
     sessions,
