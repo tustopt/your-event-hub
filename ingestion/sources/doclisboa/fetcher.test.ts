@@ -11,6 +11,7 @@ describe("Doclisboa website fetcher", () => {
       <html><body>
         <a href="/filmes/13-alfinetes/">13 Alfinetes</a>
         <a href="/filmes/last-movies/">Last Movies</a>
+        <a href="/filmes/movie.link">placeholder</a>
         <a href="/filmes/">Filmes</a>
       </body></html>
     `;
@@ -18,6 +19,7 @@ describe("Doclisboa website fetcher", () => {
     const pages: Record<string, string> = {
       "https://doclisboa.org/filmes/13-alfinetes/": `
         <h2>Competição Internacional</h2>
+        <meta property="og:image" content="/wp-content/uploads/13-alfinetes.jpg">
         <h1>13 Alfinetes</h1>
         <p>João Pedro Rodrigues, João Rui Guerra da Mata</p>
         <p>2026 Portugal 61’</p>
@@ -64,6 +66,7 @@ describe("Doclisboa website fetcher", () => {
       time: "21:30",
       venue: "Culturgest - Auditório Emílio Rui Vilar",
       director: "João Pedro Rodrigues, João Rui Guerra da Mata",
+      imageUrl: "https://doclisboa.org/wp-content/uploads/13-alfinetes.jpg",
       section: "Competição Internacional",
       durationMinutes: 61,
     });
