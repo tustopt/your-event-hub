@@ -32,11 +32,47 @@ const defaultDeps: Deps = {
   createPersist: async () => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     return async (screening, sourceKey) => {
-      const { error } = await supabaseAdmin.rpc("ingest_screening", {
+      const { data: ingestResult, error } = await supabaseAdmin.rpc("ingest_screening", {
         p_source_key: sourceKey,
         p_screening: screening,
       } as never);
       if (error) throw new Error(error.message);
+
+      // The existing ingestion RPC creates/resolves the film and screening.
+      // Persist the already-resolved source image onto films.poster_url
+      // without changing the established ingestion contract.
+      const screeningId =
+        ingestResult && typeof ingestResult === "object" && "screeningId" in ingestResult
+          ? (ingestResult as { screeningId?: unknown }).screeningId
+          : undefined;
+      const films = Array.isArray(screening["films"])
+        ? (screening["films"] as Array<{ film?: { imageUrl?: unknown } }>)
+        : [];
+
+      if (typeof screeningId === "string" && films.length > 0) {
+        const { data: screeningFilms, error: screeningFilmsError } = await supabaseAdmin
+          .from("screening_films")
+          .select("film_id,position,films(id,poster_url)")
+          .eq("screening_id", screeningId)
+          .order("position", { ascending: true });
+
+        if (screeningFilmsError) throw new Error(screeningFilmsError.message);
+
+        for (const [index, relation] of (screeningFilms ?? []).entries()) {
+          const imageUrl = films[index]?.film?.imageUrl;
+          if (typeof imageUrl !== "string" || imageUrl.trim() === "") continue;
+
+          const filmRecord = Array.isArray(relation.films) ? relation.films[0] : relation.films;
+          if (!filmRecord || filmRecord.poster_url) continue;
+
+          const { error: imageError } = await supabaseAdmin
+            .from("films")
+            .update({ poster_url: imageUrl })
+            .eq("id", relation.film_id);
+
+          if (imageError) throw new Error(imageError.message);
+        }
+      }
 
       if (screening["festivalKey"] && screening["festivalEditionYear"]) {
         const externalId = screening.provenance?.sourceExternalId;
