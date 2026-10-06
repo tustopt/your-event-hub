@@ -143,9 +143,14 @@ function parseFilmPage(html: string, sourceUrl: string): {
     if (!month) continue;
 
     const after = compact.slice((match.index ?? 0) + match[0].length);
-    const nextSession = after.search(/\s+\d{1,2}\s+(?:Jan|Fev|Mar|Abr|Mai|Jun|Jul|Ago|Set|Out|Nov|Dez)\s*\/\s*\d{1,2}:\d{2}/i);
-    const chunk = after.slice(0, nextSession >= 0 ? nextSession : 250);
-    const venueMatch = chunk.match(/\b(Culturgest(?:\s*-\s*[^.]{0,100})?|Cinema\s+[^.]{2,100}|Cinemateca(?:\s*-\s*[^.]{0,100})?)\b/i);
+    const day = Number(match[1]);
+    // Doclisboa 2026 runs from 15 to 25 October. Other dates visible on the
+    // page belong to related/site content, not festival screenings.
+    if (month !== 10 || day < 15 || day > 25) continue;
+
+    const venueMatch = after.match(
+      /\b(Culturgest(?:\s*-\s*(?:Auditório Emílio Rui Vilar|Pequeno Auditório))?|Cinema São Jorge(?:\s*-\s*Sala\s+[A-Za-z0-9]+)?|Cinema Ideal|Cinemateca(?:\s*-\s*[^.]{0,80})?)\b/i,
+    );
     const venue = venueMatch?.[1]?.trim();
     if (!venue) continue;
 
