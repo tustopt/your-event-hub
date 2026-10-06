@@ -46,7 +46,8 @@ function decodeHtml(value: string): string {
 function textContent(value: string): string {
   return decodeHtml(
     value
-      .replace(/<script[\s\S]*?<\/script>/gi, " ")
+      // Keep script contents: the live Doclisboa page embeds some programme
+      // data in its client-side markup/data attributes.
       .replace(/<style[\s\S]*?<\/style>/gi, " ")
       .replace(/<br\s*\/?>/gi, "\n")
       .replace(/<\/?(?:p|div|li|ul|ol|section|article|main|header|footer|h[1-6]|button)[^>]*>/gi, "\n")
@@ -166,6 +167,37 @@ function parseFilmPage(html: string, sourceUrl: string): {
       venue: resolvedVenue,
       durationMinutes: Number(match[5]),
     });
+  }
+
+  if (!sessions.length) {
+    // Some live pages embed the session list in script/data markup rather than
+    // visible HTML nodes. Fall back to a tag-stripped representation that
+    // preserves script contents.
+    const embeddedText = decodeHtml(
+      html
+        .replace(/<style[\s\S]*?<\/style>/gi, " ")
+        .replace(/<[^>]+>/g, " "),
+    ).replace(/\s+/g, " ").trim();
+
+    const embeddedSessionRe =
+      /(\d{1,2})\s+(Jan|Fev|Mar|Abr|Mai|Jun|Jul|Ago|Set|Out|Nov|Dez)\s*\/\s*(\d{1,2}):(\d{2})\s*\/\s*(\d{1,4})[’']/gi;
+
+    for (const match of embeddedText.matchAll(embeddedSessionRe)) {
+      const month = MONTHS[match[2].toLowerCase()];
+      if (!month) continue;
+
+      const after = embeddedText.slice((match.index ?? 0) + match[0].length, (match.index ?? 0) + match[0].length + 500);
+      const venueMatch = after.match(/(Culturgest[^|{}\[\]]+|Cinema [^|{}\[\]]+|Cinemateca[^|{}\[\]]+)/i);
+      const venue = venueMatch?.[1]?.trim();
+      if (!venue) continue;
+
+      sessions.push({
+        date: `${DOCLISBOA_EDITION_YEAR}-${String(month).padStart(2, "0")}-${String(Number(match[1])).padStart(2, "0")}`,
+        time: `${String(Number(match[3])).padStart(2, "0")}:${match[4]}`,
+        venue,
+        durationMinutes: Number(match[5]),
+      });
+    }
   }
 
   if (!sessions.length) return undefined;
