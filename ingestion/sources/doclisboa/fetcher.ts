@@ -49,7 +49,7 @@ function textContent(value: string): string {
       .replace(/<script[\s\S]*?<\/script>/gi, " ")
       .replace(/<style[\s\S]*?<\/style>/gi, " ")
       .replace(/<br\s*\/?>/gi, "\n")
-      .replace(/<\/(?:p|div|li|ul|ol|section|article|h[1-6])>/gi, "\n")
+      .replace(/<\/?(?:p|div|li|ul|ol|section|article|main|header|footer|h[1-6]|button)[^>]*>/gi, "\n")
       .replace(/<[^>]+>/g, " "),
   )
     .replace(/\r/g, "")
@@ -107,7 +107,7 @@ function parseFilmPage(html: string, sourceUrl: string): {
   // titles. Locate the metadata first, then derive the title from the heading
   // immediately preceding the film metadata.
   const metadataIndex = lines.findIndex((line) =>
-    /^(\d{4})\s+.+\s+\d{1,4}[’']$/.test(line),
+    /^(?:19|20)\\d{2}\\s+.+?\\s+\\d{1,4}[’']$/.test(line),
   );
   if (metadataIndex < 0) return undefined;
 
@@ -134,7 +134,7 @@ function parseFilmPage(html: string, sourceUrl: string): {
     lines.slice(Math.max(0, titleIndex - 5), titleIndex).includes(name),
   );
 
-  const sessionsIndex = lines.findIndex((line, index) => index > metadataIndex && line === "Sessões");
+  const sessionsIndex = lines.findIndex((line, index) => index > metadataIndex && /^Sess(?:ões|oes)$/i.test(line));
   const sessionLines = sessionsIndex >= 0 ? lines.slice(sessionsIndex + 1) : [];
 
   const sessions: Array<{ date: string; time: string; venue: string; durationMinutes?: number }> = [];
@@ -234,6 +234,12 @@ export async function fetchDoclisboaProgramme(
         });
       }
     }
+  }
+
+  if (!items.length) {
+    throw new Error(
+      `Doclisboa catalogue returned ${filmUrls.length} film links but no parseable screenings`,
+    );
   }
 
   return items;
