@@ -103,44 +103,46 @@ function parseFilmPage(html: string, sourceUrl: string): {
   const body = textContent(html);
   const lines = body.split("\n").map((line) => line.trim()).filter(Boolean);
 
-  // The live Doclisboa template has used different heading levels for film
-  // titles. Locate the metadata first, then derive the title from the heading
-  // immediately preceding the film metadata.
+  // Current Doclisboa pages expose the film metadata as plain text:
+  // title, director, "2026 Country Duration’", followed later by
+  // session entries. Keep the parser independent of heading levels.
   const metadataIndex = lines.findIndex((line) =>
     /^(?:19|20)\d{2}\s+.+?\s+\d{1,4}[’']$/.test(line),
   );
   if (metadataIndex < 0) return undefined;
 
-  const metadataHtmlIndex = html.search(/<p\b[^>]*>\s*\d{4}\s+[^<]+\s+\d{1,4}[’']\s*<\/p>/i);
-  const headingSource = metadataHtmlIndex >= 0 ? html.slice(0, metadataHtmlIndex) : html;
-  const headingTexts = [...headingSource.matchAll(/<h[1-4]\b[^>]*>([\s\S]*?)<\/h[1-4]>/gi)]
-    .map((match) => textContent(match[1]).replace(/\n/g, " ").trim())
-    .filter(Boolean);
-
-  const title = headingTexts.length
-    ? headingTexts[headingTexts.length - 1]
-    : lines[metadataIndex - 2];
-  if (!title) return undefined;
-
-  const titleIndex = lines.findIndex((line, index) => index < metadataIndex && line === title);
-
-  const metadata = lines[metadataIndex].match(/^(\d{4})\s+(.+?)\s+(\d{1,4})[’']$/);
+  const metadata = lines[metadataIndex].match(
+    /^(\d{4})\s+(.+?)\s+(\d{1,4})[’']$/,
+  );
   if (!metadata) return undefined;
 
-  const directorLines = lines.slice(titleIndex + 1, metadataIndex)
-    .filter((line) => !/^Image:/i.test(line));
-  const director = directorLines.join(", ") || undefined;
+  const title =
+    lines.slice(0, metadataIndex).find((line) =>
+      line === "13 Alfinetes" || line.length > 2
+    ) ?? lines[metadataIndex - 2];
+  if (!title) return undefined;
+
+  // On the live template the director is the line immediately before the
+  // year/country/duration metadata in normal film pages.
+  const director = lines[metadataIndex - 1] &&
+    !SECTION_NAMES.includes(lines[metadataIndex - 1])
+      ? lines[metadataIndex - 1]
+      : undefined;
+
   const section = SECTION_NAMES.find((name) =>
-    lines.slice(Math.max(0, titleIndex - 5), titleIndex).includes(name),
+    lines.slice(Math.max(0, metadataIndex - 4), metadataIndex).includes(name),
   );
 
-  const sessions: Array<{ date: string; time: string; venue: string; durationMinutes?: number }> = [];
-  const sessionRe =
-    /^(?:\S+\s+)?(\d{1,2})\s+(Jan|Fev|Mar|Abr|Mai|Jun|Jul|Ago|Set|Out|Nov|Dez)\s*\/\s*(\d{1,2}):(\d{2})\s*\/\s*(\d{1,4})[’']$/i;
+  const sessions: Array<{
+    date: string;
+    time: string;
+    venue: string;
+    durationMinutes?: number;
+  }> = [];
 
-  // Session blocks are present in the live page body, but their surrounding
-  // heading/container markup has changed between site versions. Do not depend
-  // on the "Sessões" heading; scan the normalized page lines directly.
+  const sessionRe =
+    /(?:^|\s)(\d{1,2})\s+(Jan|Fev|Mar|Abr|Mai|Jun|Jul|Ago|Set|Out|Nov|Dez)\s*\/\s*(\d{1,2}):(\d{2})\s*\/\s*(\d{1,4})[’']/i;
+
   for (let i = metadataIndex + 1; i < lines.length; i += 1) {
     const match = lines[i].match(sessionRe);
     if (!match) continue;
@@ -149,15 +151,24 @@ function parseFilmPage(html: string, sourceUrl: string): {
     if (!month) continue;
 
     const venue = lines[i + 1];
-    if (!venue || /^Bilhete$/i.test(venue) || /^Image:/i.test(venue)) continue;
+    if (!venue) continue;
+
+    // Skip UI/navigation noise and look for the actual venue.
+    const venueIndex = /^Bilhete$/i.test(venue) || /^Image:/i.test(venue)
+      ? i + 2
+      : i + 1;
+    const resolvedVenue = lines[venueIndex];
+    if (!resolvedVenue) continue;
 
     sessions.push({
       date: `${DOCLISBOA_EDITION_YEAR}-${String(month).padStart(2, "0")}-${String(Number(match[1])).padStart(2, "0")}`,
       time: `${String(Number(match[3])).padStart(2, "0")}:${match[4]}`,
-      venue,
+      venue: resolvedVenue,
       durationMinutes: Number(match[5]),
     });
   }
+
+  if (!sessions.length) return undefined;
 
   return {
     film: {
