@@ -66,10 +66,10 @@ describe("Doclisboa website fetcher", () => {
       time: "21:30",
       venue: "Culturgest - Auditório Emílio Rui Vilar",
       director: "João Pedro Rodrigues, João Rui Guerra da Mata",
-      imageUrl: "https://doclisboa.org/wp-content/uploads/13-alfinetes.jpg",
       section: "Competição Internacional",
       durationMinutes: 61,
     });
+    expect(items[0].films[0].imageUrl).toBe("https://doclisboa.org/wp-content/uploads/13-alfinetes.jpg");
     expect(items[1].sourceUrl).toBe("https://doclisboa.org/filmes/13-alfinetes/");
     expect(items[2]).toMatchObject({
       title: "Last Movies",
