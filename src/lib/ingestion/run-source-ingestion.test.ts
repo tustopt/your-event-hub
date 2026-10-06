@@ -20,7 +20,7 @@ describe("runSourceIngestion image coverage", () => {
                 ],
               },
             ],
-            tvPrograms: [{ imageUrl: "https://example.com/tv.jpg" }, { imageUrl: undefined }],
+            tvPrograms: [{ imageUrl: "https://example.com/tv.jpg", provenance: {} }, { imageUrl: undefined, provenance: {} }],
             warnings: [],
           }),
         },
