@@ -134,15 +134,15 @@ function parseFilmPage(html: string, sourceUrl: string): {
     lines.slice(Math.max(0, titleIndex - 5), titleIndex).includes(name),
   );
 
-  const sessionsIndex = lines.findIndex((line, index) => index > metadataIndex && /^Sess(?:ões|oes)$/i.test(line));
-  const sessionLines = sessionsIndex >= 0 ? lines.slice(sessionsIndex + 1) : [];
-
   const sessions: Array<{ date: string; time: string; venue: string; durationMinutes?: number }> = [];
   const sessionRe =
     /^(?:\S+\s+)?(\d{1,2})\s+(Jan|Fev|Mar|Abr|Mai|Jun|Jul|Ago|Set|Out|Nov|Dez)\s*\/\s*(\d{1,2}):(\d{2})\s*\/\s*(\d{1,4})[’']$/i;
 
-  for (let i = 0; i < sessionLines.length; i += 1) {
-    const match = sessionLines[i].match(sessionRe);
+  // Session blocks are present in the live page body, but their surrounding
+  // heading/container markup has changed between site versions. Do not depend
+  // on the "Sessões" heading; scan the normalized page lines directly.
+  for (let i = metadataIndex + 1; i < lines.length; i += 1) {
+    const match = lines[i].match(sessionRe);
     if (!match) continue;
 
     const month = MONTHS[match[2].toLowerCase()];
