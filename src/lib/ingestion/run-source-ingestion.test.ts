@@ -36,7 +36,7 @@ describe("runSourceIngestion image coverage", () => {
     );
 
     expect(result.imageCoverage).toEqual({ available: 2, missing: 2 });
-    expect(result.processed).toBe(2);
-    expect(result.persisted).toBe(2);
+    expect(result.processed).toBe(3);
+    expect(result.persisted).toBe(3);
   });
 });
