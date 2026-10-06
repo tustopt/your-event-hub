@@ -69,10 +69,10 @@ export const sourceRegistry: readonly SourceDefinition[] = [
     languageCode: "pt",
     status: "production",
     adapterKey: "doclisboa",
-    canonicalUrl: "https://doclisboa.org/seccoes/",
+    canonicalUrl: "https://doclisboa.org/filmes/",
     fetchIntervalMinutes: 360,
     description:
-      "Candidate festival source. Edition-aware ingestion for Doclisboa programme, screenings and festival venues.",
+      "Doclisboa 2026 film catalogue and screening sessions.",
   },
   {
     key: "cinema_ideal",
