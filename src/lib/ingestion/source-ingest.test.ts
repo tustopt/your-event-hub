@@ -51,6 +51,7 @@ function makeLibrary(
                 : { adapterKey: overrides.adapterKey }
               : { adapterKey: "cinemateca_pt" }),
           },
+    getProductionSources: () => [],
     createProductionAdapterRegistry: () => new Map([[adapter.key, adapter]]),
     getSourceFetcher: (sourceKey: string) => {
       if (overrides.noFetcher) throw new Error(`No fetcher implemented for source: ${sourceKey}`);

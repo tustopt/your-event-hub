@@ -900,6 +900,7 @@ export type Database = {
           film_id: string | null
           genre: string | null
           id: string
+          image_url: string | null
           season: number | null
           series_title: string | null
           source_external_id: string | null
@@ -920,6 +921,7 @@ export type Database = {
           film_id?: string | null
           genre?: string | null
           id?: string
+          image_url?: string | null
           season?: number | null
           series_title?: string | null
           source_external_id?: string | null
@@ -940,6 +942,7 @@ export type Database = {
           film_id?: string | null
           genre?: string | null
           id?: string
+          image_url?: string | null
           season?: number | null
           series_title?: string | null
           source_external_id?: string | null
