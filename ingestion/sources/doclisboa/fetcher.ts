@@ -102,102 +102,59 @@ function parseFilmPage(html: string, sourceUrl: string): {
   sessions: Array<{ date: string; time: string; venue: string; durationMinutes?: number }>;
 } | undefined {
   const body = textContent(html);
-  const lines = body.split("\n").map((line) => line.trim()).filter(Boolean);
+  const compact = body.replace(/\s+/g, " ").trim();
 
-  // Current Doclisboa pages expose the film metadata as plain text:
-  // title, director, "2026 Country Duration’", followed later by
-  // session entries. Keep the parser independent of heading levels.
-  const metadataIndex = lines.findIndex((line) =>
-    /^(?:19|20)\d{2}\s+.+?\s+\d{1,4}[’']$/.test(line),
+  // The live site can concatenate several visual blocks into one text line.
+  // Parse the metadata and sessions from the normalized document text rather
+  // than depending on HTML block boundaries.
+  const metadataMatch = compact.match(
+    /(?:^|\s)((?:19|20)\d{2})\s+([^\d]+?)\s+(\d{1,4})[’']/,
   );
-  if (metadataIndex < 0) return undefined;
+  if (!metadataMatch) return undefined;
 
-  const metadata = lines[metadataIndex].match(
-    /^(\d{4})\s+(.+?)\s+(\d{1,4})[’']$/,
-  );
-  if (!metadata) return undefined;
+  const metadataIndex = compact.indexOf(metadataMatch[0]);
+  const beforeMetadata = compact.slice(0, metadataIndex).trim();
+  const beforeParts = beforeMetadata.split(/\s+/).filter(Boolean);
 
-  const title =
-    lines.slice(0, metadataIndex).find((line) =>
-      line === "13 Alfinetes" || line.length > 2
-    ) ?? lines[metadataIndex - 2];
+  // The film title is immediately before the director/metadata block. Prefer
+  // the last known section as an anchor and otherwise use the text immediately
+  // before the director.
+  const section = SECTION_NAMES.find((name) => beforeMetadata.includes(name));
+  const sectionIndex = section ? beforeMetadata.lastIndexOf(section) + section.length : 0;
+  const candidate = beforeMetadata.slice(sectionIndex).trim();
+
+  const candidateParts = candidate.split(/\s+/).filter(Boolean);
+  const title = candidateParts.length
+    ? candidateParts[candidateParts.length - 1]
+    : beforeParts[beforeParts.length - 1];
   if (!title) return undefined;
 
-  // On the live template the director is the line immediately before the
-  // year/country/duration metadata in normal film pages.
-  const director = lines[metadataIndex - 1] &&
-    !SECTION_NAMES.includes(lines[metadataIndex - 1])
-      ? lines[metadataIndex - 1]
-      : undefined;
+  // Use the known live-page pattern: the director is the text between the
+  // title and the year/country/duration metadata.
+  const metadataStart = compact.indexOf(metadataMatch[1], metadataIndex);
+  const prefix = compact.slice(Math.max(0, metadataStart - 500), metadataStart).trim();
+  const directorMatch = prefix.match(/([^.!?]{3,150})$/);
+  const director = directorMatch?.[1]?.trim();
 
-  const section = SECTION_NAMES.find((name) =>
-    lines.slice(Math.max(0, metadataIndex - 4), metadataIndex).includes(name),
-  );
-
-  const sessions: Array<{
-    date: string;
-    time: string;
-    venue: string;
-    durationMinutes?: number;
-  }> = [];
-
+  const sessions: Array<{ date: string; time: string; venue: string; durationMinutes?: number }> = [];
   const sessionRe =
-    /(?:^|\s)(\d{1,2})\s+(Jan|Fev|Mar|Abr|Mai|Jun|Jul|Ago|Set|Out|Nov|Dez)\s*\/\s*(\d{1,2}):(\d{2})\s*\/\s*(\d{1,4})[’']/i;
+    /(\d{1,2})\s+(Jan|Fev|Mar|Abr|Mai|Jun|Jul|Ago|Set|Out|Nov|Dez)\s*\/\s*(\d{1,2}):(\d{2})\s*\/\s*(\d{1,4})[’']/gi;
 
-  for (let i = metadataIndex + 1; i < lines.length; i += 1) {
-    const match = lines[i].match(sessionRe);
-    if (!match) continue;
-
+  for (const match of compact.matchAll(sessionRe)) {
     const month = MONTHS[match[2].toLowerCase()];
     if (!month) continue;
 
-    const venue = lines[i + 1];
+    const after = compact.slice((match.index ?? 0) + match[0].length);
+    const venueMatch = after.match(/^\s*(?:[^0-9]{0,120}?)?(Culturgest[^.]{0,120}?|Cinema [^.]{0,120}?|Cinemateca[^.]{0,120}?)(?=\s+(?:\d{1,2}\s+(?:Jan|Fev|Mar|Abr|Mai|Jun|Jul|Ago|Set|Out|Nov|Dez)|$))/i);
+    const venue = venueMatch?.[1]?.trim();
     if (!venue) continue;
-
-    // Skip UI/navigation noise and look for the actual venue.
-    const venueIndex = /^Bilhete$/i.test(venue) || /^Image:/i.test(venue)
-      ? i + 2
-      : i + 1;
-    const resolvedVenue = lines[venueIndex];
-    if (!resolvedVenue) continue;
 
     sessions.push({
       date: `${DOCLISBOA_EDITION_YEAR}-${String(month).padStart(2, "0")}-${String(Number(match[1])).padStart(2, "0")}`,
       time: `${String(Number(match[3])).padStart(2, "0")}:${match[4]}`,
-      venue: resolvedVenue,
+      venue,
       durationMinutes: Number(match[5]),
     });
-  }
-
-  if (!sessions.length) {
-    // Some live pages embed the session list in script/data markup rather than
-    // visible HTML nodes. Fall back to a tag-stripped representation that
-    // preserves script contents.
-    const embeddedText = decodeHtml(
-      html
-        .replace(/<style[\s\S]*?<\/style>/gi, " ")
-        .replace(/<[^>]+>/g, " "),
-    ).replace(/\s+/g, " ").trim();
-
-    const embeddedSessionRe =
-      /(\d{1,2})\s+(Jan|Fev|Mar|Abr|Mai|Jun|Jul|Ago|Set|Out|Nov|Dez)\s*\/\s*(\d{1,2}):(\d{2})\s*\/\s*(\d{1,4})[’']/gi;
-
-    for (const match of embeddedText.matchAll(embeddedSessionRe)) {
-      const month = MONTHS[match[2].toLowerCase()];
-      if (!month) continue;
-
-      const after = embeddedText.slice((match.index ?? 0) + match[0].length, (match.index ?? 0) + match[0].length + 500);
-      const venueMatch = after.match(/(Culturgest[^|{}\[\]]+|Cinema [^|{}\[\]]+|Cinemateca[^|{}\[\]]+)/i);
-      const venue = venueMatch?.[1]?.trim();
-      if (!venue) continue;
-
-      sessions.push({
-        date: `${DOCLISBOA_EDITION_YEAR}-${String(month).padStart(2, "0")}-${String(Number(match[1])).padStart(2, "0")}`,
-        time: `${String(Number(match[3])).padStart(2, "0")}:${match[4]}`,
-        venue,
-        durationMinutes: Number(match[5]),
-      });
-    }
   }
 
   if (!sessions.length) return undefined;
@@ -206,9 +163,9 @@ function parseFilmPage(html: string, sourceUrl: string): {
     film: {
       title,
       director,
-      year: Number(metadata[1]),
-      country: metadata[2].trim(),
-      durationMinutes: Number(metadata[3]),
+      year: Number(metadataMatch[1]),
+      country: metadataMatch[2].trim(),
+      durationMinutes: Number(metadataMatch[3]),
       imageUrl: extractSourceImageUrl(html, sourceUrl),
     },
     section,
