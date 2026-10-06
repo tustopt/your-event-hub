@@ -130,6 +130,7 @@ function stubLibrary(): IngestionLibrary {
   return {
     getSourceDefinition: (key: string) =>
       ({ key, name: "Stub", status: "production", adapterKey: "cinemateca_pt" }) as never,
+    getProductionSources: () => [],
     createProductionAdapterRegistry: () =>
       new Map([
         [

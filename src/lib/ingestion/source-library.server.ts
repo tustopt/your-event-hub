@@ -12,6 +12,7 @@ export class IngestionLibraryUnavailableError extends Error {
 
 const REQUIRED = [
   "getSourceDefinition",
+  "getProductionSources",
   "createProductionAdapterRegistry",
   "getSourceFetcher",
   "runSourcePipeline",
