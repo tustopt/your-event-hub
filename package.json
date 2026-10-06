@@ -17,7 +17,8 @@
     "typecheck:ingestion": "tsc --noEmit -p tsconfig.ingestion.json",
     "ingest:cinema:diagnostic": "tsx ingestion/runners/cinema-live-diagnostic.ts",
     "ingest:cinema:ideal:source-diagnostic": "tsx ingestion/runners/cinema-ideal-source-diagnostic.ts",
-    "ingest:production:batch": "tsx ingestion/runners/production-batch-cli.ts"
+    "ingest:production:batch": "tsx ingestion/runners/production-batch-cli.ts",
+    "ingest:production:local-dry-run": "tsx ingestion/runners/production-local-dry-run.ts"
   },
   "overrides": {
     "rolldown": "1.2.1"
