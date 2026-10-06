@@ -41,3 +41,5 @@ console.log(JSON.stringify(payload, null, 2));
 if (!response.ok && response.status !== 207) {
   process.exitCode = 1;
 }
+
+export {};
