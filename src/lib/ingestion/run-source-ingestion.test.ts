@@ -15,8 +15,8 @@ describe("runSourceIngestion image coverage", () => {
             screenings: [
               {
                 films: [
-                  { film: { imageUrl: "https://example.com/poster.jpg" } },
-                  { film: {} },
+                  { film: { imageUrl: "https://example.com/poster.jpg", provenance: {} } },
+                  { film: { provenance: {} } },
                 ],
               },
             ],
