@@ -284,8 +284,11 @@ export async function fetchDoclisboaProgramme(
     let diagnostic = "";
     try {
       const firstHtml = await fetchText(fetchImpl, firstUrl);
-      const diagnosticText = textContent(firstHtml).slice(0, 800).replace(/\s+/g, " ").trim();
-      diagnostic = ` First page ${firstUrl} returned ${firstHtml.length} HTML chars; text starts: ${JSON.stringify(diagnosticText)}`;
+      const diagnosticBody = textContent(firstHtml);
+      const diagnosticLines = diagnosticBody.split("\n").filter(Boolean);
+      const metadataLines = diagnosticLines.filter((line) => /^(?:19|20)\\d{2}\\s+.+?\\s+\\d{1,4}[’']$/.test(line)).slice(0, 3);
+      const sessionCandidates = diagnosticLines.filter((line) => /\\d{1,2}\\s+(?:Jan|Fev|Mar|Abr|Mai|Jun|Jul|Ago|Set|Out|Nov|Dez)\\s*\\/\\s*\\d{1,2}:\\d{2}\\s*\\/\\s*\\d{1,4}[’']/i.test(line)).slice(0, 5);
+      diagnostic = ` First page ${firstUrl} returned ${firstHtml.length} HTML chars; lines=${diagnosticLines.length}; metadata=${JSON.stringify(metadataLines)}; sessionCandidates=${JSON.stringify(sessionCandidates)}; containsSessões=${/Sessões/i.test(diagnosticBody)}; contains20Out=${/20 Out/i.test(diagnosticBody)}`;
     } catch (error) {
       diagnostic = ` First page fetch failed: ${error instanceof Error ? error.message : String(error)}`;
     }
