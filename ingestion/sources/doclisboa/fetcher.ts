@@ -100,21 +100,27 @@ function parseFilmPage(html: string, sourceUrl: string): {
   section?: string;
   sessions: Array<{ date: string; time: string; venue: string; durationMinutes?: number }>;
 } | undefined {
-  const h1 = html.match(/<h1\b[^>]*>([\s\S]*?)<\/h1>/i);
-  const title = h1 ? textContent(h1[1]).replace(/\n/g, " ").trim() : "";
-  if (!title) return undefined;
-
   const body = textContent(html);
   const lines = body.split("\n").map((line) => line.trim()).filter(Boolean);
-  const titleIndex = lines.findIndex((line) => line === title);
 
-  const metadataIndex = lines.findIndex(
-    (line, index) =>
-      index >= Math.max(0, titleIndex) &&
-      /^(\d{4})\s+.+\s+\d{1,4}[’']$/.test(line),
+  // The live Doclisboa template has used different heading levels for film
+  // titles. Locate the metadata first, then derive the title from the heading
+  // immediately preceding the film metadata.
+  const metadataIndex = lines.findIndex((line) =>
+    /^(\d{4})\s+.+\s+\d{1,4}[’']$/.test(line),
   );
-
   if (metadataIndex < 0) return undefined;
+
+  const headingTexts = [...html.matchAll(/<h[1-4]\b[^>]*>([\s\S]*?)<\/h[1-4]>/gi)]
+    .map((match) => textContent(match[1]).replace(/\n/g, " ").trim())
+    .filter(Boolean);
+
+  const title = headingTexts.length
+    ? headingTexts[headingTexts.length >= 2 ? headingTexts.length - 1 : 0]
+    : lines[metadataIndex - 2];
+  if (!title) return undefined;
+
+  const titleIndex = lines.findIndex((line, index) => index < metadataIndex && line === title);
 
   const metadata = lines[metadataIndex].match(/^(\d{4})\s+(.+?)\s+(\d{1,4})[’']$/);
   if (!metadata) return undefined;
