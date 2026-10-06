@@ -148,7 +148,7 @@ function parseFilmPage(html: string, sourceUrl: string): {
     const month = MONTHS[match[2].toLowerCase()];
     if (!month) continue;
 
-    const venue = sessionLines[i + 1];
+    const venue = lines[i + 1];
     if (!venue || /^Bilhete$/i.test(venue) || /^Image:/i.test(venue)) continue;
 
     sessions.push({
