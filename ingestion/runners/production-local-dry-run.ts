@@ -43,7 +43,30 @@ async function main(): Promise<void> {
       now: () => new Date(),
     });
 
-    const raw = await fetcher.fetch();
+    let raw: readonly unknown[];
+    try {
+      raw = await fetcher.fetch();
+    } catch (error) {
+      results.push({
+        source: sourceKey,
+        name: definition.name,
+        fetched: 0,
+        screenings: 0,
+        tvPrograms: 0,
+        imagesAvailable: 0,
+        imagesMissing: 0,
+        warnings: 0,
+        failed: 1,
+        errors: [
+          {
+            index: -1,
+            message: error instanceof Error ? error.message : String(error),
+          },
+        ],
+      });
+      continue;
+    }
+
     const items = limit === undefined ? raw : raw.slice(0, limit);
     let screenings = 0;
     let tvPrograms = 0;
