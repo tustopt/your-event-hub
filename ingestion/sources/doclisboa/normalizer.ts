@@ -45,6 +45,7 @@ function normalizeFilm(item: DoclisboaFilmItem, sourceExternalId: string, source
     year: item.year,
     durationMinutes: item.durationMinutes,
     synopsis: item.synopsis,
+    imageUrl: item.imageUrl,
     people: item.director ? [{ name: item.director, role: "director" as const }] : undefined,
     countries: item.country ? item.country.split(/\s*[,/]\s*/).filter(Boolean) : undefined,
     provenance: {
