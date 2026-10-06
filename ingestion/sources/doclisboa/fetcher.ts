@@ -104,46 +104,35 @@ function parseFilmPage(html: string, sourceUrl: string): {
   const body = textContent(html);
   const compact = body.replace(/\s+/g, " ").trim();
 
-  // The live site can concatenate several visual blocks into one text line.
-  // Parse the metadata and sessions from the normalized document text rather
-  // than depending on HTML block boundaries.
   const metadataMatch = compact.match(
-    /(?:^|\s)((?:19|20)\d{2})\s+([^\d]+?)\s+(\d{1,4})[’']/,
+    /(?:^|\s)((?:19|20)\d{2})\s+([A-Za-zÀ-ÿ][^0-9]*?)\s+(\d{1,4})[’']/,
   );
   if (!metadataMatch) return undefined;
 
   const metadataIndex = compact.indexOf(metadataMatch[0]);
   const beforeMetadata = compact.slice(0, metadataIndex).trim();
+  const section = SECTION_NAMES.find((name) => beforeMetadata.includes(name));
 
-  // The live page exposes the film title in the HTML <title>. Using it avoids
-  // confusing the final director surname with the film title.
-  const htmlTitleMatch = html.match(/<title[^>]*>([\\s\\S]*?)<\/title>/i);
+  const htmlTitleMatch = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
   const htmlTitle = htmlTitleMatch
     ? decodeHtml(htmlTitleMatch[1].replace(/<[^>]+>/g, " ").trim())
-        .split(/\\s+-\\s+doclisboa\\b/i)[0]
+        .split(/\s+-\s+doclisboa\b/i)[0]
         .trim()
     : "";
-
-  const headingMatch = html.match(/<h1[^>]*>([\\s\\S]*?)<\/h1>/i);
+  const headingMatch = html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i);
   const headingTitle = headingMatch
     ? decodeHtml(headingMatch[1].replace(/<[^>]+>/g, " ").trim())
     : "";
-
-  const section = SECTION_NAMES.find((name) => beforeMetadata.includes(name));
   const title = htmlTitle || headingTitle;
   if (!title) return undefined;
 
-  // Locate the title occurrence immediately before the metadata block. This
-  // gives us the director text without accidentally including site navigation.
   const metadataStart = compact.indexOf(metadataMatch[1], metadataIndex);
   const titlePosition = compact.lastIndexOf(title, metadataStart);
   const directorText =
     titlePosition >= 0
       ? compact.slice(titlePosition + title.length, metadataStart).trim()
       : "";
-  const director = (section
-    ? directorText.replace(section, "").trim()
-    : directorText).trim();
+  const director = (section ? directorText.replace(section, "").trim() : directorText).trim();
 
   const sessions: Array<{ date: string; time: string; venue: string; durationMinutes?: number }> = [];
   const sessionRe =
@@ -154,7 +143,9 @@ function parseFilmPage(html: string, sourceUrl: string): {
     if (!month) continue;
 
     const after = compact.slice((match.index ?? 0) + match[0].length);
-    const venueMatch = after.match(/^\s*(?:[^0-9]{0,120}?)?(Culturgest[^.]{0,120}?|Cinema [^.]{0,120}?|Cinemateca[^.]{0,120}?)(?=\s+(?:\d{1,2}\s+(?:Jan|Fev|Mar|Abr|Mai|Jun|Jul|Ago|Set|Out|Nov|Dez)|$))/i);
+    const nextSession = after.search(/\s+\d{1,2}\s+(?:Jan|Fev|Mar|Abr|Mai|Jun|Jul|Ago|Set|Out|Nov|Dez)\s*\/\s*\d{1,2}:\d{2}/i);
+    const chunk = after.slice(0, nextSession >= 0 ? nextSession : 250);
+    const venueMatch = chunk.match(/\b(Culturgest(?:\s*-\s*[^.]{0,100})?|Cinema\s+[^.]{2,100}|Cinemateca(?:\s*-\s*[^.]{0,100})?)\b/i);
     const venue = venueMatch?.[1]?.trim();
     if (!venue) continue;
 
