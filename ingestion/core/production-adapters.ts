@@ -5,6 +5,8 @@ import { cinemaSaoJorgeAdapter } from "../sources/cinema_sao_jorge/parser.js";
 import { cinemaFernandoLopesAdapter } from "../sources/cinema_fernando_lopes/parser.js";
 import { doclisboaAdapter } from "../sources/doclisboa/parser.js";
 import { rtpAdapter } from "../sources/rtp/parser.js";
+import { tviAdapter } from "../sources/tvi/parser.js";
+import { sicAdapter } from "../sources/sic/parser.js";
 
 /**
  * Single application registry for implemented adapters.
@@ -15,12 +17,14 @@ import { rtpAdapter } from "../sources/rtp/parser.js";
  * A source can still remain "candidate" in the source registry while its
  * adapter is installed and tested independently.
  */
-export const productionAdapters: readonly SourceAdapter<any>[] = [
+export const productionAdapters: readonly SourceAdapter<never>[] = [
   cinematecaAdapter,
   cinemaSaoJorgeAdapter,
   cinemaFernandoLopesAdapter,
   doclisboaAdapter,
   rtpAdapter,
+  tviAdapter,
+  sicAdapter,
 ];
 
 export function createProductionAdapterRegistry(): AdapterRegistry {

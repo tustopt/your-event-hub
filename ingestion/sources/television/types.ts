@@ -26,17 +26,24 @@ export interface TelevisionProgrammeItem {
   episode?: number;
   seriesTitle?: string;
   year?: number;
+  imageUrl?: string;
   provenance?: SourceProvenance;
 }
 
 export function isDocumentaryProgramme(item: Pick<TelevisionProgrammeItem, "genre">): boolean {
   if (!item.genre) return false;
-  const normalized = item.genre.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
-  return normalized === "documentario" ||
+  const normalized = item.genre
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+  return (
+    normalized === "documentario" ||
     normalized === "documentarios" ||
     normalized === "documentary" ||
     normalized === "documentaries" ||
     normalized === "serie documental" ||
     normalized === "series documentais" ||
-    normalized === "documental";
+    normalized === "documental"
+  );
 }

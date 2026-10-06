@@ -1,13 +1,7 @@
 export type SourceType = "website" | "rss" | "api" | "ical" | "csv" | "manual";
 
 export type NormalizedEventType =
-  | "screening"
-  | "festival"
-  | "debate"
-  | "masterclass"
-  | "exhibition"
-  | "workshop"
-  | "other";
+  "screening" | "festival" | "debate" | "masterclass" | "exhibition" | "workshop" | "other";
 
 export interface SourceProvenance {
   sourceKey: string;
@@ -28,6 +22,7 @@ export interface NormalizedFilm {
   year?: number;
   durationMinutes?: number;
   synopsis?: string;
+  imageUrl?: string;
   imdbId?: string;
   tmdbId?: string;
   people?: NormalizedPerson[];
@@ -92,6 +87,8 @@ export interface NormalizedScreening {
 
 export interface NormalizedTVProgram {
   eventType: "television";
+  sourceExternalId: string;
+  sourceUrl: string;
   title: string;
   description?: string;
   channel: string;
@@ -104,6 +101,7 @@ export interface NormalizedTVProgram {
   episode?: number;
   seriesTitle?: string;
   year?: number;
+  imageUrl?: string;
   genre: "documentary";
   provenance: SourceProvenance;
 }

@@ -1,8 +1,8 @@
-import { PDFParse } from "pdf-parse";
+import { extractSourceImageUrl } from "../../core/image-resolver";
 import type { DoclisboaFilmItem, DoclisboaProgrammeItem } from "./types";
 
 export const DOCLISBOA_SOURCE_KEY = "doclisboa";
-export const DOCLISBOA_PROGRAMME_URL = "https://doclisboa.org/doclisboa2026_programa.pdf";
+export const DOCLISBOA_FILMS_URL = "https://doclisboa.org/filmes/";
 export const DOCLISBOA_EDITION_YEAR = 2026;
 
 export interface FetchDoclisboaOptions {
@@ -10,21 +10,10 @@ export interface FetchDoclisboaOptions {
   fetchImpl?: typeof fetch;
 }
 
-type Session = { date: string; time: string; venue: string; duration: number };
-
 const MONTHS: Record<string, number> = {
   jan: 1, fev: 2, mar: 3, abr: 4, mai: 5, jun: 6,
   jul: 7, ago: 8, set: 9, out: 10, nov: 11, dez: 12,
 };
-
-const SESSION_RE =
-  /^(\d{1,2})\s+(Jan|Fev|Mar|Abr|Mai|Jun|Jul|Ago|Set|Out|Nov|Dez)\s*\/\s*(\d{1,2})[.:](\d{2})\s*,\s*(.+)$/i;
-
-const SESSION_CONTINUATION_RE =
-  /^\d{1,2}\s+(Jan|Fev|Mar|Abr|Mai|Jun|Jul|Ago|Set|Out|Nov|Dez)\s*\/\s*\d{1,2}[.:]\d{2}\s*,\s*$/i;
-
-const METADATA_RE =
-  /^(\d{4})\s+(.+?)\s+•\s+(\d{1,4})[’']\s+•\s+(.+)$/;
 
 const SECTION_NAMES = [
   "Competição Internacional",
@@ -34,221 +23,241 @@ const SECTION_NAMES = [
   "Da Terra à Lua",
   "Verdes Anos",
   "Na Companhia de William Greaves",
-  "Lino Brocka",
+  "Sessão de Abertura",
+  "Sessão de Encerramento",
 ];
 
-function normalizeText(value: string): string {
+function decodeHtml(value: string): string {
   return value
-    .replace(/\u00ad/g, "")
-    .replace(/[ \t]+/g, " ")
-    .replace(/\s+([,.;:!?])/g, "$1")
-    .trim();
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;|&apos;/gi, "'")
+    .replace(/&#8217;|&rsquo;/gi, "’")
+    .replace(/&#8216;|&lsquo;/gi, "‘")
+    .replace(/&#8211;|&ndash;/gi, "–")
+    .replace(/&#8212;|&mdash;/gi, "—")
+    .replace(/&#x([0-9a-f]+);/gi, (_, code: string) =>
+      String.fromCodePoint(Number.parseInt(code, 16)),
+    )
+    .replace(/&#(\d+);/g, (_, code: string) => String.fromCodePoint(Number(code)));
 }
 
-function normalizeLines(text: string): string[] {
-  const raw = text
+function textContent(value: string): string {
+  return decodeHtml(
+    value
+      // Keep script contents: the live Doclisboa page embeds some programme
+      // data in its client-side markup/data attributes.
+      .replace(/<style[\s\S]*?<\/style>/gi, " ")
+      .replace(/<br\s*\/?>/gi, "\n")
+      .replace(/<\/?(?:p|div|li|ul|ol|section|article|main|header|footer|h[1-6]|button)[^>]*>/gi, "\n")
+      .replace(/<[^>]+>/g, " "),
+  )
     .replace(/\r/g, "")
     .split("\n")
-    .map(normalizeText)
-    .filter(Boolean);
-
-  const lines: string[] = [];
-  for (let i = 0; i < raw.length; i += 1) {
-    const line = raw[i];
-
-    if (SESSION_CONTINUATION_RE.test(line) && raw[i + 1]) {
-      lines.push(normalizeText(line + raw[++i]));
-      continue;
-    }
-
-    if (/\/\s*$/.test(line) && raw[i + 1] && !SESSION_RE.test(line)) {
-      lines.push(normalizeText(line + " " + raw[++i]));
-      continue;
-    }
-
-    lines.push(line);
-  }
-
-  return lines;
+    .map((line) => line.replace(/[ \t]+/g, " ").trim())
+    .filter(Boolean)
+    .join("\n");
 }
 
-function parseSession(value: string): Session | undefined {
-  const match = value.match(SESSION_RE);
-  if (!match) return undefined;
-
-  const month = MONTHS[match[2].toLowerCase()];
-  if (!month) return undefined;
-
-  return {
-    date: `${DOCLISBOA_EDITION_YEAR}-${String(month).padStart(2, "0")}-${String(Number(match[1])).padStart(2, "0")}`,
-    time: `${String(Number(match[3])).padStart(2, "0")}:${match[4]}`,
-    venue: match[5].trim(),
-    duration: 0,
-  };
+function slug(value: string): string {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
 }
 
-function isSectionLine(line: string): boolean {
-  return SECTION_NAMES.some((name) => line.startsWith(name + " ̸") || line === name);
+function absoluteUrl(value: string, baseUrl: string): string {
+  return new URL(decodeHtml(value), baseUrl).toString();
 }
 
-function sectionFromLine(line: string): string | undefined {
-  return SECTION_NAMES.find((name) => line.startsWith(name + " ̸") || line === name);
-}
+function extractFilmLinks(html: string, baseUrl: string): string[] {
+  const links = new Set<string>();
+  const hrefRe = /<a\b[^>]*href=["']([^"']+)["'][^>]*>/gi;
 
-function isNoise(line: string): boolean {
-  return /^(CP \/ PC|CI \/ IC|R \/ NV|A PROPÓSITO|PASSA COM|REALIZADOR|REALIZADORA|HOMENAGEM|OUTROS RISCOS|SOPHIE ROGER|JOHN TORRES|CINEMA ETERNO|EM TERRENO DESCONHECIDO|FANTASMAS E APARIÇÕES|POR DENTRO, POR FORA|A LÍNGUA DO LUGAR)/i.test(line);
-}
-
-function parseFilmFromMetadata(
-  lines: string[],
-  metadataIndex: number,
-  metadata: RegExpMatchArray,
-): DoclisboaFilmItem | undefined {
-  let cursor = metadataIndex - 1;
-  const directorParts: string[] = [];
-
-  if (cursor < 0) return undefined;
-  directorParts.unshift(lines[cursor--]);
-
-  if (cursor >= 0 && /,$/.test(lines[cursor])) {
-    directorParts.unshift(lines[cursor--]);
-  }
-
-  const candidates: string[] = [];
-  while (cursor >= 0 && candidates.length < 4) {
-    const line = lines[cursor];
-    if (SESSION_RE.test(line) || METADATA_RE.test(line) || isSectionLine(line) || isNoise(line)) break;
-    candidates.unshift(line);
-    cursor -= 1;
-  }
-
-  if (!candidates.length) return undefined;
-
-  let title: string;
-  let originalTitle: string | undefined;
-
-  if (candidates.length === 1) {
-    title = candidates[0];
-  } else if (candidates.length === 2) {
-    title = candidates[0];
-    originalTitle = candidates[1];
-  } else if (candidates.length === 4) {
-    title = candidates.slice(0, 2).join(" ");
-    originalTitle = candidates.slice(2).join(" ");
-  } else {
-    title = candidates.slice(0, Math.ceil(candidates.length / 2)).join(" ");
-    originalTitle = candidates.slice(Math.ceil(candidates.length / 2)).join(" ");
-  }
-
-  const country = metadata[2].split(" / ")[0].trim();
-
-  return {
-    title,
-    originalTitle,
-    director: directorParts.join(" "),
-    year: Number(metadata[1]),
-    country,
-    durationMinutes: Number(metadata[3]),
-    format: metadata[4].trim(),
-  };
-}
-
-function parseProgrammeText(text: string, sourceUrl: string): DoclisboaProgrammeItem[] {
-  const lines = normalizeLines(text);
-  const items: DoclisboaProgrammeItem[] = [];
-  const pendingSessions: Session[] = [];
-  let activeSessions: Session[] = [];
-  let activeFilms: DoclisboaFilmItem[] = [];
-  let currentSection: string | undefined;
-
-  const flush = () => {
-    if (!activeFilms.length || !activeSessions.length) return;
-
-    for (const session of activeSessions) {
-      for (const film of activeFilms) {
-        const slug = (value: string) =>
-          value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-            .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-
-        items.push({
-          sourceExternalId: `${session.date}-${session.time.replace(":", "")}-${slug(session.venue)}-${slug(film.title)}`,
-          sourceUrl,
-          editionYear: DOCLISBOA_EDITION_YEAR,
-          date: session.date,
-          time: session.time,
-          title: film.title,
-          films: [film],
-          section: currentSection,
-          venue: session.venue,
-          venueType: /cinema/i.test(session.venue) ? "cinema" : "cultural_center",
-          durationMinutes: film.durationMinutes,
-          director: film.director,
-          country: film.country,
-          year: film.year,
-        });
+  for (const match of html.matchAll(hrefRe)) {
+    const href = match[1];
+    try {
+      const url = new URL(href, baseUrl);
+      if (
+        url.hostname === "doclisboa.org" &&
+        /^\/filmes\/[^/]+\/?$/i.test(url.pathname) &&
+        !/^\/filmes\/movie\.link\/?$/i.test(url.pathname)
+      ) {
+        links.add(url.toString().replace(/\/$/, "/"));
       }
-    }
-
-    activeSessions = [];
-    activeFilms = [];
-  };
-
-  for (let i = 0; i < lines.length; i += 1) {
-    const line = lines[i];
-    const section = sectionFromLine(line);
-
-    if (section) {
-      flush();
-      currentSection = section;
-      continue;
-    }
-
-    const session = parseSession(line);
-    if (session) {
-      flush();
-      pendingSessions.push(session);
-      continue;
-    }
-
-    const metadata = line.match(METADATA_RE);
-    if (!metadata) continue;
-
-    const film = parseFilmFromMetadata(lines, i, metadata);
-    if (!film) continue;
-
-    if (!activeFilms.length && pendingSessions.length) {
-      activeSessions = pendingSessions.splice(0);
-    }
-
-    if (activeSessions.length) {
-      activeFilms.push(film);
+    } catch {
+      // Ignore malformed links.
     }
   }
 
-  flush();
-  return items;
+  return [...links];
 }
 
-async function fetchPdf(fetchImpl: typeof fetch, url: string): Promise<Uint8Array> {
+function parseFilmPage(html: string, sourceUrl: string): {
+  film: DoclisboaFilmItem;
+  section?: string;
+  sessions: Array<{ date: string; time: string; venue: string; durationMinutes?: number }>;
+} | undefined {
+  const body = textContent(html);
+  const compact = body.replace(/\s+/g, " ").trim();
+
+  const metadataMatch = compact.match(
+    /(?:^|\s)((?:19|20)\d{2})\s+([A-Za-zÀ-ÿ][^0-9]*?)\s+(\d{1,4})[’']/,
+  );
+  if (!metadataMatch) return undefined;
+
+  const metadataIndex = compact.indexOf(metadataMatch[0]);
+  const beforeMetadata = compact.slice(0, metadataIndex).trim();
+  const section = SECTION_NAMES.find((name) => beforeMetadata.includes(name));
+
+  const htmlTitleMatch = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+  const htmlTitle = htmlTitleMatch
+    ? decodeHtml(htmlTitleMatch[1].replace(/<[^>]+>/g, " ").trim())
+        .split(/\s+-\s+doclisboa\b/i)[0]
+        .trim()
+    : "";
+  const headingMatch = html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i);
+  const headingTitle = headingMatch
+    ? decodeHtml(headingMatch[1].replace(/<[^>]+>/g, " ").trim())
+    : "";
+  const title = htmlTitle || headingTitle;
+  if (!title) return undefined;
+
+  const metadataStart = compact.indexOf(metadataMatch[1], metadataIndex);
+  const titlePosition = compact.lastIndexOf(title, metadataStart);
+  const directorText =
+    titlePosition >= 0
+      ? compact.slice(titlePosition + title.length, metadataStart).trim()
+      : "";
+  const director = (section ? directorText.replace(section, "").trim() : directorText).trim();
+
+  const sessions: Array<{ date: string; time: string; venue: string; durationMinutes?: number }> = [];
+  const sessionRe =
+    /(\d{1,2})\s+(Jan|Fev|Mar|Abr|Mai|Jun|Jul|Ago|Set|Out|Nov|Dez)\s*\/\s*(\d{1,2}):(\d{2})\s*\/\s*(\d{1,4})[’']/gi;
+
+  for (const match of compact.matchAll(sessionRe)) {
+    const month = MONTHS[match[2].toLowerCase()];
+    if (!month) continue;
+
+    const after = compact.slice((match.index ?? 0) + match[0].length);
+    const day = Number(match[1]);
+    // Doclisboa 2026 runs from 15 to 25 October. Other dates visible on the
+    // page belong to related/site content, not festival screenings.
+    if (month !== 10 || day < 15 || day > 25) continue;
+
+    const venueMatch = after.match(
+      /\b(Culturgest(?:\s*-\s*(?:Auditório Emílio Rui Vilar|Pequeno Auditório))?|Cinema São Jorge(?:\s*-\s*Sala\s+[A-Za-z0-9]+)?|Cinema Ideal|Cinemateca(?:\s*-\s*[^.]{0,80})?)\b/i,
+    );
+    const venue = venueMatch?.[1]?.trim();
+    if (!venue) continue;
+
+    sessions.push({
+      date: `${DOCLISBOA_EDITION_YEAR}-${String(month).padStart(2, "0")}-${String(Number(match[1])).padStart(2, "0")}`,
+      time: `${String(Number(match[3])).padStart(2, "0")}:${match[4]}`,
+      venue,
+      durationMinutes: Number(match[5]),
+    });
+  }
+
+  if (!sessions.length) return undefined;
+
+  return {
+    film: {
+      title,
+      director,
+      year: Number(metadataMatch[1]),
+      country: metadataMatch[2].trim(),
+      durationMinutes: Number(metadataMatch[3]),
+      imageUrl: extractSourceImageUrl(html, sourceUrl),
+    },
+    section,
+    sessions,
+  };
+}
+
+async function fetchText(
+  fetchImpl: typeof fetch,
+  url: string,
+): Promise<string> {
   const response = await fetchImpl(url);
   if (!response.ok) {
-    throw new Error(`Doclisboa PDF fetch failed: ${response.status} (${url})`);
+    throw new Error(`Doclisboa request failed: HTTP ${response.status} (${url})`);
   }
-  return new Uint8Array(await response.arrayBuffer());
+  return response.text();
 }
 
 export async function fetchDoclisboaProgramme(
   options: FetchDoclisboaOptions = {},
 ): Promise<readonly DoclisboaProgrammeItem[]> {
   const fetchImpl = options.fetchImpl ?? fetch;
-  const sourceUrl = options.url ?? DOCLISBOA_PROGRAMME_URL;
-  const pdf = await fetchPdf(fetchImpl, sourceUrl);
-  const parser = new PDFParse({ data: pdf });
+  const catalogueUrl = options.url ?? DOCLISBOA_FILMS_URL;
+  const catalogueHtml = await fetchText(fetchImpl, catalogueUrl);
+  const filmUrls = extractFilmLinks(catalogueHtml, catalogueUrl);
 
-  try {
-    const result = await parser.getText();
-    return parseProgrammeText(result.text, sourceUrl);
-  } finally {
-    await parser.destroy();
+  if (!filmUrls.length) {
+    throw new Error(`Doclisboa catalogue returned no film links (${catalogueUrl})`);
   }
+
+  const items: DoclisboaProgrammeItem[] = [];
+  const seen = new Set<string>();
+
+  // Keep the request rate modest: the catalogue is small enough to process in
+  // batches while avoiding a burst against the festival website.
+  for (let offset = 0; offset < filmUrls.length; offset += 8) {
+    const batch = filmUrls.slice(offset, offset + 8);
+    const pages = await Promise.all(
+      batch.map(async (url) => ({ url, html: await fetchText(fetchImpl, url) })),
+    );
+
+    for (const page of pages) {
+      const parsed = parseFilmPage(page.html, page.url);
+      if (!parsed) continue;
+
+      for (const session of parsed.sessions) {
+        const externalId = `${session.date}-${session.time.replace(":", "")}-${slug(session.venue)}-${slug(parsed.film.title)}`;
+        if (seen.has(externalId)) continue;
+        seen.add(externalId);
+
+        items.push({
+          sourceExternalId: externalId,
+          sourceUrl: page.url,
+          editionYear: DOCLISBOA_EDITION_YEAR,
+          date: session.date,
+          time: session.time,
+          title: parsed.film.title,
+          films: [parsed.film],
+          section: parsed.section,
+          venue: session.venue,
+          venueType: /cinema/i.test(session.venue) ? "cinema" : "festival_venue",
+          durationMinutes: session.durationMinutes ?? parsed.film.durationMinutes,
+          director: parsed.film.director,
+          country: parsed.film.country,
+          year: parsed.film.year,
+        });
+      }
+    }
+  }
+
+  if (!items.length) {
+    const firstUrl = filmUrls[0];
+    let diagnostic = "";
+    try {
+      const firstHtml = await fetchText(fetchImpl, firstUrl);
+      const diagnosticBody = textContent(firstHtml);
+      const diagnosticLines = diagnosticBody.split("\n").filter(Boolean);
+      const metadataLines = diagnosticLines.filter((line) => /^(?:19|20)\d{2}\s+.+?\s+\d{1,4}[’']$/.test(line)).slice(0, 3);
+      const sessionCandidates = diagnosticLines.filter((line) => /\d{1,2}\s+(?:Jan|Fev|Mar|Abr|Mai|Jun|Jul|Ago|Set|Out|Nov|Dez)\s*\/\s*\d{1,2}:\d{2}\s*\/\s*\d{1,4}[’']/i.test(line)).slice(0, 5);
+      diagnostic = ` First page ${firstUrl} returned ${firstHtml.length} HTML chars; lines=${diagnosticLines.length}; metadata=${JSON.stringify(metadataLines)}; sessionCandidates=${JSON.stringify(sessionCandidates)}; containsSessões=${/Sessões/i.test(diagnosticBody)}; contains20Out=${/20 Out/i.test(diagnosticBody)}`;
+    } catch (error) {
+      diagnostic = ` First page fetch failed: ${error instanceof Error ? error.message : String(error)}`;
+    }
+    throw new Error(
+      `Doclisboa catalogue returned ${filmUrls.length} film links but no parseable screenings.${diagnostic}`,
+    );
+  }
+
+  return items;
 }

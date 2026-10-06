@@ -20,9 +20,9 @@ const bodySchema = z
 
 type User = { id: string; email: string | null };
 
-async function authenticateAdminRequest(request: Request): Promise<
-  { user: User } | { response: Response }
-> {
+async function authenticateAdminRequest(
+  request: Request,
+): Promise<{ user: User } | { response: Response }> {
   const authHeader = request.headers.get("authorization");
   if (!authHeader?.startsWith("Bearer ")) {
     return { response: Response.json({ error: "Unauthorized" }, { status: 401 }) };
@@ -130,12 +130,7 @@ export const Route = createFileRoute("/api/admin/ingest/source/$sourceKey")({
 
         let resolved;
         try {
-          resolved = resolveRunnableSource(
-            library,
-            params.sourceKey,
-            {},
-            options.dryRun === true,
-          );
+          resolved = resolveRunnableSource(library, params.sourceKey, {}, options.dryRun === true);
         } catch (error) {
           if (error instanceof SourceResolutionError) {
             return Response.json(
@@ -152,12 +147,7 @@ export const Route = createFileRoute("/api/admin/ingest/source/$sourceKey")({
           options.dryRun === true ? async () => {} : await createPersistTVProgram();
 
         try {
-          const result = await runSourceIngestion(
-            resolved,
-            persist,
-            persistTVProgram,
-            options,
-          );
+          const result = await runSourceIngestion(resolved, persist, persistTVProgram, options);
 
           return Response.json({
             ...result,

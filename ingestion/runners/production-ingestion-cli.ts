@@ -1,6 +1,7 @@
 import { createProductionAdapterRegistry } from "../core/production-adapters";
 import { getProductionSources, getSourceDefinition } from "../core/source-registry";
 import { getSourceFetcher } from "../core/source-fetchers";
+import { enrichAdapterResultImages } from "../core/image-resolver";
 
 function requiredEnv(...names: string[]): string {
   for (const name of names) {
@@ -59,7 +60,7 @@ async function main(): Promise<void> {
   for (const [index, item] of items.entries()) {
     try {
       const parsed = fetcher.toParsedItem(item);
-      const result = adapter.parse(parsed, item);
+      const result = await enrichAdapterResultImages(adapter.parse(parsed, item));
 
       screenings.push(...result.screenings);
       tvPrograms.push(...(result.tvPrograms ?? []));

@@ -27,9 +27,7 @@ const bodySchema = z
 
 function authenticateAutomationRequest(request: Request): Response | null {
   const expectedToken = process.env["DOCUEVENTS_INGEST_AUTOMATION_TOKEN"]?.trim();
-  const suppliedToken = request.headers
-    .get("x-docuevents-automation-token")
-    ?.trim();
+  const suppliedToken = request.headers.get("x-docuevents-automation-token")?.trim();
 
   if (!expectedToken || !suppliedToken || suppliedToken !== expectedToken) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
@@ -38,9 +36,7 @@ function authenticateAutomationRequest(request: Request): Response | null {
   return null;
 }
 
-export const Route = createFileRoute(
-  "/api/internal/ingest/source/$sourceKey",
-)({
+export const Route = createFileRoute("/api/internal/ingest/source/$sourceKey")({
   server: {
     handlers: {
       POST: async ({ request, params }) => {
@@ -61,10 +57,7 @@ export const Route = createFileRoute(
         try {
           body = bodySchema.parse(await request.json());
         } catch {
-          return Response.json(
-            { error: "Invalid normalized ingestion payload" },
-            { status: 400 },
-          );
+          return Response.json({ error: "Invalid normalized ingestion payload" }, { status: 400 });
         }
 
         const startedAt = body.fetchedAt ?? new Date().toISOString();
@@ -89,15 +82,12 @@ export const Route = createFileRoute(
             ) {
               const externalId = screening["provenance"]["sourceExternalId"];
               if (typeof externalId === "string" && externalId) {
-                const { error: festivalError } = await supabaseAdmin.rpc(
-                  "link_event_festival",
-                  {
-                    p_source_key: params.sourceKey,
-                    p_source_external_id: externalId,
-                    p_festival_key: screening["festivalKey"],
-                    p_festival_year: screening["festivalEditionYear"],
-                  } as never,
-                );
+                const { error: festivalError } = await supabaseAdmin.rpc("link_event_festival", {
+                  p_source_key: params.sourceKey,
+                  p_source_external_id: externalId,
+                  p_festival_key: screening["festivalKey"],
+                  p_festival_year: screening["festivalEditionYear"],
+                } as never);
                 if (festivalError) throw new Error(festivalError.message);
               }
             }
@@ -106,8 +96,7 @@ export const Route = createFileRoute(
           } catch (error) {
             errors.push({
               index,
-              message:
-                error instanceof Error ? error.message : String(error),
+              message: error instanceof Error ? error.message : String(error),
             });
           }
         }
@@ -124,8 +113,7 @@ export const Route = createFileRoute(
           } catch (error) {
             errors.push({
               index: body.screenings.length + index,
-              message:
-                error instanceof Error ? error.message : String(error),
+              message: error instanceof Error ? error.message : String(error),
             });
           }
         }
@@ -159,10 +147,7 @@ export const Route = createFileRoute(
           .eq("parser_key", params.sourceKey);
 
         if (sourceUpdateError) {
-          return Response.json(
-            { error: sourceUpdateError.message },
-            { status: 502 },
-          );
+          return Response.json({ error: sourceUpdateError.message }, { status: 502 });
         }
 
         return Response.json({

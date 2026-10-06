@@ -1,5 +1,6 @@
 import type { AdapterResult, ParsedSourceItem, SourceAdapter } from "./contracts.js";
 import { resolveSourceAdapter, type AdapterRegistry } from "./adapter-registry.js";
+import { enrichAdapterResultImages, type ImageResolverOptions } from "./image-resolver.js";
 
 export interface SourceFetcher<T = unknown> {
   readonly sourceKey: string;
@@ -17,6 +18,7 @@ export interface SourcePipelineResult {
 
 export interface SourcePipelineOptions {
   dryRun?: boolean;
+  imageResolver?: ImageResolverOptions;
 }
 
 export async function runSourcePipeline<T>(
@@ -40,13 +42,15 @@ export async function runSourcePipeline<T>(
     }),
   );
 
+  const enrichedResult = await enrichAdapterResultImages(result, options.imageResolver);
+
   void options.dryRun;
 
   return {
     sourceKey: fetcher.sourceKey,
     fetched: rawItems.length,
     parsed: rawItems.length,
-    result,
+    result: enrichedResult,
   };
 }
 

@@ -31,7 +31,10 @@ function parseNumber(value?: number): number | undefined {
   return value;
 }
 
-function normalizeVenue(item: CinematecaProgrammeItem, sourceKey: string): NormalizedVenue | undefined {
+function normalizeVenue(
+  item: CinematecaProgrammeItem,
+  sourceKey: string,
+): NormalizedVenue | undefined {
   if (!item.venue?.trim()) return undefined;
 
   return {
@@ -55,7 +58,10 @@ function normalizeDirectors(item: CinematecaProgrammeItem, sourceKey: string) {
     }));
 }
 
-function normalizeFilms(item: CinematecaProgrammeItem, sourceKey: string): NormalizedScreeningFilm[] {
+function normalizeFilms(
+  item: CinematecaProgrammeItem,
+  sourceKey: string,
+): NormalizedScreeningFilm[] {
   const title = item.title.trim();
   if (!title) return [];
 

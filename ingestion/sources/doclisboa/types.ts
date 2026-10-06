@@ -6,6 +6,8 @@ export interface DoclisboaFilmItem {
   country?: string;
   year?: number;
   synopsis?: string;
+  imageUrl?: string;
+  format?: string;
 }
 
 export interface DoclisboaProgrammeItem {
