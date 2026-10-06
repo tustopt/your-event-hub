@@ -237,8 +237,17 @@ export async function fetchDoclisboaProgramme(
   }
 
   if (!items.length) {
+    const firstUrl = filmUrls[0];
+    let diagnostic = "";
+    try {
+      const firstHtml = await fetchText(fetchImpl, firstUrl);
+      const diagnosticText = textContent(firstHtml).slice(0, 800).replace(/\s+/g, " ").trim();
+      diagnostic = ` First page ${firstUrl} returned ${firstHtml.length} HTML chars; text starts: ${JSON.stringify(diagnosticText)}`;
+    } catch (error) {
+      diagnostic = ` First page fetch failed: ${error instanceof Error ? error.message : String(error)}`;
+    }
     throw new Error(
-      `Doclisboa catalogue returned ${filmUrls.length} film links but no parseable screenings`,
+      `Doclisboa catalogue returned ${filmUrls.length} film links but no parseable screenings.${diagnostic}`,
     );
   }
 
