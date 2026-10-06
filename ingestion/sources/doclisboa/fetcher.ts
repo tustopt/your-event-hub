@@ -107,7 +107,7 @@ function parseFilmPage(html: string, sourceUrl: string): {
   // titles. Locate the metadata first, then derive the title from the heading
   // immediately preceding the film metadata.
   const metadataIndex = lines.findIndex((line) =>
-    /^(?:19|20)\\d{2}\\s+.+?\\s+\\d{1,4}[’']$/.test(line),
+    /^(?:19|20)\d{2}\s+.+?\s+\d{1,4}[’']$/.test(line),
   );
   if (metadataIndex < 0) return undefined;
 
@@ -139,7 +139,7 @@ function parseFilmPage(html: string, sourceUrl: string): {
 
   const sessions: Array<{ date: string; time: string; venue: string; durationMinutes?: number }> = [];
   const sessionRe =
-    /^(\d{1,2})\s+(Jan|Fev|Mar|Abr|Mai|Jun|Jul|Ago|Set|Out|Nov|Dez)\s*\/\s*(\d{1,2}):(\d{2})\s*\/\s*(\d{1,4})[’']$/i;
+    /^(?:\S+\s+)?(\d{1,2})\s+(Jan|Fev|Mar|Abr|Mai|Jun|Jul|Ago|Set|Out|Nov|Dez)\s*\/\s*(\d{1,2}):(\d{2})\s*\/\s*(\d{1,4})[’']$/i;
 
   for (let i = 0; i < sessionLines.length; i += 1) {
     const match = sessionLines[i].match(sessionRe);
