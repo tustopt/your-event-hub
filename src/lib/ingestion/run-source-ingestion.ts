@@ -131,7 +131,10 @@ export async function runSourceIngestion(
       warnings.push(...result.warnings);
 
       for (const parsedScreening of result.screenings) {
-        for (const film of parsedScreening.films ?? []) {
+        const films = Array.isArray(parsedScreening["films"])
+          ? (parsedScreening["films"] as Array<{ film?: { imageUrl?: unknown } }>)
+          : [];
+        for (const film of films) {
           if (film.film?.imageUrl) imagesAvailable += 1;
           else imagesMissing += 1;
         }
