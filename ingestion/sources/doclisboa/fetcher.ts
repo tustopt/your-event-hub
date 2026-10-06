@@ -117,14 +117,14 @@ function parseFilmPage(html: string, sourceUrl: string): {
 
   // The live page exposes the film title in the HTML <title>. Using it avoids
   // confusing the final director surname with the film title.
-  const htmlTitleMatch = html.match(/<title[^>]*>([\\s\\S]*?)<\\/title>/i);
+  const htmlTitleMatch = html.match(/<title[^>]*>([\\s\\S]*?)<\/title>/i);
   const htmlTitle = htmlTitleMatch
     ? decodeHtml(htmlTitleMatch[1].replace(/<[^>]+>/g, " ").trim())
         .split(/\\s+-\\s+doclisboa\\b/i)[0]
         .trim()
     : "";
 
-  const headingMatch = html.match(/<h1[^>]*>([\\s\\S]*?)<\\/h1>/i);
+  const headingMatch = html.match(/<h1[^>]*>([\\s\\S]*?)<\/h1>/i);
   const headingTitle = headingMatch
     ? decodeHtml(headingMatch[1].replace(/<[^>]+>/g, " ").trim())
     : "";
