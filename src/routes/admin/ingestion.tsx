@@ -122,7 +122,7 @@ function AdminIngestion() {
       <section className="mt-8 rounded-2xl border bg-card p-6">
         <h2 className="font-semibold">Ingestão de produção</h2>
         <p className="mt-2 text-sm leading-6 text-muted-foreground">
-          Executa o adaptador de produção no servidor local e persiste os dados na
+          Executa o fluxo de ingestão de produção através do servidor da aplicação e persiste os dados na
           base Supabase Cloud quando o dry run está desligado.
         </p>
 
