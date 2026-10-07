@@ -19,7 +19,8 @@
     "ingest:cinema:ideal:source-diagnostic": "tsx ingestion/runners/cinema-ideal-source-diagnostic.ts",
     "ingest:production:batch": "tsx ingestion/runners/production-batch-cli.ts",
     "ingest:production:local-dry-run": "tsx ingestion/runners/production-local-dry-run.ts",
-    "ingest:doclisboa:quality": "tsx ingestion/runners/doclisboa-quality-check.ts"
+    "ingest:doclisboa:quality": "tsx ingestion/runners/doclisboa-quality-check.ts",
+    "ingest:production:sql": "tsx ingestion/runners/production-sql-export.ts"
   },
   "overrides": {
     "rolldown": "1.2.1"
