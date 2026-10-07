@@ -145,7 +145,7 @@ export const Route = createFileRoute("/api/admin/ingest/source/$sourceKey")({
       POST: async ({ request, params }) => {
         // During local development the private Supabase service-role key remains
         // in Cloud. The local server proxies the authenticated request to Cloud.
-        if (import.meta.env.DEV) {
+        if (process.env.NODE_ENV !== "production") {
           return proxyLocalRequest(request, params.sourceKey);
         }
 
