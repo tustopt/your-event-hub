@@ -26,11 +26,10 @@ async function proxyLocalRequest(request: Request, sourceKey: string): Promise<R
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const projectId =
-    process.env["SUPABASE_PROJECT_ID"] ?? process.env["VITE_SUPABASE_PROJECT_ID"];
+  // Prefer an explicit override, otherwise use the current public Cloud deployment.
   const cloudAppUrl =
     process.env["DOCUEVENTS_CLOUD_APP_URL"] ??
-    (projectId ? `https://id-preview--${projectId}.lovable.app` : undefined);
+    "https://get-together-glow.lovable.app";
 
   if (!cloudAppUrl) {
     return Response.json(
