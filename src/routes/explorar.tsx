@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { CalendarDays, MapPin } from "lucide-react";
+import { CalendarDays, MapPin, Search } from "lucide-react";
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { FilmCard } from "@/components/film-card";
 import { SiteHeader } from "@/components/site-header";
@@ -132,7 +132,7 @@ function Explore() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <SiteHeader search />
-      <main className="mx-auto max-w-7xl px-5 py-12 lg:px-8 lg:py-16">
+      <main className="mx-auto max-w-7xl px-5 py-12 lg:px-8 lg:py-16">\n        <div className="mb-10 flex max-w-3xl items-center border-b-2 border-foreground pb-2">\n          <Search className="mr-3 size-4 shrink-0" />\n          <input aria-label="Pesquisar no catálogo" value={query} onChange={(event) => updateSearch(event.target.value)} placeholder="Pesquisar filmes, eventos, locais..." className="min-w-0 flex-1 bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground" />\n        </div>
         {!loading && !authenticated ? (
           <section className="max-w-xl border-t pt-7">
             <p className="eyebrow">Acesso</p>
