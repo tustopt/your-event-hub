@@ -20,6 +20,51 @@ const bodySchema = z
 
 type User = { id: string; email: string | null };
 
+async function proxyLocalRequest(request: Request, sourceKey: string): Promise<Response> {
+  const authHeader = request.headers.get("authorization");
+  if (!authHeader?.startsWith("Bearer ")) {
+    return Response.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  // Prefer an explicit override, otherwise use the current public Cloud deployment.
+  const cloudAppUrl =
+    process.env["DOCUEVENTS_CLOUD_APP_URL"] ??
+    "https://get-together-glow.lovable.app";
+
+  if (!cloudAppUrl) {
+    return Response.json(
+      { error: "Cloud application URL is not configured." },
+      { status: 500 },
+    );
+  }
+
+  const target = `${cloudAppUrl.replace(/\/$/, "")}/api/admin/ingest/source/${encodeURIComponent(sourceKey)}`;
+
+  try {
+    const response = await fetch(target, {
+      method: "POST",
+      headers: {
+        Authorization: authHeader,
+        "Content-Type": request.headers.get("content-type") ?? "application/json",
+      },
+      body: await request.text(),
+    });
+
+    return new Response(response.body, {
+      status: response.status,
+      headers: {
+        "Content-Type": response.headers.get("content-type") ?? "application/json",
+      },
+    });
+  } catch (error) {
+    console.error("[admin-ingest:local-proxy]", error);
+    return Response.json(
+      { error: error instanceof Error ? error.message : "Cloud ingestion request failed" },
+      { status: 502 },
+    );
+  }
+}
+
 async function authenticateAdminRequest(
   request: Request,
 ): Promise<{ user: User } | { response: Response }> {
@@ -97,10 +142,16 @@ export const Route = createFileRoute("/api/admin/ingest/source/$sourceKey")({
   server: {
     handlers: {
       POST: async ({ request, params }) => {
+        // During local development the private Supabase service-role key remains
+        // in Cloud. The local server proxies the authenticated request to Cloud.
+        if (process.env.NODE_ENV !== "production") {
+          return proxyLocalRequest(request, params.sourceKey);
+        }
+
         const auth = await authenticateAdminRequest(request);
         if ("response" in auth) return auth.response;
 
-        let options: { dryRun?: boolean | undefined; limit?: number | undefined } = {};
+        let options: { dryRun?: boolean; limit?: number } = {};
         const rawBody = await request.text();
 
         if (rawBody.trim()) {
@@ -109,13 +160,6 @@ export const Route = createFileRoute("/api/admin/ingest/source/$sourceKey")({
           } catch {
             return Response.json({ error: "Invalid request body" }, { status: 400 });
           }
-        }
-
-        if (params.sourceKey !== "cinemateca_pt") {
-          return Response.json(
-            { error: "Manual ingestion is currently enabled only for cinemateca_pt." },
-            { status: 409 },
-          );
         }
 
         let library: IngestionLibrary;
@@ -130,7 +174,7 @@ export const Route = createFileRoute("/api/admin/ingest/source/$sourceKey")({
 
         let resolved;
         try {
-          resolved = resolveRunnableSource(library, params.sourceKey, {}, options.dryRun === true);
+          resolved = resolveRunnableSource(library, params.sourceKey);
         } catch (error) {
           if (error instanceof SourceResolutionError) {
             return Response.json(
@@ -147,14 +191,19 @@ export const Route = createFileRoute("/api/admin/ingest/source/$sourceKey")({
           options.dryRun === true ? async () => {} : await createPersistTVProgram();
 
         try {
-          const result = await runSourceIngestion(resolved, persist, persistTVProgram, options);
+          const result = await runSourceIngestion(
+            resolved,
+            persist,
+            persistTVProgram,
+            options,
+          );
 
           return Response.json({
             ...result,
             triggeredBy: auth.user.email ?? auth.user.id,
           });
         } catch (error) {
-          console.error("[admin-ingest:cinemateca_pt]", error);
+          console.error(`[admin-ingest:${params.sourceKey}]`, error);
           return Response.json(
             { error: error instanceof Error ? error.message : "Ingestion failed" },
             { status: 502 },

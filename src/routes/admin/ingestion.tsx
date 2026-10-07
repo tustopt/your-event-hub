@@ -7,21 +7,34 @@ export const Route = createFileRoute("/admin/ingestion")({
   component: AdminIngestion,
 });
 
+const SOURCES = [
+  { key: "cinemateca_pt", name: "Cinemateca Portuguesa" },
+  { key: "cinema_sao_jorge", name: "Cinema São Jorge" },
+  { key: "cinema_fernando_lopes", name: "Cinema Fernando Lopes" },
+  { key: "doclisboa", name: "Doclisboa" },
+  { key: "rtp", name: "RTP" },
+  { key: "sic", name: "SIC" },
+  { key: "tvi", name: "TVI" },
+] as const;
+
 type Result = {
   source?: string;
+  adapterKey?: string;
   dryRun?: boolean;
   fetched?: number;
   processed?: number;
   persisted?: number;
   failed?: number;
   warnings?: string[];
-  errors?: Array<{ index: number; sourceExternalId: string | null; message: string }>;
+  errors?: Array<{ index: number; sourceExternalId?: string | null; message: string }>;
+  imageCoverage?: { available: number; missing: number };
   error?: string;
 };
 
 function AdminIngestion() {
   const [sessionReady, setSessionReady] = useState(false);
   const [authenticated, setAuthenticated] = useState(false);
+  const [sourceKey, setSourceKey] = useState<(typeof SOURCES)[number]["key"]>("cinemateca_pt");
   const [limit, setLimit] = useState("1");
   const [dryRun, setDryRun] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -48,7 +61,7 @@ function AdminIngestion() {
       return;
     }
 
-    const response = await fetch("/api/admin/ingest/source/cinemateca_pt", {
+    const response = await fetch(`/api/admin/ingest/source/${sourceKey}`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -60,7 +73,13 @@ function AdminIngestion() {
       }),
     });
 
-    const payload = (await response.json()) as Result;
+    let payload: Result;
+    try {
+      payload = (await response.json()) as Result;
+    } catch {
+      payload = { error: `Pedido falhou (HTTP ${response.status}).` };
+    }
+
     setResult(payload);
     setBusy(false);
   }
@@ -86,6 +105,8 @@ function AdminIngestion() {
     );
   }
 
+  const selectedSource = SOURCES.find((source) => source.key === sourceKey);
+
   return (
     <main className="mx-auto max-w-3xl px-5 py-12">
       <div className="flex items-center justify-between gap-4">
@@ -99,13 +120,28 @@ function AdminIngestion() {
       </div>
 
       <section className="mt-8 rounded-2xl border bg-card p-6">
-        <h2 className="font-semibold">Cinemateca Portuguesa</h2>
+        <h2 className="font-semibold">Ingestão de produção</h2>
         <p className="mt-2 text-sm leading-6 text-muted-foreground">
-          Executa o adaptador de produção contra o programa completo da Cinemateca.
-          O limite serve para o primeiro teste controlado.
+          Executa o adaptador de produção no servidor local e persiste os dados na
+          base Supabase Cloud quando o dry run está desligado.
         </p>
 
         <div className="mt-6 grid gap-4 sm:grid-cols-2">
+          <label className="text-sm font-medium">
+            Fonte
+            <select
+              value={sourceKey}
+              onChange={(event) => setSourceKey(event.target.value as (typeof SOURCES)[number]["key"])}
+              className="mt-2 w-full rounded-lg border bg-background px-3 py-2.5"
+            >
+              {SOURCES.map((source) => (
+                <option key={source.key} value={source.key}>
+                  {source.name}
+                </option>
+              ))}
+            </select>
+          </label>
+
           <label className="text-sm font-medium">
             Máximo de itens
             <input
@@ -117,21 +153,21 @@ function AdminIngestion() {
               className="mt-2 w-full rounded-lg border bg-background px-3 py-2.5"
             />
           </label>
-
-          <label className="flex items-center gap-3 rounded-lg border px-3 py-2.5 text-sm">
-            <input
-              type="checkbox"
-              checked={dryRun}
-              onChange={(event) => setDryRun(event.target.checked)}
-            />
-            <span>
-              <strong>Dry run</strong>
-              <span className="block text-xs text-muted-foreground">
-                Analisa sem gravar na base de dados.
-              </span>
-            </span>
-          </label>
         </div>
+
+        <label className="mt-4 flex items-center gap-3 rounded-lg border px-3 py-2.5 text-sm">
+          <input
+            type="checkbox"
+            checked={dryRun}
+            onChange={(event) => setDryRun(event.target.checked)}
+          />
+          <span>
+            <strong>Dry run</strong>
+            <span className="block text-xs text-muted-foreground">
+              Analisa e normaliza sem gravar na base de dados.
+            </span>
+          </span>
+        </label>
 
         <button
           type="button"
@@ -145,7 +181,9 @@ function AdminIngestion() {
 
       {result && (
         <section className="mt-6 rounded-2xl border bg-muted/30 p-6">
-          <h2 className="font-semibold">Resultado</h2>
+          <h2 className="font-semibold">
+            Resultado{selectedSource ? ` — ${selectedSource.name}` : ""}
+          </h2>
           <pre className="mt-4 overflow-auto text-xs leading-5">
             {JSON.stringify(result, null, 2)}
           </pre>

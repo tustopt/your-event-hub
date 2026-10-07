@@ -20,29 +20,46 @@ function absoluteUrl(value: string, baseUrl: string): string | undefined {
   }
 }
 
+function isLikelySiteChromeImage(url: string): boolean {
+  try {
+    const path = new URL(url).pathname.toLowerCase();
+    return /(?:^|[/_-])(logo|favicon|icon|sprite)(?:[._/-]|$)/i.test(path);
+  } catch {
+    return false;
+  }
+}
+
 /** Extracts the most useful public image URL from a source page. */
 export function extractSourceImageUrl(html: string, baseUrl: string): string | undefined {
+  const candidates: string[] = [];
+
   const metaPatterns = [
-    /<meta[^>]+(?:property|name)=["'](?:og:image|og:image:secure_url|twitter:image|twitter:image:src)["'][^>]+content=["']([^"']+)["'][^>]*>/i,
-    /<meta[^>]+content=["']([^"']+)["'][^>]+(?:property|name)=["'](?:og:image|og:image:secure_url|twitter:image|twitter:image:src)["'][^>]*>/i,
+    /<meta[^>]+(?:property|name)=["'](?:og:image|og:image:secure_url|twitter:image|twitter:image:src)["'][^>]+content=["']([^"']+)["'][^>]*>/gi,
+    /<meta[^>]+content=["']([^"']+)["'][^>]+(?:property|name)=["'](?:og:image|og:image:secure_url|twitter:image|twitter:image:src)["'][^>]*>/gi,
   ];
   for (const pattern of metaPatterns) {
-    const match = html.match(pattern);
-    const url = match?.[1] ? absoluteUrl(match[1], baseUrl) : undefined;
-    if (url) return url;
+    for (const match of html.matchAll(pattern)) {
+      if (match[1]) candidates.push(match[1]);
+    }
   }
 
   const imagePatterns = [
-    /<img[^>]+(?:data-src|data-lazy-src|src)=["']([^"']+)["'][^>]*>/i,
-    /<img[^>]+srcset=["']([^"']+)["'][^>]*>/i,
+    /<img[^>]+(?:data-src|data-lazy-src|src)=["']([^"']+)["'][^>]*>/gi,
+    /<img[^>]+srcset=["']([^"']+)["'][^>]*>/gi,
   ];
   for (const pattern of imagePatterns) {
-    const match = html.match(pattern);
-    if (!match?.[1]) continue;
-    const candidate = match[1].split(",")[0]?.trim().split(/\s+/)[0];
-    const url = candidate ? absoluteUrl(candidate, baseUrl) : undefined;
-    if (url) return url;
+    for (const match of html.matchAll(pattern)) {
+      if (!match[1]) continue;
+      const candidate = match[1].split(",")[0]?.trim().split(/\s+/)[0];
+      if (candidate) candidates.push(candidate);
+    }
   }
+
+  for (const candidate of candidates) {
+    const url = absoluteUrl(candidate, baseUrl);
+    if (url && !isLikelySiteChromeImage(url)) return url;
+  }
+
   return undefined;
 }
 
