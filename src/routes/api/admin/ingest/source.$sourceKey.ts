@@ -39,7 +39,7 @@ async function proxyLocalRequest(request: Request, sourceKey: string): Promise<R
     );
   }
 
-  const target = `${cloudAppUrl.replace(/\\/$/, "")}/api/admin/ingest/source/${encodeURIComponent(sourceKey)}`;
+  const target = `${cloudAppUrl.replace(/\/$/, "")}/api/admin/ingest/source/${encodeURIComponent(sourceKey)}`;
 
   try {
     const response = await fetch(target, {
