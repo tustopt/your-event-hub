@@ -66,11 +66,47 @@ export const Route = createFileRoute("/api/internal/ingest/source/$sourceKey")({
 
         for (const [index, screening] of body.screenings.entries()) {
           try {
-            const { error } = await supabaseAdmin.rpc("ingest_screening", {
+            const { data: ingestResult, error } = await supabaseAdmin.rpc("ingest_screening", {
               p_source_key: params.sourceKey,
               p_screening: screening,
             } as never);
             if (error) throw new Error(error.message);
+
+            // Persist normalized poster URLs after the existing ingestion RPC.
+            const screeningId =
+              ingestResult &&
+              typeof ingestResult === "object" &&
+              "screeningId" in ingestResult
+                ? (ingestResult as { screeningId?: unknown }).screeningId
+                : undefined;
+            const films = Array.isArray(screening["films"])
+              ? (screening["films"] as Array<{ film?: { imageUrl?: unknown } }>)
+              : [];
+
+            if (typeof screeningId === "string" && films.length > 0) {
+              const { data: screeningFilms, error: screeningFilmsError } = await supabaseAdmin
+                .from("screening_films")
+                .select("film_id,position,films(id,poster_url)")
+                .eq("screening_id", screeningId)
+                .order("position", { ascending: true });
+
+              if (screeningFilmsError) throw new Error(screeningFilmsError.message);
+
+              for (const [filmIndex, relation] of (screeningFilms ?? []).entries()) {
+                const imageUrl = films[filmIndex]?.film?.imageUrl;
+                if (typeof imageUrl !== "string" || imageUrl.trim() === "") continue;
+
+                const filmRecord = Array.isArray(relation.films) ? relation.films[0] : relation.films;
+                if (!filmRecord || filmRecord.poster_url) continue;
+
+                const { error: imageError } = await supabaseAdmin
+                  .from("films")
+                  .update({ poster_url: imageUrl })
+                  .eq("id", relation.film_id);
+
+                if (imageError) throw new Error(imageError.message);
+              }
+            }
 
             if (
               screening["festivalKey"] &&
