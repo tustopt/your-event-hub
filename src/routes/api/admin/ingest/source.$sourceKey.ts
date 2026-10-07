@@ -20,6 +20,52 @@ const bodySchema = z
 
 type User = { id: string; email: string | null };
 
+async function proxyLocalRequest(request: Request, sourceKey: string): Promise<Response> {
+  const authHeader = request.headers.get("authorization");
+  if (!authHeader?.startsWith("Bearer ")) {
+    return Response.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const projectId =
+    process.env["SUPABASE_PROJECT_ID"] ?? process.env["VITE_SUPABASE_PROJECT_ID"];
+  const cloudAppUrl =
+    process.env["DOCUEVENTS_CLOUD_APP_URL"] ??
+    (projectId ? `https://id-preview--${projectId}.lovable.app` : undefined);
+
+  if (!cloudAppUrl) {
+    return Response.json(
+      { error: "Cloud application URL is not configured." },
+      { status: 500 },
+    );
+  }
+
+  const target = `${cloudAppUrl.replace(/\\/$/, "")}/api/admin/ingest/source/${encodeURIComponent(sourceKey)}`;
+
+  try {
+    const response = await fetch(target, {
+      method: "POST",
+      headers: {
+        Authorization: authHeader,
+        "Content-Type": request.headers.get("content-type") ?? "application/json",
+      },
+      body: await request.text(),
+    });
+
+    return new Response(response.body, {
+      status: response.status,
+      headers: {
+        "Content-Type": response.headers.get("content-type") ?? "application/json",
+      },
+    });
+  } catch (error) {
+    console.error("[admin-ingest:local-proxy]", error);
+    return Response.json(
+      { error: error instanceof Error ? error.message : "Cloud ingestion request failed" },
+      { status: 502 },
+    );
+  }
+}
+
 async function authenticateAdminRequest(
   request: Request,
 ): Promise<{ user: User } | { response: Response }> {
@@ -97,6 +143,12 @@ export const Route = createFileRoute("/api/admin/ingest/source/$sourceKey")({
   server: {
     handlers: {
       POST: async ({ request, params }) => {
+        // During local development the private Supabase service-role key remains
+        // in Cloud. The local server proxies the authenticated request to Cloud.
+        if (import.meta.env.DEV) {
+          return proxyLocalRequest(request, params.sourceKey);
+        }
+
         const auth = await authenticateAdminRequest(request);
         if ("response" in auth) return auth.response;
 
