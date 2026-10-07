@@ -24,6 +24,19 @@ describe("image resolver", () => {
     ).toBe("https://example.test/poster.jpg");
   });
 
+  it("skips site chrome images and keeps looking for the content image", () => {
+    expect(
+      extractSourceImageUrl(
+        [
+          '<meta property="og:image" content="/images/logo.png">',
+          '<img src="/images/poster-viva-maria.jpg" alt="VIVA MARIA!">',
+        ].join(""),
+        "https://www.cinemateca.pt/programacao.aspx",
+      ),
+    ).toBe("https://www.cinemateca.pt/images/poster-viva-maria.jpg");
+  });
+
+
   it("resolves an image from a source page", async () => {
     const fetchImpl = vi.fn<typeof fetch>().mockResolvedValue(
       new Response('<meta property="og:image" content="https://cdn.example.test/poster.jpg">', {
