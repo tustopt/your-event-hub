@@ -35,3 +35,6 @@ dist-ssr
 coverage/
 .env.*
 !.env.example
+
+# Python deployment helpers
+__pycache__/

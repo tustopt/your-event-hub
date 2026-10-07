@@ -136,7 +136,7 @@ function Explore() {
         {!loading && !authenticated ? (
           <section className="max-w-xl border-t pt-7">
             <p className="eyebrow">Acesso</p>
-            <h1 className="display-serif mt-3 text-4xl">Explore o DocuEvents</h1>
+            <h1 className="display-serif mt-3 text-4xl">Explore o docradar</h1>
             <p className="mt-4 text-sm leading-6 text-muted-foreground">Entre para consultar o catálogo e a agenda com dados reais.</p>
             <Link to="/login" className="mt-6 inline-flex bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground">Entrar</Link>
           </section>

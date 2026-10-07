@@ -124,7 +124,7 @@ function Index() {
       </main>
       <footer className="border-t">
         <div className="mx-auto flex max-w-7xl justify-between px-5 py-8 text-xs text-muted-foreground lg:px-8">
-          <span>DocuEvents</span><span>Portugal · Descoberta documental</span>
+          <span>docradar</span><span>Portugal · Descoberta documental</span>
         </div>
       </footer>
     </div>

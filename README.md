@@ -1,10 +1,14 @@
-# DocuEvents
+# docradar
+
+Repositorio no Gitea: https://srv2042599.hstgr.cloud/admin/docradar
+
+Pasta no servidor: `/root/admin/docradar`.
 
 Personalized discovery platform for documentary cinema, screenings, festivals, television, streaming and related cultural events.
 
 ## Product principle
 
-DocuEvents is not a generic event calendar. It combines user interests, location, dates, films, directors, themes, festivals and trusted sources to answer a practical question:
+docradar is not a generic event calendar. It combines user interests, location, dates, films, directors, themes, festivals and trusted sources to answer a practical question:
 
 > What is relevant for me to see or discover now?
 
@@ -37,13 +41,13 @@ Mobile / web application
 
 ## Library entrypoint
 
-This repository is the source of truth for the DocuEvents ingestion pipeline. The package exposes `ingestion/index.ts` as its library entrypoint. Consumers should reuse the exported fetchers, parsers, normalizers and contracts instead of copying ingestion business logic.
+This repository is the source of truth for the docradar ingestion pipeline. The package exposes `ingestion/index.ts` as its library entrypoint. Consumers should reuse the exported fetchers, parsers, normalizers and contracts instead of copying ingestion business logic.
 
 The Cinemateca adapter is available through `fetchCinematecaProgramme()` and the parser/normalizer exports from `ingestion/index.ts`.
 
 ## Project boundary
 
-This repository is independent from `tustopt/docworld`. Do not place DocuEvents code in that repository.
+This repository is independent from `tustopt/docworld`. Do not place docradar code in that repository.
 
 ## Current status
 
@@ -51,7 +55,7 @@ Foundation phase. The repository is intentionally starting with architecture and
 
 ## Lovable application
 
-This repository is also the Lovable project for the DocuEvents application:
+This repository is also the Lovable project for the docradar application:
 
 - `src/` — TanStack Start application (routes, UI, Lovable Cloud integration)
 - `src/routes/api/public/ingest/cinemateca.ts` — server-side ingestion endpoint

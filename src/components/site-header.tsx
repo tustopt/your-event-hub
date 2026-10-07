@@ -9,8 +9,8 @@ export function SiteHeader({ search = false }: SiteHeaderProps) {
   return (
     <header className="site-header">
       <div className="site-header__inner">
-        <Link to="/" className="brand" aria-label="DocuEvents — início">
-          <span className="brand__main">Docu</span><span className="brand__muted">Events</span>
+        <Link to="/" className="brand" aria-label="docradar — início">
+          <span className="brand__main">doc</span><span className="brand__muted">radar</span>
         </Link>
 
         <nav className="site-nav" aria-label="Navegação principal">

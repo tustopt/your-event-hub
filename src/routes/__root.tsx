@@ -77,14 +77,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "DocuEvents — Cinema documental" },
+      { title: "docradar — Cinema documental" },
       { name: "description", content: "Descubra documentários, sessões, festivais e televisão documental em Portugal." },
-      { name: "author", content: "DocuEvents" },
-      { property: "og:title", content: "DocuEvents — Cinema documental" },
+      { name: "author", content: "docradar" },
+      { property: "og:title", content: "docradar — Cinema documental" },
       { property: "og:description", content: "Descubra documentários, sessões, festivais e televisão documental em Portugal." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:site", content: "@DocuEvents" },
     ],
     links: [
       {
