@@ -197,6 +197,8 @@ BEGIN
             WHERE id = v_film_id;
         END IF;
 
+        v_film_ids := array_append(v_film_ids, v_film_id);
+
         DELETE FROM public.film_countries WHERE film_id = v_film_id;
         v_position := 0;
         FOR v_country IN
@@ -290,37 +292,18 @@ BEGIN
     DELETE FROM public.screening_films WHERE screening_id = v_screening_id;
     v_position := 0;
 
-    -- Resolve the same film identity used during the film upsert. Do not
-    -- fall back to title/year alone: duplicate titles are possible.
+    -- Reuse the exact film IDs resolved during the film upsert above.
+    -- This is important for films without IMDb/TMDB IDs or a complete
+    -- title/year/director identity. Re-resolving here could fail even though
+    -- the film was successfully inserted in the first pass.
     FOR v_film IN
         SELECT value FROM jsonb_array_elements(COALESCE(p_screening->'films', '[]'::jsonb))
     LOOP
         v_position := v_position + 1;
-        v_title := BTRIM(v_film->'film'->>'title');
-        v_year := NULLIF(v_film->'film'->>'year', '')::INTEGER;
-        v_director := NULLIF(BTRIM(v_film->'film'->'people'->0->>'name'), '');
-        v_film_id := NULL;
-
-        IF NULLIF(BTRIM(v_film->'film'->>'imdbId'), '') IS NOT NULL THEN
-            SELECT id INTO v_film_id FROM public.films
-            WHERE imdb_id = BTRIM(v_film->'film'->>'imdbId') LIMIT 1;
-        END IF;
-
-        IF v_film_id IS NULL AND NULLIF(BTRIM(v_film->'film'->>'tmdbId'), '') IS NOT NULL THEN
-            SELECT id INTO v_film_id FROM public.films
-            WHERE tmdb_id = BTRIM(v_film->'film'->>'tmdbId') LIMIT 1;
-        END IF;
-
-        IF v_film_id IS NULL AND v_title <> '' AND v_year IS NOT NULL AND v_director IS NOT NULL THEN
-            v_canonical_key := 'title:' || lower(regexp_replace(v_title, '[^a-zA-Z0-9]+', ' ', 'g'))
-                || '|year:' || v_year
-                || '|director:' || lower(regexp_replace(v_director, '[^a-zA-Z0-9]+', ' ', 'g'));
-            SELECT id INTO v_film_id FROM public.films
-            WHERE canonical_key = v_canonical_key LIMIT 1;
-        END IF;
+        v_film_id := v_film_ids[v_position];
 
         IF v_film_id IS NULL THEN
-            RAISE EXCEPTION 'film could not be resolved: %', v_title;
+            RAISE EXCEPTION 'film could not be resolved: %', BTRIM(v_film->'film'->>'title');
         END IF;
 
         INSERT INTO public.screening_films(screening_id, film_id, position)
