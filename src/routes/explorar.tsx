@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
-import { CalendarDays, Clapperboard, MapPin, Search, UserRound } from "lucide-react";
+import { CalendarDays, MapPin, Search, UserRound } from "lucide-react";
+import { FilmCard } from "@/components/film-card";
+import { SiteHeader } from "@/components/site-header";
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import {
   matchesExploreFilter,
@@ -346,7 +348,7 @@ function Explore() {
                 </span>
               </div>
 
-              <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="mt-8 grid grid-cols-2 gap-x-5 gap-y-10 sm:grid-cols-3 lg:grid-cols-4">
                 {filteredFilms.map((film) => {
                   const screening = nextScreeningByFilm.get(film.id);
                   const screeningIsFuture = screening
@@ -422,13 +424,13 @@ function Explore() {
                 <span className="text-sm text-muted-foreground">{filtered.length} eventos</span>
               </div>
 
-              <div className="mt-6 grid gap-4 md:grid-cols-2">
+              <div className="mt-8 grid gap-x-8 md:grid-cols-2">
                 {filtered.map((event) => (
                   <Link
                     key={event.id}
                     to="/eventos/$id"
                     params={{ id: event.id }}
-                    className="block rounded-2xl border bg-card p-6 transition-shadow hover:shadow-md"
+                    className="block border-t py-5 transition-colors hover:bg-muted/40"
                   >
                     <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                       {event.type}
