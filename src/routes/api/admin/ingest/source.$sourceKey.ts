@@ -100,7 +100,7 @@ export const Route = createFileRoute("/api/admin/ingest/source/$sourceKey")({
         const auth = await authenticateAdminRequest(request);
         if ("response" in auth) return auth.response;
 
-        let options: { dryRun?: boolean | undefined; limit?: number | undefined } = {};
+        let options: { dryRun?: boolean; limit?: number } = {};
         const rawBody = await request.text();
 
         if (rawBody.trim()) {
@@ -109,13 +109,6 @@ export const Route = createFileRoute("/api/admin/ingest/source/$sourceKey")({
           } catch {
             return Response.json({ error: "Invalid request body" }, { status: 400 });
           }
-        }
-
-        if (params.sourceKey !== "cinemateca_pt") {
-          return Response.json(
-            { error: "Manual ingestion is currently enabled only for cinemateca_pt." },
-            { status: 409 },
-          );
         }
 
         let library: IngestionLibrary;
@@ -130,7 +123,7 @@ export const Route = createFileRoute("/api/admin/ingest/source/$sourceKey")({
 
         let resolved;
         try {
-          resolved = resolveRunnableSource(library, params.sourceKey, {}, options.dryRun === true);
+          resolved = resolveRunnableSource(library, params.sourceKey);
         } catch (error) {
           if (error instanceof SourceResolutionError) {
             return Response.json(
@@ -147,14 +140,19 @@ export const Route = createFileRoute("/api/admin/ingest/source/$sourceKey")({
           options.dryRun === true ? async () => {} : await createPersistTVProgram();
 
         try {
-          const result = await runSourceIngestion(resolved, persist, persistTVProgram, options);
+          const result = await runSourceIngestion(
+            resolved,
+            persist,
+            persistTVProgram,
+            options,
+          );
 
           return Response.json({
             ...result,
             triggeredBy: auth.user.email ?? auth.user.id,
           });
         } catch (error) {
-          console.error("[admin-ingest:cinemateca_pt]", error);
+          console.error(`[admin-ingest:${params.sourceKey}]`, error);
           return Response.json(
             { error: error instanceof Error ? error.message : "Ingestion failed" },
             { status: 502 },
