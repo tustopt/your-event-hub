@@ -1,3 +1,4 @@
+import { appPath } from "@/lib/app-path";
 import { Search, UserRound } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 
@@ -16,7 +17,7 @@ export function SiteHeader({ search = false }: SiteHeaderProps) {
         <nav className="site-nav" aria-label="Navegação principal">
           <Link to="/explorar">Filmes</Link>
           <Link to="/explorar">Agenda</Link>
-          <a href="/#fontes">Fontes</a>
+          <a href={appPath("/#fontes")}>Fontes</a>
         </nav>
 
         {search && (

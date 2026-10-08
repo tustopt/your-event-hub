@@ -1,3 +1,4 @@
+import { appPath } from "@/lib/app-path";
 import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 
@@ -61,7 +62,7 @@ function AdminIngestion() {
       return;
     }
 
-    const response = await fetch(`/api/admin/ingest/source/${sourceKey}`, {
+    const response = await fetch(appPath(`/api/admin/ingest/source/${sourceKey}`), {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,

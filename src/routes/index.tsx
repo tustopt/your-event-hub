@@ -1,3 +1,4 @@
+import { appPath } from "@/lib/app-path";
 import { CalendarDays, Clapperboard, MapPin, Search, Tv } from "lucide-react";
 import { createFileRoute } from "@tanstack/react-router";
 import { SiteHeader } from "@/components/site-header";
@@ -48,7 +49,7 @@ function Index() {
               </form>
               <div className="mt-5 flex flex-wrap gap-2">
                 {quickFilters.map((item) => (
-                  <a key={item.filter} href={`/explorar?filter=${item.filter}`} className="rounded-full border px-4 py-2 text-xs font-semibold transition-colors hover:bg-muted">
+                  <a key={item.filter} href={appPath(`/explorar?filter=${item.filter}`)} className="rounded-full border px-4 py-2 text-xs font-semibold transition-colors hover:bg-muted">
                     {item.label}
                   </a>
                 ))}
@@ -63,11 +64,11 @@ function Index() {
               <p className="eyebrow">Descobrir</p>
               <h2 className="display-serif mt-2 text-3xl sm:text-4xl">Por onde quer começar?</h2>
             </div>
-            <a href="/explorar" className="hidden text-xs font-bold uppercase tracking-wider sm:block">Ver tudo →</a>
+            <a href={appPath("/explorar")} className="hidden text-xs font-bold uppercase tracking-wider sm:block">Ver tudo →</a>
           </div>
           <div className="mt-8 grid border-l border-t md:grid-cols-3">
             {featured.map(({ title, description, icon: Icon }) => (
-              <a key={title} href="/explorar" className="group border-b border-r p-7 transition-colors hover:bg-muted/50 lg:p-9">
+              <a key={title} href={appPath("/explorar")} className="group border-b border-r p-7 transition-colors hover:bg-muted/50 lg:p-9">
                 <Icon className="size-5 text-primary" />
                 <h3 className="mt-14 text-xl font-bold tracking-tight">{title}</h3>
                 <p className="mt-3 max-w-sm text-sm leading-6 text-muted-foreground">{description}</p>
@@ -84,7 +85,7 @@ function Index() {
                 <p className="text-xs font-bold uppercase tracking-[.16em] text-primary">Agenda</p>
                 <h2 className="display-serif mt-2 text-3xl sm:text-4xl">Próximos eventos</h2>
               </div>
-              <a href="/explorar" className="text-xs font-bold uppercase tracking-wider opacity-75 hover:opacity-100">Abrir agenda →</a>
+              <a href={appPath("/explorar")} className="text-xs font-bold uppercase tracking-wider opacity-75 hover:opacity-100">Abrir agenda →</a>
             </div>
             <div className="py-7">
               <div className="grid gap-5 sm:grid-cols-[auto_1fr_auto] sm:items-center">
@@ -96,7 +97,7 @@ function Index() {
                     O catálogo cresce continuamente à medida que novas fontes são integradas.
                   </p>
                 </div>
-                <a href="/explorar" className="border border-background/30 px-5 py-3 text-xs font-bold uppercase tracking-wider hover:bg-background hover:text-foreground">Explorar</a>
+                <a href={appPath("/explorar")} className="border border-background/30 px-5 py-3 text-xs font-bold uppercase tracking-wider hover:bg-background hover:text-foreground">Explorar</a>
               </div>
             </div>
           </div>

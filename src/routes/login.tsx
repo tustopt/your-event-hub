@@ -42,7 +42,7 @@ function Login() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-muted/30 px-5 py-12">
       <section className="w-full max-w-md rounded-2xl border bg-card p-8 shadow-sm">
-        <Link to="/" className="text-xl font-semibold tracking-tight">Docu<span className="text-muted-foreground">Events</span></Link>
+        <Link to="/" className="text-xl font-semibold tracking-tight">doc<span className="text-muted-foreground">radar</span></Link>
         <h1 className="mt-8 text-2xl font-semibold">{mode === "login" ? "Entrar" : "Criar conta"}</h1>
         <p className="mt-2 text-sm leading-6 text-muted-foreground">{mode === "login" ? "Entre para explorar a agenda e o catálogo documental." : "Crie uma conta para começar a guardar a sua descoberta documental."}</p>
         <form onSubmit={submit} className="mt-8 space-y-4">
